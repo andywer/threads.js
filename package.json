@@ -1,0 +1,36 @@
+{
+  "name"     : "thread.js",
+  "version"  : "0.1.0",
+  "keywords" : [
+    "thread",
+    "cluster",
+    "web worker",
+    "threadpool",
+    "spawn",
+    "fork",
+    "parallel"
+  ],
+  "description" : "Easy to use multi-threading library for node.js and the browser.",
+  "author"      : "Andy Wermke <andy@dev.next-step-software.com>",
+  "license"     : "MIT",
+  "main"        : "lib/index.js",
+  "bugs"  : {
+    "url" : "https://github.com/andywer/thread.js/issues"
+  },
+  "repository" : {
+    "type"     : "git",
+    "url"      : "https://github.com/andywer/thread.js.git"
+  },
+  "devDependencies" : {
+    "browserify"          : "^9.0.8",
+    "gulp"                : "^3.8.11",
+    "gulp-babel"          : "^5.2.0",
+    "gulp-concat"         : "^2.5.2",
+    "gulp-eslint"         : "^0.9.0",
+    "gulp-uglify"         : "^1.2.0",
+    "vinyl-source-stream" : "^1.1.0"
+  },
+  "dependencies"    : {
+    "eventemitter3" : "^1.1.1"
+  }
+}

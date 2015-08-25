@@ -1,0 +1,23 @@
+{
+  "ecmaFeatures" : {
+    "arrowFunctions" : true,
+    "blockBindings"  : true,
+    "classes"        : true,
+    "defaultParams"  : true,
+    "destructuring"  : true,
+    "jsx"            : true,
+    "modules"        : true,
+    "restParams"     : true
+  },
+  "globals" : {
+    "Blob"        : true,
+    "BlobBuilder" : true
+  },
+  "rules" : {
+    "global-strict"   : 0,
+    "key-spacing"     : [0, { "beforeColon": false, "afterColon": true }],
+    "no-console"      : 1,
+    "no-multi-spaces" : 0,
+    "quotes"          : [1, "single", "avoid-escape"]
+  }
+}
