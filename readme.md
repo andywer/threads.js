@@ -10,10 +10,10 @@ when run by node.js. Also supports browsers which do not support web workers.
 - example use cases
 - ES6, but backwards-compatible
 
--> TODO: event emitter + promise api
-
 
 ## Sample use
+
+### Basic use
 
 ```javascript
 import { spawn } from 'thread.js';
@@ -38,6 +38,10 @@ setTimeout(function() {
 }, 1000);
 ```
 
+### Generic worker
+
+Don't provide a worker script, but spawn a generic worker and provide him a
+function to execute.
 
 ```javascript
 import { spawn } from 'thread.js';
@@ -57,6 +61,10 @@ thread
   });
 ```
 
+### Thread Pool
+
+You can also create a thread pool that spawns a fixed no. of workers. Pass jobs
+to the thread pool which it will queue and pass to the next idle worker.
 
 ```javascript
 import { Pool } from 'thread.js';
@@ -103,3 +111,12 @@ pool
     console.log('Thread pool destroyed.');
   });
 ```
+
+## API
+
+You can find the API documentation in the [wiki](https://github.com/andywer/thread.js/wiki).
+
+
+## License
+
+This library is published under the MIT license. See [LICENSE](https://raw.githubusercontent.com/andywer/thread.js/master/LICENSE) for details.
