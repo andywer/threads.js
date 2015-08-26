@@ -41,7 +41,7 @@ setTimeout(function() {
 ### Generic worker
 
 Don't provide a worker script, but spawn a generic worker and provide him a
-function to execute.
+function to execute. This is especially useful for non-complex thread code.
 
 ```javascript
 import { spawn } from 'thread.js';
@@ -52,6 +52,8 @@ const thread = spawn();
 
 thread
   .run(function(param, done) {
+    // remember that this function will be executed in the thread's context,
+    // so you cannot reference any value of the surrounding code
     done(param, param + 1);
   })
   .send(1)
@@ -111,6 +113,41 @@ pool
     console.log('Thread pool destroyed.');
   });
 ```
+
+### Streaming
+
+You can also spawn a thread for streaming purposes. The following example shows
+a very simple use case where you keep feeding numbers to the background task
+and it will return the minimum and maximum of all values you ever passed.
+
+```javascript
+thread
+  .run(function minmax(int, done) {
+    if (typeof this.min === 'undefined') {
+      this.min = int;
+      this.max = int;
+    } else {
+      this.min = Math.min(this.min, int);
+      this.max = Math.max(this.max, int);
+    }
+    done({ min : this.min, max : this.max }});
+  })
+  .send(2)
+  .send(3)
+  .send(4)
+  .send(1)
+  .send(5)
+  .on('message', function(minmax) {
+    console.log('min:', minmax.min, ', max:', minmax.max);
+  })
+  .on('done', function() {
+    thread.kill();
+  });
+```
+
+### Import scripts and data transfer
+
+TODO
 
 ## API
 
