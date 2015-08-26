@@ -11,7 +11,7 @@ when run by node.js. Also supports browsers which do not support web workers.
 - ES6, but backwards-compatible
 
 
-## Sample use
+## How To
 
 ### Basic use
 
@@ -145,9 +145,29 @@ thread
   });
 ```
 
-### Import scripts and data transfer
+### Import scripts and transferable objects
 
-TODO
+You can also use dependencies in the spawned thread and use transferable objects
+to improve performance when passing large buffers (in browser).
+See [Transferable Objects: Lightning Fast!](http://updates.html5rocks.com/2011/12/Transferable-Objects-Lightning-Fast).
+
+```javascript
+const largeArrayBuffer = new Uint8Array(1024*1024*32); // 32MB
+const data = { label : 'huge thing', buffer: largeArrayBuffer.buffer };
+
+thread
+  .run(function(param, done) {
+    // do something cool with this.axios
+    done();
+  }, {
+    // dependencies; resolved using node's require() or the web workers importScript()
+    // the key will be used as key on worker's `this` object
+    // the value is used similar to require() or es6 import
+    axios : 'axios'
+  })
+  // pass the buffers to transfer into thread context as 2nd parameter to send()
+  .send(data, [ largeArrayBuffer.buffer ]);
+```
 
 ## API
 
