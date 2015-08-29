@@ -1,10 +1,12 @@
 
+import config from './config';
 import Worker from './worker';
 
-export function spawn(url = null) {
-  // TODO: GenericWorker if url === null
+export { config };
+export { Worker };    // needed for testing
 
-  return new Worker();
+export function spawn(runnable = null) {
+  return new Worker(runnable);
 }
 
 // TODO: export Pool
