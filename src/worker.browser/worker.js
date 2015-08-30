@@ -21,7 +21,7 @@ export default class Worker extends EventEmitter {
   constructor(initialScript = null, importScripts = []) {
     super();
 
-    this.worker = new Worker(slaveCodeDataUri);
+    this.worker = new window.Worker(slaveCodeDataUri);
     this.setupListeners();
 
     if (initialScript) {
