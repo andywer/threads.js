@@ -22,7 +22,8 @@ export default class Worker extends EventEmitter {
     super();
 
     this.worker = new window.Worker(slaveCodeDataUri);
-    this.setupListeners();
+    this.worker.addEventListener('message', this.handleMessage.bind(this));
+    this.worker.addEventListener('error', this.handleError.bind(this));
 
     if (initialScript) {
       this.run(initialScript, importScripts);
@@ -39,8 +40,13 @@ export default class Worker extends EventEmitter {
   }
 
   runMethod(method, importScripts) {
+    const methodStr = method.toString();
+    const args = methodStr.substring(methodStr.indexOf('(') + 1, methodStr.indexOf(')')).split(',');
+    const body = methodStr.substring(methodStr.indexOf('{') + 1, methodStr.lastIndexOf('}'));
+
     this.worker.postMessage({
       initByMethod : true,
+      method       : { args, body },
       scripts      : importScripts
     });
   }
@@ -69,8 +75,27 @@ export default class Worker extends EventEmitter {
     return this;
   }
 
-  setupListeners() {
-    this.worker.addEventListener('message', this.emit.bind(this, 'message'));
-    this.worker.addEventListener('error', this.emit.bind(this, 'error'));
+  handleMessage(event) {
+    if (event.data.error) {
+      this.handleError(event.data.error);
+    } else {
+      this.emit('message', event.data.response);
+    }
+  }
+
+  handleError(error) {
+    if (!this.listeners('error', true)) {
+      if (error.stack) {
+        console.error(error.stack);                                             // eslint-disable-line no-console
+      } else if (error.message && error.filename && error.lineno) {
+        const fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50
+                       ? error.filename.substr(0, 50) + '...'
+                       : error.filename;
+        console.error(`${error.message} @${fileName}:${error.lineno}`);   // eslint-disable-line no-console
+      } else {
+        console.error(error);                                                   // eslint-disable-line no-console
+      }
+    }
+    this.emit('error', error);
   }
 }

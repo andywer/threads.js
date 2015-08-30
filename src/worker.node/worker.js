@@ -11,7 +11,7 @@ export default class Worker extends EventEmitter {
 
     this.slave = child.fork(path.join(__dirname, 'slave.js'), [], options);
     this.slave.on('message', this.handleMessage.bind(this));
-    this.slave.on('error', this.emit.bind(this, 'error'));
+    this.slave.on('error', this.handleError.bind(this));
     this.slave.on('exit', this.emit.bind(this, 'exit'));
 
     if (initialRunnable) {
@@ -65,12 +65,16 @@ export default class Worker extends EventEmitter {
       const error = new Error(message.error.message);
       error.stack = message.error.stack;
 
-      if (!this.listeners('error', true)) {
-        console.error(error.stack);       // eslint-disable-line no-console
-      }
-      this.emit('error', error);
+      this.handleError(error);
     } else {
       this.emit('message', message.response);
     }
+  }
+
+  handleError(error) {
+    if (!this.listeners('error', true)) {
+      console.error(error.stack || error);       // eslint-disable-line no-console
+    }
+    this.emit('error', error);
   }
 }
