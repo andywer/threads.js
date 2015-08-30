@@ -5,7 +5,7 @@ var babel      = require('gulp-babel');
 var browserify = require('browserify');
 var concat     = require('gulp-concat');
 var eslint     = require('gulp-eslint');
-var karma      = require('karma').server;
+var karma      = require('karma');
 var mocha      = require('gulp-mocha');
 var rename     = require('gulp-rename');
 var source     = require('vinyl-source-stream');
@@ -82,10 +82,10 @@ gulp.task('uglify', ['browserify-lib'], function() {
 
 
 gulp.task('test-browser', ['dist', 'babel-spec'], function(done) {
-  karma.start({
+  new karma.Server({
     configFile: __dirname + '/karma.conf.js',
     singleRun: true
-  }, done);
+  }, done).start();
 });
 
 gulp.task('test-node', ['dist', 'babel-spec'], function() {
