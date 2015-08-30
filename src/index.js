@@ -9,4 +9,8 @@ export function spawn(runnable = null) {
   return new Worker(runnable);
 }
 
-// TODO: export Pool
+export default {
+  config,
+  spawn,
+  Worker
+};
