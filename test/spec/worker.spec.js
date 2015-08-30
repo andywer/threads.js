@@ -14,7 +14,7 @@ var _sinon = require('sinon');
 
 var _sinon2 = _interopRequireDefault(_sinon);
 
-var _lib = require('../../lib');
+var _ = require('../../');
 
 var env = typeof window === 'object' ? 'browser' : 'node';
 
@@ -37,7 +37,7 @@ function canSendAndReceiveEcho(worker, done) {
 describe('Worker', function () {
 
   before(function () {
-    _sinon2['default'].stub(_lib.config, 'get').returns({
+    _sinon2['default'].stub(_.config, 'get').returns({
       basepath: {
         node: __dirname + '/../thread-scripts',
         web: '/thread-scripts'
@@ -46,15 +46,15 @@ describe('Worker', function () {
   });
 
   it('can be spawned', function () {
-    var worker = (0, _lib.spawn)();
+    var worker = (0, _.spawn)();
 
     (0, _expectJs2['default'])(worker).to.be.a('object');
-    (0, _expectJs2['default'])(worker).to.be.a(_lib.Worker);
+    (0, _expectJs2['default'])(worker).to.be.a(_.Worker);
   });
 
   it('can be killed', function (done) {
     var spy = undefined;
-    var worker = (0, _lib.spawn)();
+    var worker = (0, _.spawn)();
 
     // the browser worker owns a worker, the node worker owns a slave
     if (env === 'browser') {
@@ -71,27 +71,27 @@ describe('Worker', function () {
   });
 
   it('can run method (set using spawn())', function (done) {
-    var worker = (0, _lib.spawn)(echoThread);
+    var worker = (0, _.spawn)(echoThread);
     canSendAndReceiveEcho(worker, done);
   });
 
   it('can run method (set using .run())', function (done) {
-    var worker = (0, _lib.spawn)().run(echoThread);
+    var worker = (0, _.spawn)().run(echoThread);
     canSendAndReceiveEcho(worker, done);
   });
 
   it('can run script (set using spawn())', function (done) {
-    var worker = (0, _lib.spawn)('../thread-scripts/abc-sender.js');
+    var worker = (0, _.spawn)('../thread-scripts/abc-sender.js');
     canSendAndReceive(worker, null, 'abc', done);
   });
 
   it('can run script (set using .run())', function (done) {
-    var worker = (0, _lib.spawn)(echoThread);
+    var worker = (0, _.spawn)(echoThread);
     canSendAndReceiveEcho(worker, done);
   });
 
   it('can reset thread code', function (done) {
-    var worker = (0, _lib.spawn)();
+    var worker = (0, _.spawn)();
 
     // .run(code), .send(data), .run(script), .send(data), .run(code), .send(data)
     _async2['default'].series([function (stepDone) {
@@ -104,7 +104,7 @@ describe('Worker', function () {
   });
 
   it('can emit error', function (done) {
-    var worker = (0, _lib.spawn)(function () {
+    var worker = (0, _.spawn)(function () {
       throw new Error('Test message');
     });
 
@@ -120,7 +120,7 @@ describe('Worker', function () {
     it('thread code can use setTimeout, setInterval', function (done) {
       var messageCount = 0;
 
-      var worker = (0, _lib.spawn)().run(function (param, threadDone) {
+      var worker = (0, _.spawn)().run(function (param, threadDone) {
         setTimeout(function () {
           setInterval(function () {
             threadDone(true);

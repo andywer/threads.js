@@ -22,10 +22,7 @@ if (typeof define === 'function') {
   module.exports = _index2['default'];
 }
 //# sourceMappingURL=bundle.browser.js.map
-},{"./index":3}],"./slave.js.txt":[function(require,module,exports){
-module.exports = "/*eslint-env worker*/\n/*eslint-disable no-console*/\nthis.module = {\n  exports : function() {\n    if (console) { console.error('No thread logic initialized.'); }\n  }\n};\n\nthis.onmessage = function (event) {\n  var scripts = event.data.scripts;\n  if (scripts && scripts.length > 0 && importScripts !== 'function') {\n    throw new Error('importScripts() not supported.');\n  }\n\n  if (event.data.initByScripts) {\n    this.module = { exports : {} };\n    importScripts.apply(null, scripts);\n  }\n\n  if (event.data.initByMethod) {\n    var method = event.data.method;\n    this.module.exports = Function.apply(null, method.args.concat(method.body));\n\n    if (scripts && scripts.length > 0) {\n      importScripts.apply(null, scripts);\n    }\n  }\n\n  if (event.data.doRun) {\n    var handler = this.module.exports;\n    if (typeof handler !== 'function') {\n      throw new Error('Cannot run thread logic. No handler has been exported.');\n    }\n    handler(event.data.param, function(response) { this.postMessage(response); }.bind(this));\n  }\n};\n";
-
-},{}],"./worker":[function(require,module,exports){
+},{"./index":3}],"./worker":[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -46,17 +43,17 @@ var _eventemitter3 = require('eventemitter3');
 
 var _eventemitter32 = _interopRequireDefault(_eventemitter3);
 
-var _slaveJsTxt = require('./slave.js.txt');
+var _slaveCode = require('./slave-code');
 
-var _slaveJsTxt2 = _interopRequireDefault(_slaveJsTxt);
+var _slaveCode2 = _interopRequireDefault(_slaveCode);
 
 var _config = require('../config');
 
-if (typeof window.Worker !== 'object') {
+if (typeof window.Worker !== 'object' && typeof window.Worker !== 'function') {
   throw new Error('Browser does not support web workers!');
 }
 
-var slaveCodeDataUri = 'data:text/javascript;charset=utf-8,' + encodeURI(_slaveJsTxt2['default']);
+var slaveCodeDataUri = 'data:text/javascript;charset=utf-8,' + encodeURI(_slaveCode2['default']);
 
 function prependScriptUrl(scriptUrl) {
   var prefix = (0, _config.getConfig)().basepath.web;
@@ -147,7 +144,7 @@ var Worker = (function (_EventEmitter) {
 exports['default'] = Worker;
 module.exports = exports['default'];
 //# sourceMappingURL=../worker.browser/worker.js.map
-},{"../config":2,"./slave.js.txt":"./slave.js.txt","eventemitter3":4}],2:[function(require,module,exports){
+},{"../config":2,"./slave-code":4,"eventemitter3":5}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -242,6 +239,8 @@ function spawn() {
 // TODO: export Pool
 //# sourceMappingURL=index.js.map
 },{"./config":2,"./worker":"./worker"}],4:[function(require,module,exports){
+module.exports = "/*eslint-env worker*/\n/*eslint-disable no-console*/\nthis.module = {\n  exports : function() {\n    if (console) { console.error('No thread logic initialized.'); }\n  }\n};\n\nthis.onmessage = function (event) {\n  var scripts = event.data.scripts;\n  if (scripts && scripts.length > 0 && importScripts !== 'function') {\n    throw new Error('importScripts() not supported.');\n  }\n\n  if (event.data.initByScripts) {\n    this.module = { exports : {} };\n    importScripts.apply(null, scripts);\n  }\n\n  if (event.data.initByMethod) {\n    var method = event.data.method;\n    this.module.exports = Function.apply(null, method.args.concat(method.body));\n\n    if (scripts && scripts.length > 0) {\n      importScripts.apply(null, scripts);\n    }\n  }\n\n  if (event.data.doRun) {\n    var handler = this.module.exports;\n    if (typeof handler !== 'function') {\n      throw new Error('Cannot run thread logic. No handler has been exported.');\n    }\n    handler(event.data.param, function(response) { this.postMessage(response); }.bind(this));\n  }\n};\n";
+},{}],5:[function(require,module,exports){
 'use strict';
 
 //

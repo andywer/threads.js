@@ -5,11 +5,26 @@ var babel      = require('gulp-babel');
 var browserify = require('browserify');
 var concat     = require('gulp-concat');
 var eslint     = require('gulp-eslint');
+var karma      = require('karma').server;
 var mocha      = require('gulp-mocha');
+var rename     = require('gulp-rename');
 var source     = require('vinyl-source-stream');
 var sourcemaps = require('gulp-sourcemaps');
-var stringify  = require('stringify');
+var through    = require('through2');
 var uglify     = require('gulp-uglify');
+
+
+function toStringModule() {
+  return through.obj(function(file, enc, done) {
+    if (file.isBuffer()) {
+      var newContents = 'module.exports = ' + JSON.stringify(file.contents.toString(enc)) + ';';
+      file.contents = new Buffer(newContents, enc);
+    } else if (file.isStream()) {
+      throw new Error('Streams are not yet supported.');
+    }
+    done(null, file);
+  });
+}
 
 
 // Fix for gulp not terminating after mocha finishes
@@ -41,12 +56,18 @@ gulp.task('babel-spec', function() {
 });
 
 
-gulp.task('browserify-lib', ['babel-lib'], function() {
+gulp.task('browser-slave-module', function() {
+  return gulp.src('./src/worker.browser/slave.js.txt')
+    .pipe(toStringModule())
+    .pipe(rename('slave-code.js'))
+    .pipe(gulp.dest('./lib/worker.browser/'));
+});
+
+
+gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], function() {
   return browserify()
-    .transform(stringify(['.txt']))
     .add('./lib/bundle.browser.js')
-    .require('./src/worker.browser/slave.js.txt', { expose : './slave.js.txt' })
-    .require('./lib/worker.browser/worker.js', { expose : './worker' })
+    .require('./lib/worker.browser/worker.js', { expose : './worker' })   // so the node worker won't make it's way into the bundle
     .bundle()
     .pipe(source('thread.browser.js'))
     .pipe(gulp.dest('dist/'));
@@ -60,7 +81,14 @@ gulp.task('uglify', ['browserify-lib'], function() {
 });
 
 
-gulp.task('test', ['dist', 'babel-spec'], function() {
+gulp.task('test-browser', ['dist', 'babel-spec'], function(done) {
+  karma.start({
+    configFile: __dirname + '/karma.conf.js',
+    singleRun: true
+  }, done);
+});
+
+gulp.task('test-node', ['dist', 'babel-spec'], function() {
   return gulp.src('test/spec/*.spec.js', { read: false })
     .pipe(mocha());
 });
@@ -68,4 +96,4 @@ gulp.task('test', ['dist', 'babel-spec'], function() {
 
 gulp.task('dist', ['lint', 'browserify-lib', 'uglify']);
 
-gulp.task('default', ['dist', 'test']);
+gulp.task('default', ['dist', 'test-node', 'test-browser']);

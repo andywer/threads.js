@@ -1,10 +1,10 @@
 import EventEmitter from 'eventemitter3';
-import slaveCode from './slave.js.txt';
+import slaveCode from './slave-code';
 
 import { getConfig } from '../config';
 
 
-if (typeof window.Worker !== 'object') {
+if (typeof window.Worker !== 'object' && typeof window.Worker !== 'function') {
   throw new Error('Browser does not support web workers!');
 }
 

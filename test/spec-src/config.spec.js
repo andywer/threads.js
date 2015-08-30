@@ -1,5 +1,5 @@
 import expect from 'expect.js';
-import { config } from '../../lib';
+import { config } from '../../';
 
 function cloneWithMods(obj, callback) {
   const clone = JSON.parse(JSON.stringify(obj));
