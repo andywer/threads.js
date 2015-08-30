@@ -11,7 +11,7 @@
     "fork",
     "parallel"
   ],
-  "description": "Easy to use multi-threading library for node.js and the browser.",
+  "description": "Easy to use multi-threading library for node.js and the browser!",
   "author": "Andy Wermke <andy@dev.next-step-software.com>",
   "license": "MIT",
   "main": "lib/index.js",
@@ -21,6 +21,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/andywer/thread.js.git"
+  },
+  "scripts": {
+    "compile": "./node_modules/.bin/gulp dist",
+    "test": "./node_modules/.bin/gulp test"
   },
   "devDependencies": {
     "async": "^1.4.2",
