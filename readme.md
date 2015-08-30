@@ -1,14 +1,15 @@
 # thread.js
 
-Javascript thread library. Uses web workers when run in browsers and clusters
+Javascript thread library. Uses web workers when run in browsers and child processes
 when run by node.js. Also supports browsers which do not support web workers.
 
 - Convenience API
 - For client and server use
-- Use different APIs (web worker, shared worker, node cluster) transparently
+- Use different APIs (web worker, node child_process) transparently
 - Thread pools
 - example use cases
-- ES6, but backwards-compatible
+- ES6 and backwards-compatible
+- Planned features: Shared workers
 
 
 ## How To
@@ -19,49 +20,55 @@ when run by node.js. Also supports browsers which do not support web workers.
 import { spawn } from 'thread.js';
 // ES5 syntax: var spawn = require('thread.js').spawn;
 
-const thread = spawn('/path/to/worker.js');
+const thread = spawn(function(input, done) {
+  // Everything we do here will be run in parallel in another execution context.
+  // Remember that this function will be executed in the thread's context,
+  // so you cannot reference any value of the surrounding code.
+  done({ string : input.string, integer : parseInt(input.string) });
+});
 
 thread
-  .send({ hello : 'world' })
-  .on('message', function(message) {
-    console.log('Worker sent:', message);
+  .send({ string : '123' })
+  .on('message', function(response) {
+    console.log('123 * 2 = ', response.integer * 2);
+    thread.kill();
   })
   .on('error', function(error) {
     console.error('Worker errored:', error);
   })
   .on('exit', function() {
-    console.log('Worker is terminated.');
+    console.log('Worker has been terminated.');
   });
-
-setTimeout(function() {
-  thread.kill();
-}, 1000);
 ```
 
-### Generic worker
 
-Don't provide a worker script, but spawn a generic worker and provide him a
-function to execute. This is especially useful for non-complex thread code.
+### Thread code in separate files
+
+You don't have to write the thread's code inline. The file is expected to be a
+commonjs module (so something that uses `module.exports = ...`), for node and
+browser.
 
 ```javascript
-import { spawn } from 'thread.js';
-// ES5 syntax: var spawn = require('thread.js').spawn;
+import { config, spawn } from 'thread.js';
+// ES5 syntax: var config = require('thread.js').config, spawn = require('thread.js').spawn;
 
-const thread = spawn();
-// spawn a SharedWorker: `spawn({ shared: true })`
+// Set base paths to thread scripts
+config.set({
+  basepath : {
+    browser : 'http://myserver.local/thread-scripts',
+    node    : __dirname + '/../thread-scripts'
+  }
+});
+
+const thread = spawn('worker.js');
 
 thread
-  .run(function(param, done) {
-    // remember that this function will be executed in the thread's context,
-    // so you cannot reference any value of the surrounding code
-    done(param, param + 1);
-  })
-  .send(1)
-  .send(2)
-  .on('message', function(value, valuePlusOne) {
-    console.log(`${value} + 1 = ${valuePlusOne}`);
+  .send({ do : 'Something awesome!' })
+  .on('message', function(message) {
+    console.log('Worker sent:', message);
   });
 ```
+
 
 ### Thread Pool
 
@@ -145,10 +152,11 @@ thread
   });
 ```
 
-### Import scripts and transferable objects
+### Transferable objects
 
-You can also use dependencies in the spawned thread and use transferable objects
-to improve performance when passing large buffers (in browser).
+You can also use transferable objects to improve performance when passing large
+buffers (in browser). Add script files you want to run using importScripts()
+(if in browser) as second parameter to thread.run().
 See [Transferable Objects: Lightning Fast!](http://updates.html5rocks.com/2011/12/Transferable-Objects-Lightning-Fast).
 
 ```javascript
@@ -156,18 +164,24 @@ const largeArrayBuffer = new Uint8Array(1024*1024*32); // 32MB
 const data = { label : 'huge thing', buffer: largeArrayBuffer.buffer };
 
 thread
-  .run(function(param, done) {
-    // do something cool with this.axios
+  .run(function(input, done) {
+    // do something cool with input.label, input.buffer
     done();
-  }, {
-    // dependencies; resolved using node's require() or the web workers importScript()
-    // the key will be used as key on worker's `this` object
-    // the value is used similar to require() or es6 import
-    axios : 'axios'
-  })
+  }, [
+    // this file will be run in the thread using importScripts() if in browser
+    '/dependencies-bundle.js'
+  ])
   // pass the buffers to transfer into thread context as 2nd parameter to send()
   .send(data, [ largeArrayBuffer.buffer ]);
 ```
+
+### Use external dependencies
+
+TODO
+-> gulp task to bundle deps using browserify and expose all of them -> dependency bundle
+-> dependency bundle can be imported by importScripts()
+-> code can just call `var axios = require('axios');`, no matter if browser or node.js
+
 
 ## API
 
