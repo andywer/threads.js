@@ -33,7 +33,7 @@ describe('Worker', () => {
       .returns({
         basepath : {
           node : __dirname + '/../thread-scripts',
-          web  : '/thread-scripts'
+          web  : 'http://localhost:9876/base/test/thread-scripts'
         }
       });
   });
@@ -75,7 +75,7 @@ describe('Worker', () => {
   });
 
   it('can run script (set using spawn())', (done) => {
-    const worker = spawn('../thread-scripts/abc-sender.js');
+    const worker = spawn('abc-sender.js');
     canSendAndReceive(worker, null, 'abc', done);
   });
 
@@ -93,7 +93,7 @@ describe('Worker', () => {
         canSendAndReceiveEcho(worker.run(echoThread), stepDone);
       },
       (stepDone) => {
-        canSendAndReceive(worker.run('../thread-scripts/abc-sender.js'), null, 'abc', stepDone);
+        canSendAndReceive(worker.run('abc-sender.js'), null, 'abc', stepDone);
       },
       (stepDone) => {
         canSendAndReceiveEcho(worker.run(echoThread), stepDone);
@@ -107,7 +107,7 @@ describe('Worker', () => {
     });
 
     worker.on('error', (error) => {
-      expect(error.message).to.eql('Test message');
+      expect(error.message).to.match(/^(Uncaught Error: )?Test message$/);
       done();
     });
     worker.send();

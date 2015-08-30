@@ -40,7 +40,7 @@ describe('Worker', function () {
     _sinon2['default'].stub(_.config, 'get').returns({
       basepath: {
         node: __dirname + '/../thread-scripts',
-        web: '/thread-scripts'
+        web: 'http://localhost:9876/base/test/thread-scripts'
       }
     });
   });
@@ -81,7 +81,7 @@ describe('Worker', function () {
   });
 
   it('can run script (set using spawn())', function (done) {
-    var worker = (0, _.spawn)('../thread-scripts/abc-sender.js');
+    var worker = (0, _.spawn)('abc-sender.js');
     canSendAndReceive(worker, null, 'abc', done);
   });
 
@@ -97,7 +97,7 @@ describe('Worker', function () {
     _async2['default'].series([function (stepDone) {
       canSendAndReceiveEcho(worker.run(echoThread), stepDone);
     }, function (stepDone) {
-      canSendAndReceive(worker.run('../thread-scripts/abc-sender.js'), null, 'abc', stepDone);
+      canSendAndReceive(worker.run('abc-sender.js'), null, 'abc', stepDone);
     }, function (stepDone) {
       canSendAndReceiveEcho(worker.run(echoThread), stepDone);
     }], done);
@@ -109,7 +109,7 @@ describe('Worker', function () {
     });
 
     worker.on('error', function (error) {
-      (0, _expectJs2['default'])(error.message).to.eql('Test message');
+      (0, _expectJs2['default'])(error.message).to.match(/^(Uncaught Error: )?Test message$/);
       done();
     });
     worker.send();
