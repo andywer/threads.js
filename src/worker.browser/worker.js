@@ -16,6 +16,18 @@ function prependScriptUrl(scriptUrl) {
   return prefix ? prefix + '/' + scriptUrl : scriptUrl;
 }
 
+function convertToArray(input) {
+  let outputArray = [];
+  let index = 0;
+
+  while (typeof input[index] !== 'undefined') {
+    outputArray.push(input[index]);
+    index++;
+  }
+
+  return outputArray;
+}
+
 
 export default class Worker extends EventEmitter {
   constructor(initialScript = null, importScripts = []) {
@@ -79,7 +91,8 @@ export default class Worker extends EventEmitter {
     if (event.data.error) {
       this.handleError(event.data.error);
     } else {
-      this.emit('message', event.data.response);
+      const responseArgs = convertToArray(event.data.response);
+      this.emit.apply(this, ['message'].concat(responseArgs));
     }
   }
 

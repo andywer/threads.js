@@ -60,6 +60,18 @@ function prependScriptUrl(scriptUrl) {
   return prefix ? prefix + '/' + scriptUrl : scriptUrl;
 }
 
+function convertToArray(input) {
+  var outputArray = [];
+  var index = 0;
+
+  while (typeof input[index] !== 'undefined') {
+    outputArray.push(input[index]);
+    index++;
+  }
+
+  return outputArray;
+}
+
 var Worker = (function (_EventEmitter) {
   _inherits(Worker, _EventEmitter);
 
@@ -142,7 +154,8 @@ var Worker = (function (_EventEmitter) {
       if (event.data.error) {
         this.handleError(event.data.error);
       } else {
-        this.emit('message', event.data.response);
+        var responseArgs = convertToArray(event.data.response);
+        this.emit.apply(this, ['message'].concat(responseArgs));
       }
     }
   }, {
@@ -267,7 +280,7 @@ exports['default'] = {
 };
 //# sourceMappingURL=index.js.map
 },{"./config":2,"./worker":"./worker"}],4:[function(require,module,exports){
-module.exports = "/*eslint-env worker*/\n/*global importScripts*/\n/*eslint-disable no-console*/\nthis.module = {\n  exports : function() {\n    if (console) { console.error('No thread logic initialized.'); }\n  }\n};\n\nthis.onmessage = function (event) {\n  var scripts = event.data.scripts;\n  if (scripts && scripts.length > 0 && typeof importScripts !== 'function') {\n    throw new Error('importScripts() not supported.');\n  }\n\n  if (event.data.initByScripts) {\n    importScripts.apply(null, scripts);\n  }\n\n  if (event.data.initByMethod) {\n    var method = event.data.method;\n    this.module.exports = Function.apply(null, method.args.concat(method.body));\n\n    if (scripts && scripts.length > 0) {\n      importScripts.apply(null, scripts);\n    }\n  }\n\n  if (event.data.doRun) {\n    var handler = this.module.exports;\n    if (typeof handler !== 'function') {\n      throw new Error('Cannot run thread logic. No handler has been exported.');\n    }\n\n    handler(event.data.param, function(response) {\n      this.postMessage({ response : response });\n    }.bind(this));\n  }\n}.bind(this);\n";
+module.exports = "/*eslint-env worker*/\n/*global importScripts*/\n/*eslint-disable no-console*/\nthis.module = {\n  exports : function() {\n    if (console) { console.error('No thread logic initialized.'); }\n  }\n};\n\nthis.onmessage = function (event) {\n  var scripts = event.data.scripts;\n  if (scripts && scripts.length > 0 && typeof importScripts !== 'function') {\n    throw new Error('importScripts() not supported.');\n  }\n\n  if (event.data.initByScripts) {\n    importScripts.apply(null, scripts);\n  }\n\n  if (event.data.initByMethod) {\n    var method = event.data.method;\n    this.module.exports = Function.apply(null, method.args.concat(method.body));\n\n    if (scripts && scripts.length > 0) {\n      importScripts.apply(null, scripts);\n    }\n  }\n\n  if (event.data.doRun) {\n    var handler = this.module.exports;\n    if (typeof handler !== 'function') {\n      throw new Error('Cannot run thread logic. No handler has been exported.');\n    }\n\n    handler(event.data.param, function() {\n      this.postMessage({ response : arguments });\n    }.bind(this));\n  }\n}.bind(this);\n";
 },{}],5:[function(require,module,exports){
 'use strict';
 

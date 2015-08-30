@@ -84,6 +84,19 @@ describe('Worker', () => {
     canSendAndReceiveEcho(worker, done);
   });
 
+  it('can pass more than one argument as response', (done) => {
+    const worker = spawn((input, done) => { done('a', 'b', 'c'); });
+    worker
+      .send()
+      .on('message', (a, b, c) => {
+        expect(a).to.eql('a');
+        expect(b).to.eql('b');
+        expect(c).to.eql('c');
+        worker.kill();
+        done();
+      });
+  });
+
   it('can reset thread code', done => {
     const worker = spawn();
 
@@ -134,6 +147,14 @@ describe('Worker', () => {
           }
         });
     });
+
+  }
+
+
+  if (env === 'browser') {
+
+    // TODO: test additional importScripts()
+    // TODO: test transferables
 
   }
 

@@ -90,6 +90,19 @@ describe('Worker', function () {
     canSendAndReceiveEcho(worker, done);
   });
 
+  it('can pass more than one argument as response', function (done) {
+    var worker = (0, _.spawn)(function (input, done) {
+      done('a', 'b', 'c');
+    });
+    worker.send().on('message', function (a, b, c) {
+      (0, _expectJs2['default'])(a).to.eql('a');
+      (0, _expectJs2['default'])(b).to.eql('b');
+      (0, _expectJs2['default'])(c).to.eql('c');
+      worker.kill();
+      done();
+    });
+  });
+
   it('can reset thread code', function (done) {
     var worker = (0, _.spawn)();
 
@@ -134,5 +147,12 @@ describe('Worker', function () {
         }
       });
     });
+  }
+
+  if (env === 'browser') {
+
+    // TODO: test additional importScripts()
+    // TODO: test transferables
+
   }
 });

@@ -32,8 +32,8 @@ this.onmessage = function (event) {
       throw new Error('Cannot run thread logic. No handler has been exported.');
     }
 
-    handler(event.data.param, function(response) {
-      this.postMessage({ response : response });
+    handler(event.data.param, function() {
+      this.postMessage({ response : arguments });
     }.bind(this));
   }
 }.bind(this);

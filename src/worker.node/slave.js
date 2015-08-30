@@ -51,8 +51,8 @@ process.on('message', function(data) {
     // so initialization errors will be printed to console
     setupErrorCatcher();
 
-    messageHandler(data.param, response => {
-      process.send({ response });
+    messageHandler(data.param, (...args) => {
+      process.send({ response: args });
     });
   }
 });
