@@ -26,6 +26,22 @@ function toStringModule() {
   });
 }
 
+function runKarma(options, done) {
+  if (typeof options === 'function') {
+    done = options;
+    options = {};
+  }
+  options.configFile = __dirname + '/karma.conf.js'
+
+  new karma.Server(options, function(exitCode) {
+    if (exitCode === 0) {
+      done();
+    } else {
+      done(new Error('Karma quit with exit code ' + exitCode));
+    }
+  }).start();
+}
+
 
 // Fix for gulp not terminating after mocha finishes
 gulp.doneCallback = function (err) {
@@ -34,7 +50,7 @@ gulp.doneCallback = function (err) {
 
 
 gulp.task('lint', function() {
-  return gulp.src('src/**/*.js')
+  return gulp.src(['src/**/*.js', 'src/**/*.js.txt'])
     .pipe(eslint())
     .pipe(eslint.format())
     .pipe(eslint.failOnError());
@@ -82,10 +98,11 @@ gulp.task('uglify', ['browserify-lib'], function() {
 
 
 gulp.task('test-browser', ['dist', 'babel-spec'], function(done) {
-  new karma.Server({
-    configFile: __dirname + '/karma.conf.js',
-    singleRun: true
-  }, done).start();
+  runKarma(done);
+});
+
+gulp.task('test-browser-after-node', ['test-node'], function(done) {
+  runKarma(done);
 });
 
 gulp.task('test-node', ['dist', 'babel-spec'], function() {
@@ -95,5 +112,6 @@ gulp.task('test-node', ['dist', 'babel-spec'], function() {
 
 
 gulp.task('dist', ['lint', 'browserify-lib', 'uglify']);
+gulp.task('test', ['test-node', 'test-browser-after-node']);
 
-gulp.task('default', ['dist', 'test-node', 'test-browser']);
+gulp.task('default', ['dist', 'test']);
