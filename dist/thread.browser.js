@@ -71,8 +71,9 @@ var Worker = (function (_EventEmitter) {
 
     _get(Object.getPrototypeOf(Worker.prototype), 'constructor', this).call(this);
 
-    this.worker = new Worker(slaveCodeDataUri);
-    this.setupListeners();
+    this.worker = new window.Worker(slaveCodeDataUri);
+    this.worker.addEventListener('message', this.handleMessage.bind(this));
+    this.worker.addEventListener('error', this.handleError.bind(this));
 
     if (initialScript) {
       this.run(initialScript, importScripts);
@@ -94,8 +95,13 @@ var Worker = (function (_EventEmitter) {
   }, {
     key: 'runMethod',
     value: function runMethod(method, importScripts) {
+      var methodStr = method.toString();
+      var args = methodStr.substring(methodStr.indexOf('(') + 1, methodStr.indexOf(')')).split(',');
+      var body = methodStr.substring(methodStr.indexOf('{') + 1, methodStr.lastIndexOf('}'));
+
       this.worker.postMessage({
         initByMethod: true,
+        method: { args: args, body: body },
         scripts: importScripts
       });
     }
@@ -131,10 +137,28 @@ var Worker = (function (_EventEmitter) {
       return this;
     }
   }, {
-    key: 'setupListeners',
-    value: function setupListeners() {
-      this.worker.addEventListener('message', this.emit.bind(this, 'message'));
-      this.worker.addEventListener('error', this.emit.bind(this, 'error'));
+    key: 'handleMessage',
+    value: function handleMessage(event) {
+      if (event.data.error) {
+        this.handleError(event.data.error);
+      } else {
+        this.emit('message', event.data.response);
+      }
+    }
+  }, {
+    key: 'handleError',
+    value: function handleError(error) {
+      if (!this.listeners('error', true)) {
+        if (error.stack) {
+          console.error(error.stack); // eslint-disable-line no-console
+        } else if (error.message && error.filename && error.lineno) {
+            var fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50 ? error.filename.substr(0, 50) + '...' : error.filename;
+            console.error(error.message + ' @' + fileName + ':' + error.lineno); // eslint-disable-line no-console
+          } else {
+              console.error(error); // eslint-disable-line no-console
+            }
+      }
+      this.emit('error', error);
     }
   }]);
 
@@ -236,10 +260,14 @@ function spawn() {
   return new _worker2['default'](runnable);
 }
 
-// TODO: export Pool
+exports['default'] = {
+  config: _config2['default'],
+  spawn: spawn,
+  Worker: _worker2['default']
+};
 //# sourceMappingURL=index.js.map
 },{"./config":2,"./worker":"./worker"}],4:[function(require,module,exports){
-module.exports = "/*eslint-env worker*/\n/*eslint-disable no-console*/\nthis.module = {\n  exports : function() {\n    if (console) { console.error('No thread logic initialized.'); }\n  }\n};\n\nthis.onmessage = function (event) {\n  var scripts = event.data.scripts;\n  if (scripts && scripts.length > 0 && importScripts !== 'function') {\n    throw new Error('importScripts() not supported.');\n  }\n\n  if (event.data.initByScripts) {\n    this.module = { exports : {} };\n    importScripts.apply(null, scripts);\n  }\n\n  if (event.data.initByMethod) {\n    var method = event.data.method;\n    this.module.exports = Function.apply(null, method.args.concat(method.body));\n\n    if (scripts && scripts.length > 0) {\n      importScripts.apply(null, scripts);\n    }\n  }\n\n  if (event.data.doRun) {\n    var handler = this.module.exports;\n    if (typeof handler !== 'function') {\n      throw new Error('Cannot run thread logic. No handler has been exported.');\n    }\n    handler(event.data.param, function(response) { this.postMessage(response); }.bind(this));\n  }\n};\n";
+module.exports = "/*eslint-env worker*/\n/*global importScripts*/\n/*eslint-disable no-console*/\nthis.module = {\n  exports : function() {\n    if (console) { console.error('No thread logic initialized.'); }\n  }\n};\n\nthis.onmessage = function (event) {\n  var scripts = event.data.scripts;\n  if (scripts && scripts.length > 0 && typeof importScripts !== 'function') {\n    throw new Error('importScripts() not supported.');\n  }\n\n  if (event.data.initByScripts) {\n    importScripts.apply(null, scripts);\n  }\n\n  if (event.data.initByMethod) {\n    var method = event.data.method;\n    this.module.exports = Function.apply(null, method.args.concat(method.body));\n\n    if (scripts && scripts.length > 0) {\n      importScripts.apply(null, scripts);\n    }\n  }\n\n  if (event.data.doRun) {\n    var handler = this.module.exports;\n    if (typeof handler !== 'function') {\n      throw new Error('Cannot run thread logic. No handler has been exported.');\n    }\n\n    handler(event.data.param, function(response) {\n      this.postMessage({ response : response });\n    }.bind(this));\n  }\n}.bind(this);\n";
 },{}],5:[function(require,module,exports){
 'use strict';
 
