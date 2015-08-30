@@ -7,7 +7,8 @@
     "destructuring"  : true,
     "jsx"            : true,
     "modules"        : true,
-    "restParams"     : true
+    "restParams"     : true,
+    "templateStrings": true
   },
   "globals" : {
     "Blob"        : true,
