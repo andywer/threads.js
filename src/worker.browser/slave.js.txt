@@ -1,4 +1,5 @@
 /*eslint-env worker*/
+/*global importScripts*/
 /*eslint-disable no-console*/
 this.module = {
   exports : function() {
@@ -8,12 +9,11 @@ this.module = {
 
 this.onmessage = function (event) {
   var scripts = event.data.scripts;
-  if (scripts && scripts.length > 0 && importScripts !== 'function') {
+  if (scripts && scripts.length > 0 && typeof importScripts !== 'function') {
     throw new Error('importScripts() not supported.');
   }
 
   if (event.data.initByScripts) {
-    this.module = { exports : {} };
     importScripts.apply(null, scripts);
   }
 
@@ -31,6 +31,9 @@ this.onmessage = function (event) {
     if (typeof handler !== 'function') {
       throw new Error('Cannot run thread logic. No handler has been exported.');
     }
-    handler(event.data.param, function(response) { this.postMessage(response); }.bind(this));
+
+    handler(event.data.param, function(response) {
+      this.postMessage({ response : response });
+    }.bind(this));
   }
-};
+}.bind(this);
