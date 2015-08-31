@@ -16,6 +16,9 @@ when run by node.js. Also supports browsers which do not support web workers.
 
 ### Basic use
 
+Spawn threads to do the time-consuming work and let the parent thread focus on
+daily business!
+
 ```javascript
 import { spawn } from 'thread.js';
 // ES5 syntax: var spawn = require('thread.js').spawn;
@@ -29,6 +32,7 @@ const thread = spawn(function(input, done) {
 
 thread
   .send({ string : '123' })
+  // The handlers come here: (none of them is mandatory)
   .on('message', function(response) {
     console.log('123 * 2 = ', response.integer * 2);
     thread.kill();
@@ -65,8 +69,17 @@ const thread = spawn('worker.js');
 thread
   .send({ do : 'Something awesome!' })
   .on('message', function(message) {
-    console.log('Worker sent:', message);
+    console.log('worker.js replied:', message);
   });
+```
+
+worker.js:
+```javascript
+// Use CommonJS syntax (module.exports). Works in browser, too!
+// Only limitation: You won't have require() when run in the browser.
+module.exports = function(input, done) {
+  done('Awesome thread script may run in browser and node.js!');
+};
 ```
 
 
@@ -80,11 +93,16 @@ import { Pool } from 'thread.js';
 // ES5 syntax: var Pool = require('thread.js').Pool;
 
 const pool = new Pool();
-const jobA = pool.run('/path/to/worker').send({ do : 'something' });
+
+// Run a script
+const jobA = pool.run('/path/to/worker')
+  .send({ do : 'something' });
+
+// Run inline code
 const jobB = pool.run(
-  function(string, done) {
-    const hash = md5(string);
-    done(hash);
+  function(input, done) {
+    const hash = md5(input);
+    done(hash, input);
   }, {
     // dependencies; resolved using node's require() or the web workers importScript()
     md5 : 'js-md5'
@@ -92,11 +110,8 @@ const jobB = pool.run(
 ).send('Hash this string!');
 
 jobA
-  .on('done', function(message) {
-    console.log('Job A done:', message);
-  })
-  .on('error', function(error) {
-    console.error('Job A errored:', error);
+  .on('done', function(hash, input) {
+    console.log(`Job A hashed: md5("${input}") = "${hash}"`);
   });
 
 pool
@@ -106,18 +121,9 @@ pool
   .on('error', function(job, error) {
     console.error('Job errored:', job);
   })
-  .on('spawn', function(worker, job) {
-    console.log('Thread pool spawned a new worker:', worker);
-  })
-  .on('kill', function(worker) {
-    console.log('Thread pool killed a worker:', worker);
-  })
   .on('finished', function() {
     console.log('Everything done, shutting down the thread pool.');
     pool.destroy();
-  })
-  .on('destroy', function() {
-    console.log('Thread pool destroyed.');
   });
 ```
 
@@ -152,6 +158,22 @@ thread
   });
 ```
 
+### Retraining
+
+As it turns out, `thread.run()` is no one-way road.
+
+```javascript
+thread
+  .run(function doThis(input, done) {
+    done('My first job!');
+  })
+  .send()
+  .run(function doThat(input, done) {
+    done('Old job was boring. Trying something new!');
+  })
+  .send();
+```
+
 ### Transferable objects
 
 You can also use transferable objects to improve performance when passing large
@@ -169,6 +191,7 @@ thread
     done();
   }, [
     // this file will be run in the thread using importScripts() if in browser
+    // the node.js code will ignore this second parameter
     '/dependencies-bundle.js'
   ])
   // pass the buffers to transfer into thread context as 2nd parameter to send()
