@@ -91,8 +91,8 @@ describe('Worker', function () {
   });
 
   it('can pass more than one argument as response', function (done) {
-    var worker = (0, _.spawn)(function (input, done) {
-      done('a', 'b', 'c');
+    var worker = (0, _.spawn)(function (input, threadDone) {
+      threadDone('a', 'b', 'c');
     });
     worker.send().on('message', function (a, b, c) {
       (0, _expectJs2['default'])(a).to.eql('a');
@@ -139,7 +139,7 @@ describe('Worker', function () {
             threadDone(true);
           }, 10);
         }, 20);
-      }).send().on('message', function (response) {
+      }).send().on('message', function () {
         messageCount++;
         if (messageCount === 3) {
           worker.kill();
@@ -151,8 +151,16 @@ describe('Worker', function () {
 
   if (env === 'browser') {
 
-    // TODO: test additional importScripts()
-    // TODO: test transferables
+    it('can importScripts()', function (done) {
+      var worker = (0, _.spawn)().run(function (input, threadDone) {
+        this.importedEcho(input, threadDone);
+      }, ['import-me.js']).send('abc').on('message', function (response) {
+        (0, _expectJs2['default'])(response).to.eql('abc');
+        worker.kill();
+        done();
+      });
+    });
 
+    // TODO: test transferables
   }
 });

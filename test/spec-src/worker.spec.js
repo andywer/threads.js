@@ -153,7 +153,19 @@ describe('Worker', () => {
 
   if (env === 'browser') {
 
-    // TODO: test additional importScripts()
+    it('can importScripts()', (done) => {
+      const worker = spawn()
+        .run(function(input, threadDone) {
+          this.importedEcho(input, threadDone);
+        }, [ 'import-me.js' ])
+        .send('abc')
+        .on('message', (response) => {
+          expect(response).to.eql('abc');
+          worker.kill();
+          done();
+        });
+    });
+
     // TODO: test transferables
 
   }
