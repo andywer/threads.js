@@ -1,3 +1,4 @@
+/*eslint-env node*/
 'use strict';
 
 var gulp       = require('gulp');
@@ -7,6 +8,7 @@ var concat     = require('gulp-concat');
 var eslint     = require('gulp-eslint');
 var karma      = require('karma');
 var mocha      = require('gulp-mocha');
+var path       = require('path');
 var rename     = require('gulp-rename');
 var source     = require('vinyl-source-stream');
 var sourcemaps = require('gulp-sourcemaps');
@@ -31,7 +33,7 @@ function runKarma(options, done) {
     done = options;
     options = {};
   }
-  options.configFile = __dirname + '/karma.conf.js'
+  options.configFile = path.join(__dirname, '/karma.conf.js');
 
   new karma.Server(options, function(exitCode) {
     if (exitCode === 0) {
@@ -45,12 +47,12 @@ function runKarma(options, done) {
 
 // Fix for gulp not terminating after mocha finishes
 gulp.doneCallback = function (err) {
-  process.exit(err ? 1 : 0);
+  process.exit(err ? 1 : 0);          // eslint-disable-line no-process-exit
 };
 
 
 gulp.task('lint', function() {
-  return gulp.src(['src/**/*.js', 'src/**/*.js.txt'])
+  return gulp.src(['src/**/*.js', 'src/**/*.js.txt', 'test/spec-src/*.js'])
     .pipe(eslint())
     .pipe(eslint.format())
     .pipe(eslint.failOnError());

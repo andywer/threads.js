@@ -85,7 +85,7 @@ describe('Worker', () => {
   });
 
   it('can pass more than one argument as response', (done) => {
-    const worker = spawn((input, done) => { done('a', 'b', 'c'); });
+    const worker = spawn((input, threadDone) => { threadDone('a', 'b', 'c'); });
     worker
       .send()
       .on('message', (a, b, c) => {
@@ -139,7 +139,7 @@ describe('Worker', () => {
           }, 20);
         })
         .send()
-        .on('message', (response) => {
+        .on('message', () => {
           messageCount++;
           if (messageCount === 3) {
             worker.kill();

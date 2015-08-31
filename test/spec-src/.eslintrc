@@ -1,0 +1,10 @@
+{
+  "env" : {
+    "mocha" : true
+  },
+  "globals" : {
+    "__dirname"   : true,
+    "setInterval" : true,
+    "setTimeout"  : true
+  }
+}
