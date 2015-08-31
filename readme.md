@@ -95,11 +95,16 @@ import { Pool } from 'thread.js';
 const pool = new Pool();
 
 // Run a script
-const jobA = pool.run('/path/to/worker')
+const jobA = pool
+  .run('/path/to/worker')
   .send({ do : 'something' });
 
+// Run the same script, but with a different parameter
+const jobB = pool
+  .send({ do : 'something else' });
+
 // Run inline code
-const jobB = pool.run(
+const jobC = pool.run(
   function(input, done) {
     const hash = md5(input);
     done(hash, input);
@@ -109,9 +114,9 @@ const jobB = pool.run(
   }
 ).send('Hash this string!');
 
-jobA
+jobC
   .on('done', function(hash, input) {
-    console.log(`Job A hashed: md5("${input}") = "${hash}"`);
+    console.log(`Job C hashed: md5("${input}") = "${hash}"`);
   });
 
 pool
