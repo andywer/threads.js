@@ -181,21 +181,25 @@ buffers (in browser). Add script files you want to run using importScripts()
 (if in browser) as second parameter to thread.run().
 See [Transferable Objects: Lightning Fast!](http://updates.html5rocks.com/2011/12/Transferable-Objects-Lightning-Fast).
 
+Both features will be ignored by node.js version for now.
+
 ```javascript
-const largeArrayBuffer = new Uint8Array(1024*1024*32); // 32MB
-const data = { label : 'huge thing', buffer: largeArrayBuffer.buffer };
+const largeArrayBuffer = new Uint8Array(1024 * 1024 * 32); // 32MB
+const jobData = { label : 'huge thing', data: largeArrayBuffer.buffer };
 
 thread
   .run(function(input, done) {
-    // do something cool with input.label, input.buffer
-    done();
+    // do something cool with input.label, input.data
+    // call done.transfer() if you want to use transferables in the thread's response
+    // (the node.js code simply ignores the transferables)
+    done.transfer({ some : { response : input.buffer } }, [input.data.buffer]);
   }, [
     // this file will be run in the thread using importScripts() if in browser
     // the node.js code will ignore this second parameter
     '/dependencies-bundle.js'
   ])
   // pass the buffers to transfer into thread context as 2nd parameter to send()
-  .send(data, [ largeArrayBuffer.buffer ]);
+  .send(jobData, [ largeArrayBuffer.buffer ]);
 ```
 
 ### Use external dependencies
