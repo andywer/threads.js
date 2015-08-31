@@ -59,7 +59,7 @@ export default class Worker extends EventEmitter {
     this.worker.postMessage({
       initByMethod : true,
       method       : { args, body },
-      scripts      : importScripts
+      scripts      : importScripts.map(prependScriptUrl)
     });
   }
 

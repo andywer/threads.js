@@ -114,7 +114,7 @@ var Worker = (function (_EventEmitter) {
       this.worker.postMessage({
         initByMethod: true,
         method: { args: args, body: body },
-        scripts: importScripts
+        scripts: importScripts.map(prependScriptUrl)
       });
     }
   }, {
