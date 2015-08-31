@@ -166,7 +166,30 @@ describe('Worker', () => {
         });
     });
 
-    // TODO: test transferables
+    it('can use transferables', (done) => {
+      const arrayBuffer = new Uint8Array(1024 * 2);       // 2 KB
+      const arrayBufferClone = new Uint8Array(1024 * 2);
+      // need to clone, because referencing arrayBuffer will not work after .send()
+
+      for (let index = 0; index < arrayBuffer.byteLength; index++) {
+        arrayBufferClone[ index ] = arrayBuffer[ index ];
+      }
+
+      const worker = spawn().
+        run((input, threadDone) => {
+          threadDone.transfer(input, [ input.data.buffer ]);
+        })
+        .send({ data: arrayBuffer }, [ arrayBuffer.buffer ])
+        .on('message', (response) => {
+          expect(response.data.byteLength).to.equal(arrayBufferClone.byteLength);
+          for (let index = 0; index < arrayBufferClone.byteLength; index++) {
+            expect(response.data[ index ]).to.equal(arrayBufferClone[ index ]);
+          }
+
+          worker.kill();
+          done();
+        });
+    });
 
   }
 

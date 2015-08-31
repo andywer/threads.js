@@ -4,7 +4,11 @@
   },
   "globals" : {
     "__dirname"   : true,
+    "console"     : true,
     "setInterval" : true,
     "setTimeout"  : true
+  },
+  "rules" : {
+    "no-console"  : 1
   }
 }

@@ -7,6 +7,21 @@ this.module = {
   }
 };
 
+function handlerDone() {
+  this.postMessage({ response : arguments });
+}
+
+function handlerDoneTransfer() {
+  var args = Array.prototype.slice.call(arguments);
+  var lastArg = args.pop();
+
+  if (!(lastArg instanceof Array) && this.console) {
+    console.error('Expected 2nd parameter of <doneCallback>.transfer() to be an array. Got:', lastArg);
+  }
+
+  this.postMessage({ response : args }, lastArg);
+}
+
 this.onmessage = function (event) {
   var scripts = event.data.scripts;
   if (scripts && scripts.length > 0 && typeof importScripts !== 'function') {
@@ -32,8 +47,9 @@ this.onmessage = function (event) {
       throw new Error('Cannot run thread logic. No handler has been exported.');
     }
 
-    handler(event.data.param, function() {
-      this.postMessage({ response : arguments });
-    }.bind(this));
+    var preparedHandlerDone = handlerDone.bind(this);
+    preparedHandlerDone.transfer = handlerDoneTransfer.bind(this);
+
+    handler(event.data.param, preparedHandlerDone);
   }
 }.bind(this);

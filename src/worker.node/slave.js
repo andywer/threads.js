@@ -37,6 +37,16 @@ function runAsSandboxedModule(code) {
 }
 
 
+function messageHandlerDone(...args) {
+  process.send({ response: args });
+}
+
+messageHandlerDone.transfer = function(...args) {
+  args.pop();         // ignore last parameter, since it's only useful for browser code
+  messageHandlerDone.apply(null, args);
+};
+
+
 process.on('message', function(data) {
   if (data.initByScript) {
     messageHandler = require(data.script);
@@ -51,8 +61,6 @@ process.on('message', function(data) {
     // so initialization errors will be printed to console
     setupErrorCatcher();
 
-    messageHandler(data.param, (...args) => {
-      process.send({ response: args });
-    });
+    messageHandler(data.param, messageHandlerDone);
   }
 });

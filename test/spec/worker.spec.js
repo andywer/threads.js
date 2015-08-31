@@ -161,6 +161,26 @@ describe('Worker', function () {
       });
     });
 
-    // TODO: test transferables
+    it('can use transferables', function (done) {
+      var arrayBuffer = new Uint8Array(1024 * 2); // 2 KB
+      var arrayBufferClone = new Uint8Array(1024 * 2);
+      // need to clone, because referencing arrayBuffer will not work after .send()
+
+      for (var index = 0; index < arrayBuffer.byteLength; index++) {
+        arrayBufferClone[index] = arrayBuffer[index];
+      }
+
+      var worker = (0, _.spawn)().run(function (input, threadDone) {
+        threadDone.transfer(input, [input.data.buffer]);
+      }).send({ data: arrayBuffer }, [arrayBuffer.buffer]).on('message', function (response) {
+        (0, _expectJs2['default'])(response.data.byteLength).to.equal(arrayBufferClone.byteLength);
+        for (var index = 0; index < arrayBufferClone.byteLength; index++) {
+          (0, _expectJs2['default'])(response.data[index]).to.equal(arrayBufferClone[index]);
+        }
+
+        worker.kill();
+        done();
+      });
+    });
   }
 });
