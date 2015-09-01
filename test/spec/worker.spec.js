@@ -14,6 +14,10 @@ var _sinon = require('sinon');
 
 var _sinon2 = _interopRequireDefault(_sinon);
 
+var _libWorker = require('../../lib/worker');
+
+var _libWorker2 = _interopRequireDefault(_libWorker);
+
 var _ = require('../../');
 
 var env = typeof window === 'object' ? 'browser' : 'node';
@@ -49,7 +53,7 @@ describe('Worker', function () {
     var worker = (0, _.spawn)();
 
     (0, _expectJs2['default'])(worker).to.be.a('object');
-    (0, _expectJs2['default'])(worker).to.be.a(_.Worker);
+    (0, _expectJs2['default'])(worker).to.be.a(_libWorker2['default']);
   });
 
   it('can be killed', function (done) {

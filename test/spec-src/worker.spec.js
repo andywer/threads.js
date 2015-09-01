@@ -1,7 +1,8 @@
 import async  from 'async';
 import expect from 'expect.js';
 import sinon  from 'sinon';
-import { config, spawn, Worker } from '../../';
+import Worker from '../../lib/worker';
+import { config, spawn } from '../../';
 
 
 const env = typeof window === 'object' ? 'browser' : 'node';
