@@ -92,7 +92,7 @@ export default class Worker extends EventEmitter {
       this.handleError(event.data.error);
     } else {
       const responseArgs = convertToArray(event.data.response);
-      this.emit.apply(this, ['message'].concat(responseArgs));
+      this.emit('message', ...responseArgs);
     }
   }
 

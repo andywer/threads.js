@@ -43,5 +43,5 @@ export function getConfig () {
 }
 
 export function setConfig (...args) {
-  return config.set.apply(config, args);
+  return config.set(...args);
 }

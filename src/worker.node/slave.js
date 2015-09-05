@@ -43,7 +43,7 @@ function messageHandlerDone(...args) {
 
 messageHandlerDone.transfer = function(...args) {
   args.pop();         // ignore last parameter, since it's only useful for browser code
-  messageHandlerDone.apply(null, args);
+  messageHandlerDone(...args);
 };
 
 

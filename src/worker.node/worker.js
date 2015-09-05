@@ -67,7 +67,7 @@ export default class Worker extends EventEmitter {
 
       this.handleError(error);
     } else {
-      this.emit.apply(this, ['message'].concat(message.response));
+      this.emit('message', ...message.response);
     }
   }
 
