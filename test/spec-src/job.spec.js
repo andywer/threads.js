@@ -19,7 +19,7 @@ function createFakeThread(response) {
     };
   } else {
     thread.send = function() {
-      thread.emit('done', ...response.response);
+      thread.emit('message', ...response.response);
     };
   }
 

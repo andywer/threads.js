@@ -35,7 +35,7 @@ function createFakeThread(response) {
     };
   } else {
     thread.send = function () {
-      thread.emit.apply(thread, ['done'].concat(_toConsumableArray(response.response)));
+      thread.emit.apply(thread, ['message'].concat(_toConsumableArray(response.response)));
     };
   }
 

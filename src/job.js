@@ -40,7 +40,7 @@ export default class Job extends EventEmitter {
 
   executeOn(thread) {
     thread
-      .once('done', this.emit.bind(this, 'done'))
+      .once('message', this.emit.bind(this, 'done'))
       .once('error', this.emit.bind(this, 'error'))
       .run(...this.runArgs)
       .send(...this.sendArgs);
