@@ -46,6 +46,11 @@ thread
 ```
 
 
+### Installation
+
+TODO: npm, bower, script tag
+
+
 ### Thread code in separate files
 
 You don't have to write the thread's code inline. The file is expected to be a
