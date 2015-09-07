@@ -132,6 +132,29 @@ describe('Worker', function () {
     worker.send();
   });
 
+  it('can promise and resolve', function (done) {
+    var promise = (0, _.spawn)(echoThread).send('foo bar').promise();
+
+    (0, _expectJs2['default'])(promise).to.be.a(Promise);
+
+    promise.then(function (response) {
+      (0, _expectJs2['default'])(response).to.eql('foo bar');
+      done();
+    });
+  });
+
+  it('can promise and reject', function (done) {
+    var worker = (0, _.spawn)(function () {
+      throw new Error('I fail');
+    });
+    var promise = worker.send().promise();
+
+    promise['catch'](function (error) {
+      (0, _expectJs2['default'])(error.message).to.match(/^(Uncaught Error: )?I fail$/);
+      done();
+    });
+  });
+
   if (env === 'node') {
 
     it('thread code can use setTimeout, setInterval', function (done) {

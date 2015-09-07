@@ -151,6 +151,15 @@ var Worker = (function (_EventEmitter) {
       return this;
     }
   }, {
+    key: 'promise',
+    value: function promise() {
+      var _this = this;
+
+      return new Promise(function (resolve, reject) {
+        _this.once('message', resolve).once('error', reject);
+      });
+    }
+  }, {
     key: 'handleMessage',
     value: function handleMessage(event) {
       if (event.data.error) {
@@ -313,6 +322,7 @@ var Job = (function (_EventEmitter) {
 
     _get(Object.getPrototypeOf(Job.prototype), 'constructor', this).call(this);
     this.pool = pool;
+    this.thread = null;
 
     this.runArgs = [];
     this.clearSendParameter();
@@ -364,7 +374,17 @@ var Job = (function (_EventEmitter) {
       var _thread$once$once$run, _thread$once$once;
 
       (_thread$once$once$run = (_thread$once$once = thread.once('message', this.emit.bind(this, 'done')).once('error', this.emit.bind(this, 'error'))).run.apply(_thread$once$once, _toConsumableArray(this.runArgs))).send.apply(_thread$once$once$run, _toConsumableArray(this.sendArgs));
+
+      this.thread = thread;
       return this;
+    }
+  }, {
+    key: 'promise',
+    value: function promise() {
+      if (!this.thread) {
+        throw new Error('Cannot return promise, since job is not executed.');
+      }
+      return this.thread.promise();
     }
   }, {
     key: 'clone',

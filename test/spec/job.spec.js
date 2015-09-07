@@ -20,6 +20,8 @@ var _libJob = require('../../lib/job');
 
 var _libJob2 = _interopRequireDefault(_libJob);
 
+var fakeThreadPromise = new Promise(function () {});
+
 function noop() {
   return this;
 }
@@ -28,6 +30,9 @@ function createFakeThread(response) {
   var thread = new _eventemitter32['default']();
 
   thread.run = noop;
+  thread.promise = function () {
+    return fakeThreadPromise;
+  };
 
   if (response.error) {
     thread.send = function () {
@@ -192,5 +197,24 @@ describe('Job', function () {
     (0, _expectJs2['default'])(clone.hasSendParameter()).to.equal(true);
     (0, _expectJs2['default'])(job.sendArgs).to.eql([paramA]);
     (0, _expectJs2['default'])(job.hasSendParameter()).to.equal(true);
+  });
+
+  it('proxies the promise', function () {
+    var job = new _libJob2['default'](pool);
+    var thread = createFakeThread({
+      response: ['foo bar']
+    });
+
+    var promise = job.run(noop).send().executeOn(thread).promise();
+
+    (0, _expectJs2['default'])(promise).to.equal(fakeThreadPromise);
+  });
+
+  it('prevents promise without .executeOn()', function () {
+    var job = new _libJob2['default'](pool);
+
+    job.run(noop).send();
+
+    (0, _expectJs2['default'])(job.promise).to.throwError(/Cannot return promise, since job is not executed/);
   });
 });

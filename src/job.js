@@ -5,6 +5,7 @@ export default class Job extends EventEmitter {
   constructor(pool) {
     super();
     this.pool   = pool;
+    this.thread = null;
 
     this.runArgs = [];
     this.clearSendParameter();
@@ -44,7 +45,16 @@ export default class Job extends EventEmitter {
       .once('error', this.emit.bind(this, 'error'))
       .run(...this.runArgs)
       .send(...this.sendArgs);
+
+    this.thread = thread;
     return this;
+  }
+
+  promise() {
+    if (!this.thread) {
+      throw new Error('Cannot return promise, since job is not executed.');
+    }
+    return this.thread.promise();
   }
 
   clone() {

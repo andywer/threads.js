@@ -4,6 +4,8 @@ import EventEmitter from 'eventemitter3';
 import Job          from '../../lib/job';
 
 
+const fakeThreadPromise = new Promise(() => {});
+
 function noop() {
   return this;
 }
@@ -11,7 +13,8 @@ function noop() {
 function createFakeThread(response) {
   const thread = new EventEmitter();
 
-  thread.run  = noop;
+  thread.run = noop;
+  thread.promise = () => fakeThreadPromise;
 
   if (response.error) {
     thread.send = function() {
@@ -185,6 +188,31 @@ describe('Job', () => {
     expect(clone.hasSendParameter()).to.equal(true);
     expect(job.sendArgs).to.eql([ paramA ]);
     expect(job.hasSendParameter()).to.equal(true);
+  });
+
+  it('proxies the promise', () => {
+    const job = new Job(pool);
+    const thread = createFakeThread({
+      response : [ 'foo bar' ]
+    });
+
+    const promise = job
+      .run(noop)
+      .send()
+      .executeOn(thread)
+      .promise();
+
+    expect(promise).to.equal(fakeThreadPromise);
+  });
+
+  it('prevents promise without .executeOn()', () => {
+    const job = new Job(pool);
+
+    job
+      .run(noop)
+      .send();
+
+    expect(job.promise).to.throwError(/Cannot return promise, since job is not executed/);
   });
 
 });

@@ -75,17 +75,17 @@ describe('Worker', () => {
     canSendAndReceiveEcho(worker, done);
   });
 
-  it('can run script (set using spawn())', (done) => {
+  it('can run script (set using spawn())', done => {
     const worker = spawn('abc-sender.js');
     canSendAndReceive(worker, null, 'abc', done);
   });
 
-  it('can run script (set using .run())', (done) => {
+  it('can run script (set using .run())', done => {
     const worker = spawn(echoThread);
     canSendAndReceiveEcho(worker, done);
   });
 
-  it('can pass more than one argument as response', (done) => {
+  it('can pass more than one argument as response', done => {
     const worker = spawn((input, threadDone) => { threadDone('a', 'b', 'c'); });
     worker
       .send()
@@ -120,17 +120,44 @@ describe('Worker', () => {
       throw new Error('Test message');
     });
 
-    worker.on('error', (error) => {
+    worker.on('error', error => {
       expect(error.message).to.match(/^(Uncaught Error: )?Test message$/);
       done();
     });
     worker.send();
   });
 
+  it('can promise and resolve', done => {
+    const promise = spawn(echoThread)
+      .send('foo bar')
+      .promise();
+
+    expect(promise).to.be.a(Promise);
+
+    promise.then(response => {
+      expect(response).to.eql('foo bar');
+      done();
+    });
+  });
+
+  it('can promise and reject', done => {
+    const worker = spawn(() => {
+      throw new Error('I fail');
+    });
+    const promise = worker
+      .send()
+      .promise();
+
+    promise.catch(error => {
+      expect(error.message).to.match(/^(Uncaught Error: )?I fail$/);
+      done();
+    });
+  });
+
 
   if (env === 'node') {
 
-    it('thread code can use setTimeout, setInterval', (done) => {
+    it('thread code can use setTimeout, setInterval', done => {
       let messageCount = 0;
 
       const worker = spawn()
@@ -154,7 +181,7 @@ describe('Worker', () => {
 
   if (env === 'browser') {
 
-    it('can importScripts()', (done) => {
+    it('can importScripts()', done => {
       const worker = spawn()
         .run(function(input, threadDone) {
           this.importedEcho(input, threadDone);
@@ -167,7 +194,7 @@ describe('Worker', () => {
         });
     });
 
-    it('can use transferables', (done) => {
+    it('can use transferables', done => {
       const arrayBuffer = new Uint8Array(1024 * 2);       // 2 KB
       const arrayBufferClone = new Uint8Array(1024 * 2);
       // need to clone, because referencing arrayBuffer will not work after .send()

@@ -186,7 +186,27 @@ thread
 
 ### Promises
 
-TODO (.send().promise())
+Instead of using callbacks, you can also turn thread messages and pool jobs into
+promises.
+
+```javascript
+spawn(myThreadFile)
+  .send({ important : 'data' })
+  .promise()
+  .then(function success(message) {}, function error(error) {});
+```
+
+```javascript
+pool.run(fancyThreadCode);
+
+Promise.all([
+  pool.send({ data : 1 }).promise(),
+  pool.send({ data : 2 }).promise()
+]).then(function allResolved() {
+  console.log('Everything done! It\'s closing time...');
+});
+```
+
 
 ### Transferable objects
 

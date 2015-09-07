@@ -87,6 +87,14 @@ export default class Worker extends EventEmitter {
     return this;
   }
 
+  promise() {
+    return new Promise((resolve, reject) => {
+      this
+        .once('message', resolve)
+        .once('error', reject);
+    });
+  }
+
   handleMessage(event) {
     if (event.data.error) {
       this.handleError(event.data.error);
