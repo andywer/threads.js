@@ -184,6 +184,10 @@ thread
   .send();
 ```
 
+### Promises
+
+TODO (.send().promise())
+
 ### Transferable objects
 
 You can also use transferable objects to improve performance when passing large
