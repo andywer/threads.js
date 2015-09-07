@@ -11,8 +11,7 @@
     "templateStrings": true
   },
   "globals" : {
-    "Blob"        : true,
-    "BlobBuilder" : true
+    "setTimeout" : true
   },
   "rules" : {
     "global-strict"   : 0,

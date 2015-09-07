@@ -35,6 +35,8 @@ var _get = function get(_x5, _x6, _x7) { var _again = true; _function: while (_a
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
@@ -155,7 +157,7 @@ var Worker = (function (_EventEmitter) {
         this.handleError(event.data.error);
       } else {
         var responseArgs = convertToArray(event.data.response);
-        this.emit.apply(this, ['message'].concat(responseArgs));
+        this.emit.apply(this, ['message'].concat(_toConsumableArray(responseArgs)));
       }
     }
   }, {
@@ -181,7 +183,7 @@ var Worker = (function (_EventEmitter) {
 exports['default'] = Worker;
 module.exports = exports['default'];
 //# sourceMappingURL=../worker.browser/worker.js.map
-},{"../config":2,"./slave-code":4,"eventemitter3":5}],2:[function(require,module,exports){
+},{"../config":2,"./slave-code":6,"eventemitter3":7}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -238,11 +240,7 @@ function getConfig() {
 }
 
 function setConfig() {
-  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-
-  return config.set.apply(config, args);
+  return config.set.apply(config, arguments);
 }
 //# sourceMappingURL=config.js.map
 },{}],3:[function(require,module,exports){
@@ -259,29 +257,297 @@ var _config = require('./config');
 
 var _config2 = _interopRequireDefault(_config);
 
+var _pool = require('./pool');
+
+var _pool2 = _interopRequireDefault(_pool);
+
 var _worker = require('./worker');
 
 var _worker2 = _interopRequireDefault(_worker);
 
 exports.config = _config2['default'];
-exports.Worker = _worker2['default'];
-// needed for testing
+exports.Pool = _pool2['default'];
 
 function spawn() {
   var runnable = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+  var importScripts = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
 
-  return new _worker2['default'](runnable);
+  return new _worker2['default'](runnable, importScripts);
 }
 
 exports['default'] = {
   config: _config2['default'],
+  Pool: _pool2['default'],
   spawn: spawn,
   Worker: _worker2['default']
 };
 //# sourceMappingURL=index.js.map
-},{"./config":2,"./worker":"./worker"}],4:[function(require,module,exports){
+},{"./config":2,"./pool":5,"./worker":"./worker"}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _eventemitter3 = require('eventemitter3');
+
+var _eventemitter32 = _interopRequireDefault(_eventemitter3);
+
+var Job = (function (_EventEmitter) {
+  _inherits(Job, _EventEmitter);
+
+  function Job(pool) {
+    _classCallCheck(this, Job);
+
+    _get(Object.getPrototypeOf(Job.prototype), 'constructor', this).call(this);
+    this.pool = pool;
+
+    this.runArgs = [];
+    this.clearSendParameter();
+
+    pool.emit('newJob', this);
+  }
+
+  _createClass(Job, [{
+    key: 'run',
+    value: function run() {
+      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      if (args.length === 0) {
+        throw new Error('Cannot call .run() without arguments.');
+      }
+
+      this.runArgs = args;
+      return this;
+    }
+  }, {
+    key: 'send',
+    value: function send() {
+      if (this.runArgs.length === 0) {
+        throw new Error('Cannot .send() before .run().');
+      }
+
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
+      if (this.hasSendParameter()) {
+        var _clone$clearSendParameter;
+
+        // do not alter this job, clone it and set send param instead
+        return (_clone$clearSendParameter = this.clone().clearSendParameter()).send.apply(_clone$clearSendParameter, args);
+      }
+
+      this.sendArgs = args;
+      this.parameterSet = true;
+
+      this.emit('readyToRun');
+      return this;
+    }
+  }, {
+    key: 'executeOn',
+    value: function executeOn(thread) {
+      var _thread$once$once$run, _thread$once$once;
+
+      (_thread$once$once$run = (_thread$once$once = thread.once('message', this.emit.bind(this, 'done')).once('error', this.emit.bind(this, 'error'))).run.apply(_thread$once$once, _toConsumableArray(this.runArgs))).send.apply(_thread$once$once$run, _toConsumableArray(this.sendArgs));
+      return this;
+    }
+  }, {
+    key: 'clone',
+    value: function clone() {
+      var clone = new Job(this.pool);
+
+      if (this.runArgs.length > 0) {
+        clone.run.apply(clone, _toConsumableArray(this.runArgs));
+      }
+      if (this.parameterSet) {
+        clone.send.apply(clone, _toConsumableArray(this.sendArgs));
+      }
+
+      return clone;
+    }
+  }, {
+    key: 'hasSendParameter',
+    value: function hasSendParameter() {
+      return this.parameterSet;
+    }
+  }, {
+    key: 'clearSendParameter',
+    value: function clearSendParameter() {
+      this.parameterSet = false;
+      this.sendArgs = [];
+      return this;
+    }
+  }]);
+
+  return Job;
+})(_eventemitter32['default']);
+
+exports['default'] = Job;
+module.exports = exports['default'];
+//# sourceMappingURL=job.js.map
+},{"eventemitter3":7}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x2, _x3, _x4) { var _again = true; _function: while (_again) { var object = _x2, property = _x3, receiver = _x4; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x2 = parent; _x3 = property; _x4 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _eventemitter3 = require('eventemitter3');
+
+var _eventemitter32 = _interopRequireDefault(_eventemitter3);
+
+var _job = require('./job');
+
+var _job2 = _interopRequireDefault(_job);
+
+var _ = require('./');
+
+var Pool = (function (_EventEmitter) {
+  _inherits(Pool, _EventEmitter);
+
+  function Pool() {
+    var threads = arguments.length <= 0 || arguments[0] === undefined ? 8 : arguments[0];
+
+    _classCallCheck(this, Pool);
+
+    _get(Object.getPrototypeOf(Pool.prototype), 'constructor', this).call(this);
+    this.threads = Pool.spawn(threads);
+    this.idleThreads = this.threads.slice();
+    this.jobQueue = [];
+    this.lastCreatedJob = null;
+
+    this.on('newJob', this.handleNewJob.bind(this));
+  }
+
+  _createClass(Pool, [{
+    key: 'run',
+    value: function run() {
+      var _ref;
+
+      return (_ref = new _job2['default'](this)).run.apply(_ref, arguments);
+    }
+  }, {
+    key: 'send',
+    value: function send() {
+      var _lastCreatedJob;
+
+      if (!this.lastCreatedJob) {
+        throw new Error('Pool.send() called without prior Pool.run(). You need to define what to run first.');
+      }
+
+      // this will not alter the last job, but rather clone it and set this params on the new job
+      return (_lastCreatedJob = this.lastCreatedJob).send.apply(_lastCreatedJob, arguments);
+    }
+  }, {
+    key: 'killAll',
+    value: function killAll() {
+      this.threads.forEach(function (thread) {
+        thread.kill();
+      });
+    }
+  }, {
+    key: 'queueJob',
+    value: function queueJob(job) {
+      this.jobQueue.push(job);
+      this.dequeue();
+    }
+  }, {
+    key: 'dequeue',
+    value: function dequeue() {
+      if (this.jobQueue.length === 0 || this.idleThreads.length === 0) {
+        return;
+      }
+
+      var job = this.jobQueue.shift();
+      var thread = this.idleThreads.shift();
+
+      job.on('done', this.handleJobSuccess.bind(this, thread, job)).on('error', this.handleJobError.bind(this, thread, job));
+
+      job.executeOn(thread);
+    }
+  }, {
+    key: 'handleNewJob',
+    value: function handleNewJob(job) {
+      this.lastCreatedJob = job;
+      job.on('readyToRun', this.queueJob.bind(this, job)); // triggered by job.send()
+    }
+  }, {
+    key: 'handleJobSuccess',
+    value: function handleJobSuccess(thread, job) {
+      for (var _len = arguments.length, responseArgs = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+        responseArgs[_key - 2] = arguments[_key];
+      }
+
+      this.emit.apply(this, ['done', job].concat(responseArgs));
+      this.handleJobDone(thread);
+    }
+  }, {
+    key: 'handleJobError',
+    value: function handleJobError(thread, job, error) {
+      this.emit('error', job, error);
+      this.handleJobDone(thread);
+    }
+  }, {
+    key: 'handleJobDone',
+    value: function handleJobDone(thread) {
+      var _this = this;
+
+      this.idleThreads.push(thread);
+      this.dequeue();
+
+      if (this.idleThreads.length === this.threads.length) {
+        // run deferred to give other job.on('done') handlers time to run first
+        setTimeout(function () {
+          _this.emit('finished');
+        }, 0);
+      }
+    }
+  }]);
+
+  return Pool;
+})(_eventemitter32['default']);
+
+exports['default'] = Pool;
+
+Pool.spawn = function (threadCount) {
+  var threads = [];
+
+  for (var threadIndex = 0; threadIndex < threadCount; threadIndex++) {
+    threads.push((0, _.spawn)());
+  }
+
+  return threads;
+};
+module.exports = exports['default'];
+//# sourceMappingURL=pool.js.map
+},{"./":3,"./job":4,"eventemitter3":7}],6:[function(require,module,exports){
 module.exports = "/*eslint-env worker*/\n/*global importScripts*/\n/*eslint-disable no-console*/\nthis.module = {\n  exports : function() {\n    if (console) { console.error('No thread logic initialized.'); }\n  }\n};\n\nfunction handlerDone() {\n  this.postMessage({ response : arguments });\n}\n\nfunction handlerDoneTransfer() {\n  var args = Array.prototype.slice.call(arguments);\n  var lastArg = args.pop();\n\n  if (!(lastArg instanceof Array) && this.console) {\n    console.error('Expected 2nd parameter of <doneCallback>.transfer() to be an array. Got:', lastArg);\n  }\n\n  this.postMessage({ response : args }, lastArg);\n}\n\nthis.onmessage = function (event) {\n  var scripts = event.data.scripts;\n  if (scripts && scripts.length > 0 && typeof importScripts !== 'function') {\n    throw new Error('importScripts() not supported.');\n  }\n\n  if (event.data.initByScripts) {\n    importScripts.apply(null, scripts);\n  }\n\n  if (event.data.initByMethod) {\n    var method = event.data.method;\n    this.module.exports = Function.apply(null, method.args.concat(method.body));\n\n    if (scripts && scripts.length > 0) {\n      importScripts.apply(null, scripts);\n    }\n  }\n\n  if (event.data.doRun) {\n    var handler = this.module.exports;\n    if (typeof handler !== 'function') {\n      throw new Error('Cannot run thread logic. No handler has been exported.');\n    }\n\n    var preparedHandlerDone = handlerDone.bind(this);\n    preparedHandlerDone.transfer = handlerDoneTransfer.bind(this);\n\n    handler(event.data.param, preparedHandlerDone);\n  }\n}.bind(this);\n";
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 //
