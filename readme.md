@@ -1,4 +1,4 @@
-# thread.js
+# threads.js
 
 Javascript thread library. Uses web workers when run in browsers and child processes
 when run by node.js. Also supports browsers which do not support web workers.
@@ -20,8 +20,8 @@ Spawn threads to do the time-consuming work and let the parent thread focus on
 daily business!
 
 ```javascript
-import { spawn } from 'thread.js';
-// ES5 syntax: var spawn = require('thread.js').spawn;
+import { spawn } from 'threads';
+// ES5 syntax: var spawn = require('threads').spawn;
 
 const thread = spawn(function(input, done) {
   // Everything we do here will be run in parallel in another execution context.
@@ -58,8 +58,8 @@ commonjs module (so something that uses `module.exports = ...`), for node and
 browser.
 
 ```javascript
-import { config, spawn } from 'thread.js';
-// ES5 syntax: var config = require('thread.js').config, spawn = require('thread.js').spawn;
+import { config, spawn } from 'threads';
+// ES5 syntax: var config = require('threads').config, spawn = require('threads').spawn;
 
 // Set base paths to thread scripts
 config.set({
@@ -94,8 +94,8 @@ You can also create a thread pool that spawns a fixed no. of workers. Pass jobs
 to the thread pool which it will queue and pass to the next idle worker.
 
 ```javascript
-import { Pool } from 'thread.js';
-// ES5 syntax: var Pool = require('thread.js').Pool;
+import { Pool } from 'threads';
+// ES5 syntax: var Pool = require('threads').Pool;
 
 const pool = new Pool();
 
