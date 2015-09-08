@@ -62,7 +62,7 @@ gulp.task('lint', function() {
 gulp.task('babel-lib', function() {
   return gulp.src('src/**/*.js')
     .pipe(sourcemaps.init())
-    .pipe(babel())
+    .pipe(babel({ loose : 'all' }))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('lib/'));
 });

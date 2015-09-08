@@ -25,17 +25,9 @@ if (typeof define === 'function') {
 },{"./index":3}],"./worker":[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x5, _x6, _x7) { var _again = true; _function: while (_again) { var object = _x5, property = _x6, receiver = _x7; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x5 = parent; _x6 = property; _x7 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -58,7 +50,7 @@ if (typeof window.Worker !== 'object' && typeof window.Worker !== 'function') {
 var slaveCodeDataUri = 'data:text/javascript;charset=utf-8,' + encodeURI(_slaveCode2['default']);
 
 function prependScriptUrl(scriptUrl) {
-  var prefix = (0, _config.getConfig)().basepath.web;
+  var prefix = _config.getConfig().basepath.web;
   return prefix ? prefix + '/' + scriptUrl : scriptUrl;
 }
 
@@ -83,7 +75,7 @@ var Worker = (function (_EventEmitter) {
 
     _classCallCheck(this, Worker);
 
-    _get(Object.getPrototypeOf(Worker.prototype), 'constructor', this).call(this);
+    _EventEmitter.call(this);
 
     this.worker = new window.Worker(slaveCodeDataUri);
     this.worker.addEventListener('message', this.handleMessage.bind(this));
@@ -94,97 +86,87 @@ var Worker = (function (_EventEmitter) {
     }
   }
 
-  _createClass(Worker, [{
-    key: 'run',
-    value: function run(toRun) {
-      var importScripts = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+  Worker.prototype.run = function run(toRun) {
+    var importScripts = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
 
-      if (typeof toRun === 'function') {
-        this.runMethod(toRun, importScripts);
-      } else {
-        this.runScripts(toRun, importScripts);
-      }
-      return this;
+    if (typeof toRun === 'function') {
+      this.runMethod(toRun, importScripts);
+    } else {
+      this.runScripts(toRun, importScripts);
     }
-  }, {
-    key: 'runMethod',
-    value: function runMethod(method, importScripts) {
-      var methodStr = method.toString();
-      var args = methodStr.substring(methodStr.indexOf('(') + 1, methodStr.indexOf(')')).split(',');
-      var body = methodStr.substring(methodStr.indexOf('{') + 1, methodStr.lastIndexOf('}'));
+    return this;
+  };
 
-      this.worker.postMessage({
-        initByMethod: true,
-        method: { args: args, body: body },
-        scripts: importScripts.map(prependScriptUrl)
-      });
-    }
-  }, {
-    key: 'runScripts',
-    value: function runScripts(script, importScripts) {
-      if (!script) {
-        throw new Error('Must pass a function or a script URL to run().');
-      }
+  Worker.prototype.runMethod = function runMethod(method, importScripts) {
+    var methodStr = method.toString();
+    var args = methodStr.substring(methodStr.indexOf('(') + 1, methodStr.indexOf(')')).split(',');
+    var body = methodStr.substring(methodStr.indexOf('{') + 1, methodStr.lastIndexOf('}'));
 
-      // attention: array for browser, single script for node
-      this.worker.postMessage({
-        initByScripts: true,
-        scripts: importScripts.concat([script]).map(prependScriptUrl)
-      });
-    }
-  }, {
-    key: 'send',
-    value: function send(param) {
-      var transferables = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+    this.worker.postMessage({
+      initByMethod: true,
+      method: { args: args, body: body },
+      scripts: importScripts.map(prependScriptUrl)
+    });
+  };
 
-      this.worker.postMessage({
-        doRun: true,
-        param: param
-      }, transferables);
-      return this;
+  Worker.prototype.runScripts = function runScripts(script, importScripts) {
+    if (!script) {
+      throw new Error('Must pass a function or a script URL to run().');
     }
-  }, {
-    key: 'kill',
-    value: function kill() {
-      this.worker.terminate();
-      this.emit('exit');
-      return this;
-    }
-  }, {
-    key: 'promise',
-    value: function promise() {
-      var _this = this;
 
-      return new Promise(function (resolve, reject) {
-        _this.once('message', resolve).once('error', reject);
-      });
+    // attention: array for browser, single script for node
+    this.worker.postMessage({
+      initByScripts: true,
+      scripts: importScripts.concat([script]).map(prependScriptUrl)
+    });
+  };
+
+  Worker.prototype.send = function send(param) {
+    var transferables = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+
+    this.worker.postMessage({
+      doRun: true,
+      param: param
+    }, transferables);
+    return this;
+  };
+
+  Worker.prototype.kill = function kill() {
+    this.worker.terminate();
+    this.emit('exit');
+    return this;
+  };
+
+  Worker.prototype.promise = function promise() {
+    var _this = this;
+
+    return new Promise(function (resolve, reject) {
+      _this.once('message', resolve).once('error', reject);
+    });
+  };
+
+  Worker.prototype.handleMessage = function handleMessage(event) {
+    if (event.data.error) {
+      this.handleError(event.data.error);
+    } else {
+      var responseArgs = convertToArray(event.data.response);
+      this.emit.apply(this, ['message'].concat(responseArgs));
     }
-  }, {
-    key: 'handleMessage',
-    value: function handleMessage(event) {
-      if (event.data.error) {
-        this.handleError(event.data.error);
-      } else {
-        var responseArgs = convertToArray(event.data.response);
-        this.emit.apply(this, ['message'].concat(_toConsumableArray(responseArgs)));
-      }
+  };
+
+  Worker.prototype.handleError = function handleError(error) {
+    if (!this.listeners('error', true)) {
+      if (error.stack) {
+        console.error(error.stack); // eslint-disable-line no-console
+      } else if (error.message && error.filename && error.lineno) {
+          var fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50 ? error.filename.substr(0, 50) + '...' : error.filename;
+          console.error(error.message + ' @' + fileName + ':' + error.lineno); // eslint-disable-line no-console
+        } else {
+            console.error(error); // eslint-disable-line no-console
+          }
     }
-  }, {
-    key: 'handleError',
-    value: function handleError(error) {
-      if (!this.listeners('error', true)) {
-        if (error.stack) {
-          console.error(error.stack); // eslint-disable-line no-console
-        } else if (error.message && error.filename && error.lineno) {
-            var fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50 ? error.filename.substr(0, 50) + '...' : error.filename;
-            console.error(error.message + ' @' + fileName + ':' + error.lineno); // eslint-disable-line no-console
-          } else {
-              console.error(error); // eslint-disable-line no-console
-            }
-      }
-      this.emit('error', error);
-    }
-  }]);
+    this.emit('error', error);
+  };
 
   return Worker;
 })(_eventemitter32['default']);
@@ -195,9 +177,7 @@ module.exports = exports['default'];
 },{"../config":2,"./slave-code":6,"eventemitter3":7}],2:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
+exports.__esModule = true;
 exports.getConfig = getConfig;
 exports.setConfig = setConfig;
 var configuration = {
@@ -255,9 +235,7 @@ function setConfig() {
 },{}],3:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
+exports.__esModule = true;
 exports.spawn = spawn;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -296,17 +274,9 @@ exports['default'] = {
 },{"./config":2,"./pool":5,"./worker":"./worker","native-promise-only":8}],4:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -322,7 +292,7 @@ var Job = (function (_EventEmitter) {
   function Job(pool) {
     _classCallCheck(this, Job);
 
-    _get(Object.getPrototypeOf(Job.prototype), 'constructor', this).call(this);
+    _EventEmitter.call(this);
     this.pool = pool;
     this.thread = null;
 
@@ -332,89 +302,80 @@ var Job = (function (_EventEmitter) {
     pool.emit('newJob', this);
   }
 
-  _createClass(Job, [{
-    key: 'run',
-    value: function run() {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      if (args.length === 0) {
-        throw new Error('Cannot call .run() without arguments.');
-      }
-
-      this.runArgs = args;
-      return this;
+  Job.prototype.run = function run() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
     }
-  }, {
-    key: 'send',
-    value: function send() {
-      if (this.runArgs.length === 0) {
-        throw new Error('Cannot .send() before .run().');
-      }
 
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
-      }
-
-      if (this.hasSendParameter()) {
-        var _clone$clearSendParameter;
-
-        // do not alter this job, clone it and set send param instead
-        return (_clone$clearSendParameter = this.clone().clearSendParameter()).send.apply(_clone$clearSendParameter, args);
-      }
-
-      this.sendArgs = args;
-      this.parameterSet = true;
-
-      this.emit('readyToRun');
-      return this;
+    if (args.length === 0) {
+      throw new Error('Cannot call .run() without arguments.');
     }
-  }, {
-    key: 'executeOn',
-    value: function executeOn(thread) {
-      var _thread$once$once$run, _thread$once$once;
 
-      (_thread$once$once$run = (_thread$once$once = thread.once('message', this.emit.bind(this, 'done')).once('error', this.emit.bind(this, 'error'))).run.apply(_thread$once$once, _toConsumableArray(this.runArgs))).send.apply(_thread$once$once$run, _toConsumableArray(this.sendArgs));
+    this.runArgs = args;
+    return this;
+  };
 
-      this.thread = thread;
-      return this;
+  Job.prototype.send = function send() {
+    if (this.runArgs.length === 0) {
+      throw new Error('Cannot .send() before .run().');
     }
-  }, {
-    key: 'promise',
-    value: function promise() {
-      if (!this.thread) {
-        throw new Error('Cannot return promise, since job is not executed.');
-      }
-      return this.thread.promise();
-    }
-  }, {
-    key: 'clone',
-    value: function clone() {
-      var clone = new Job(this.pool);
 
-      if (this.runArgs.length > 0) {
-        clone.run.apply(clone, _toConsumableArray(this.runArgs));
-      }
-      if (this.parameterSet) {
-        clone.send.apply(clone, _toConsumableArray(this.sendArgs));
-      }
+    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
 
-      return clone;
+    if (this.hasSendParameter()) {
+      var _clone$clearSendParameter;
+
+      // do not alter this job, clone it and set send param instead
+      return (_clone$clearSendParameter = this.clone().clearSendParameter()).send.apply(_clone$clearSendParameter, args);
     }
-  }, {
-    key: 'hasSendParameter',
-    value: function hasSendParameter() {
-      return this.parameterSet;
+
+    this.sendArgs = args;
+    this.parameterSet = true;
+
+    this.emit('readyToRun');
+    return this;
+  };
+
+  Job.prototype.executeOn = function executeOn(thread) {
+    var _thread$once$once$run, _thread$once$once;
+
+    (_thread$once$once$run = (_thread$once$once = thread.once('message', this.emit.bind(this, 'done')).once('error', this.emit.bind(this, 'error'))).run.apply(_thread$once$once, this.runArgs)).send.apply(_thread$once$once$run, this.sendArgs);
+
+    this.thread = thread;
+    return this;
+  };
+
+  Job.prototype.promise = function promise() {
+    if (!this.thread) {
+      throw new Error('Cannot return promise, since job is not executed.');
     }
-  }, {
-    key: 'clearSendParameter',
-    value: function clearSendParameter() {
-      this.parameterSet = false;
-      this.sendArgs = [];
-      return this;
+    return this.thread.promise();
+  };
+
+  Job.prototype.clone = function clone() {
+    var clone = new Job(this.pool);
+
+    if (this.runArgs.length > 0) {
+      clone.run.apply(clone, this.runArgs);
     }
-  }]);
+    if (this.parameterSet) {
+      clone.send.apply(clone, this.sendArgs);
+    }
+
+    return clone;
+  };
+
+  Job.prototype.hasSendParameter = function hasSendParameter() {
+    return this.parameterSet;
+  };
+
+  Job.prototype.clearSendParameter = function clearSendParameter() {
+    this.parameterSet = false;
+    this.sendArgs = [];
+    return this;
+  };
 
   return Job;
 })(_eventemitter32['default']);
@@ -425,13 +386,7 @@ module.exports = exports['default'];
 },{"eventemitter3":7}],5:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x2, _x3, _x4) { var _again = true; _function: while (_again) { var object = _x2, property = _x3, receiver = _x4; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x2 = parent; _x3 = property; _x4 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+exports.__esModule = true;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -457,7 +412,7 @@ var Pool = (function (_EventEmitter) {
 
     _classCallCheck(this, Pool);
 
-    _get(Object.getPrototypeOf(Pool.prototype), 'constructor', this).call(this);
+    _EventEmitter.call(this);
     this.threads = Pool.spawn(threads);
     this.idleThreads = this.threads.slice();
     this.jobQueue = [];
@@ -466,90 +421,79 @@ var Pool = (function (_EventEmitter) {
     this.on('newJob', this.handleNewJob.bind(this));
   }
 
-  _createClass(Pool, [{
-    key: 'run',
-    value: function run() {
-      var _ref;
+  Pool.prototype.run = function run() {
+    var _ref;
 
-      return (_ref = new _job2['default'](this)).run.apply(_ref, arguments);
-    }
-  }, {
-    key: 'send',
-    value: function send() {
-      var _lastCreatedJob;
+    return (_ref = new _job2['default'](this)).run.apply(_ref, arguments);
+  };
 
-      if (!this.lastCreatedJob) {
-        throw new Error('Pool.send() called without prior Pool.run(). You need to define what to run first.');
-      }
+  Pool.prototype.send = function send() {
+    var _lastCreatedJob;
 
-      // this will not alter the last job, but rather clone it and set this params on the new job
-      return (_lastCreatedJob = this.lastCreatedJob).send.apply(_lastCreatedJob, arguments);
+    if (!this.lastCreatedJob) {
+      throw new Error('Pool.send() called without prior Pool.run(). You need to define what to run first.');
     }
-  }, {
-    key: 'killAll',
-    value: function killAll() {
-      this.threads.forEach(function (thread) {
-        thread.kill();
-      });
-    }
-  }, {
-    key: 'queueJob',
-    value: function queueJob(job) {
-      this.jobQueue.push(job);
-      this.dequeue();
-    }
-  }, {
-    key: 'dequeue',
-    value: function dequeue() {
-      if (this.jobQueue.length === 0 || this.idleThreads.length === 0) {
-        return;
-      }
 
-      var job = this.jobQueue.shift();
-      var thread = this.idleThreads.shift();
+    // this will not alter the last job, but rather clone it and set this params on the new job
+    return (_lastCreatedJob = this.lastCreatedJob).send.apply(_lastCreatedJob, arguments);
+  };
 
-      job.on('done', this.handleJobSuccess.bind(this, thread, job)).on('error', this.handleJobError.bind(this, thread, job));
+  Pool.prototype.killAll = function killAll() {
+    this.threads.forEach(function (thread) {
+      thread.kill();
+    });
+  };
 
-      job.executeOn(thread);
-    }
-  }, {
-    key: 'handleNewJob',
-    value: function handleNewJob(job) {
-      this.lastCreatedJob = job;
-      job.on('readyToRun', this.queueJob.bind(this, job)); // triggered by job.send()
-    }
-  }, {
-    key: 'handleJobSuccess',
-    value: function handleJobSuccess(thread, job) {
-      for (var _len = arguments.length, responseArgs = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-        responseArgs[_key - 2] = arguments[_key];
-      }
+  Pool.prototype.queueJob = function queueJob(job) {
+    this.jobQueue.push(job);
+    this.dequeue();
+  };
 
-      this.emit.apply(this, ['done', job].concat(responseArgs));
-      this.handleJobDone(thread);
+  Pool.prototype.dequeue = function dequeue() {
+    if (this.jobQueue.length === 0 || this.idleThreads.length === 0) {
+      return;
     }
-  }, {
-    key: 'handleJobError',
-    value: function handleJobError(thread, job, error) {
-      this.emit('error', job, error);
-      this.handleJobDone(thread);
-    }
-  }, {
-    key: 'handleJobDone',
-    value: function handleJobDone(thread) {
-      var _this = this;
 
-      this.idleThreads.push(thread);
-      this.dequeue();
+    var job = this.jobQueue.shift();
+    var thread = this.idleThreads.shift();
 
-      if (this.idleThreads.length === this.threads.length) {
-        // run deferred to give other job.on('done') handlers time to run first
-        setTimeout(function () {
-          _this.emit('finished');
-        }, 0);
-      }
+    job.on('done', this.handleJobSuccess.bind(this, thread, job)).on('error', this.handleJobError.bind(this, thread, job));
+
+    job.executeOn(thread);
+  };
+
+  Pool.prototype.handleNewJob = function handleNewJob(job) {
+    this.lastCreatedJob = job;
+    job.on('readyToRun', this.queueJob.bind(this, job)); // triggered by job.send()
+  };
+
+  Pool.prototype.handleJobSuccess = function handleJobSuccess(thread, job) {
+    for (var _len = arguments.length, responseArgs = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      responseArgs[_key - 2] = arguments[_key];
     }
-  }]);
+
+    this.emit.apply(this, ['done', job].concat(responseArgs));
+    this.handleJobDone(thread);
+  };
+
+  Pool.prototype.handleJobError = function handleJobError(thread, job, error) {
+    this.emit('error', job, error);
+    this.handleJobDone(thread);
+  };
+
+  Pool.prototype.handleJobDone = function handleJobDone(thread) {
+    var _this = this;
+
+    this.idleThreads.push(thread);
+    this.dequeue();
+
+    if (this.idleThreads.length === this.threads.length) {
+      // run deferred to give other job.on('done') handlers time to run first
+      setTimeout(function () {
+        _this.emit('finished');
+      }, 0);
+    }
+  };
 
   return Pool;
 })(_eventemitter32['default']);
@@ -560,7 +504,7 @@ Pool.spawn = function (threadCount) {
   var threads = [];
 
   for (var threadIndex = 0; threadIndex < threadCount; threadIndex++) {
-    threads.push((0, _.spawn)());
+    threads.push(_.spawn());
   }
 
   return threads;
