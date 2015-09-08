@@ -49,6 +49,7 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "dependencies": {
-    "eventemitter3": "^1.1.1"
+    "eventemitter3": "^1.1.1",
+    "native-promise-only": "^0.8.1"
   }
 }

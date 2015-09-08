@@ -1,3 +1,4 @@
+import 'native-promise-only';
 
 import config from './config';
 import Pool   from './pool';
