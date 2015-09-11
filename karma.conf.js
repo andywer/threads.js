@@ -72,7 +72,7 @@ module.exports = function(config) {
     customLaunchers: {
       ChromeInsecure: {
         base: 'Chrome',
-        flags: ['--disable-web-security']
+        flags: ['--disable-web-security', '--no-sandbox']
       }
     },
 
