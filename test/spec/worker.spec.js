@@ -126,7 +126,7 @@ describe('Worker', function () {
     });
 
     worker.on('error', function (error) {
-      (0, _expectJs2['default'])(error.message).to.match(/^(Uncaught Error: )?Test message$/);
+      (0, _expectJs2['default'])(error.message).to.match(/^((Uncaught )?Error: )?Test message$/);
       done();
     });
     worker.send();
@@ -150,7 +150,7 @@ describe('Worker', function () {
     var promise = worker.send().promise();
 
     promise['catch'](function (error) {
-      (0, _expectJs2['default'])(error.message).to.match(/^(Uncaught Error: )?I fail$/);
+      (0, _expectJs2['default'])(error.message).to.match(/^((Uncaught )?Error: )?I fail$/);
       done();
     });
   });

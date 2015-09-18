@@ -121,7 +121,7 @@ describe('Worker', () => {
     });
 
     worker.on('error', error => {
-      expect(error.message).to.match(/^(Uncaught Error: )?Test message$/);
+      expect(error.message).to.match(/^((Uncaught )?Error: )?Test message$/);
       done();
     });
     worker.send();
@@ -149,7 +149,7 @@ describe('Worker', () => {
       .promise();
 
     promise.catch(error => {
-      expect(error.message).to.match(/^(Uncaught Error: )?I fail$/);
+      expect(error.message).to.match(/^((Uncaught )?Error: )?I fail$/);
       done();
     });
   });
