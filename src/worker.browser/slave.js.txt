@@ -1,7 +1,7 @@
 /*eslint-env worker*/
 /*global importScripts*/
 /*eslint-disable no-console*/
-this.module = {
+self.module = {
   exports : function() {
     if (console) { console.error('No thread logic initialized.'); }
   }
@@ -23,7 +23,7 @@ function handlerDoneTransfer() {
   this.postMessage({ response : args }, lastArg);
 }
 
-this.onmessage = function (event) {
+self.onmessage = function (event) {
   var scripts = event.data.scripts;
   if (scripts && scripts.length > 0 && typeof importScripts !== 'function') {
     throw new Error('importScripts() not supported.');
@@ -51,6 +51,6 @@ this.onmessage = function (event) {
     var preparedHandlerDone = handlerDone.bind(this);
     preparedHandlerDone.transfer = handlerDoneTransfer.bind(this);
 
-    handler(event.data.param, preparedHandlerDone);
+    handler.call(this, event.data.param, preparedHandlerDone);
   }
 }.bind(self);
