@@ -25,6 +25,14 @@ function canSendAndReceiveEcho(worker, done) {
   canSendAndReceive(worker, testData, testData, done);
 }
 
+function expectEqualBuffers(buffer1, buffer2) {
+  expect(buffer2.byteLength).to.equal(buffer1.byteLength);
+
+  for (let index = 0; index < buffer1.byteLength; index++) {
+    expect(buffer2[ index ]).to.equal(buffer1[ index ]);
+  }
+}
+
 
 describe('Worker', () => {
 
@@ -209,10 +217,7 @@ describe('Worker', () => {
         })
         .send({ data: arrayBuffer }, [ arrayBuffer.buffer ])
         .on('message', (response) => {
-          expect(response.data.byteLength).to.equal(arrayBufferClone.byteLength);
-          for (let index = 0; index < arrayBufferClone.byteLength; index++) {
-            expect(response.data[ index ]).to.equal(arrayBufferClone[ index ]);
-          }
+          expectEqualBuffers(arrayBufferClone, response.data);
 
           worker.kill();
           done();

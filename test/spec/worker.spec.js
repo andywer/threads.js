@@ -38,6 +38,14 @@ function canSendAndReceiveEcho(worker, done) {
   canSendAndReceive(worker, testData, testData, done);
 }
 
+function expectEqualBuffers(buffer1, buffer2) {
+  (0, _expectJs2['default'])(buffer2.byteLength).to.equal(buffer1.byteLength);
+
+  for (var index = 0; index < buffer1.byteLength; index++) {
+    (0, _expectJs2['default'])(buffer2[index]).to.equal(buffer1[index]);
+  }
+}
+
 describe('Worker', function () {
 
   before(function () {
@@ -200,10 +208,7 @@ describe('Worker', function () {
       var worker = (0, _.spawn)().run(function (input, threadDone) {
         threadDone.transfer(input, [input.data.buffer]);
       }).send({ data: arrayBuffer }, [arrayBuffer.buffer]).on('message', function (response) {
-        (0, _expectJs2['default'])(response.data.byteLength).to.equal(arrayBufferClone.byteLength);
-        for (var index = 0; index < arrayBufferClone.byteLength; index++) {
-          (0, _expectJs2['default'])(response.data[index]).to.equal(arrayBufferClone[index]);
-        }
+        expectEqualBuffers(arrayBufferClone, response.data);
 
         worker.kill();
         done();
