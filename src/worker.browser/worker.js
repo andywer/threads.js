@@ -121,6 +121,8 @@ export default class Worker extends EventEmitter {
     if (!this.listeners('error', true)) {
       logError(error);
     }
+
+    error.preventDefault();
     this.emit('error', error);
   }
 }

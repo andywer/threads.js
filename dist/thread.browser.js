@@ -169,6 +169,8 @@ var Worker = (function (_EventEmitter) {
     if (!this.listeners('error', true)) {
       logError(error);
     }
+
+    error.preventDefault();
     this.emit('error', error);
   };
 
