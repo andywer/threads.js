@@ -8,7 +8,8 @@ this.module = {
 };
 
 function handlerDone() {
-  this.postMessage({ response : arguments });
+  var args = Array.prototype.slice.call(arguments, 0);
+  this.postMessage({ response : args });
 }
 
 function handlerDoneTransfer() {
@@ -52,4 +53,4 @@ this.onmessage = function (event) {
 
     handler(event.data.param, preparedHandlerDone);
   }
-}.bind(this);
+}.bind(self);
