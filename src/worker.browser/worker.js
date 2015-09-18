@@ -28,6 +28,19 @@ function convertToArray(input) {
   return outputArray;
 }
 
+function logError(error) {
+  if (error.stack) {
+    console.error(error.stack);                                             // eslint-disable-line no-console
+  } else if (error.message && error.filename && error.lineno) {
+    const fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50
+                   ? error.filename.substr(0, 50) + '...'
+                   : error.filename;
+    console.error(`${error.message} @${fileName}:${error.lineno}`);   // eslint-disable-line no-console
+  } else {
+    console.error(error);                                                   // eslint-disable-line no-console
+  }
+}
+
 
 export default class Worker extends EventEmitter {
   constructor(initialScript = null, importScripts = []) {
@@ -106,16 +119,7 @@ export default class Worker extends EventEmitter {
 
   handleError(error) {
     if (!this.listeners('error', true)) {
-      if (error.stack) {
-        console.error(error.stack);                                             // eslint-disable-line no-console
-      } else if (error.message && error.filename && error.lineno) {
-        const fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50
-                       ? error.filename.substr(0, 50) + '...'
-                       : error.filename;
-        console.error(`${error.message} @${fileName}:${error.lineno}`);   // eslint-disable-line no-console
-      } else {
-        console.error(error);                                                   // eslint-disable-line no-console
-      }
+      logError(error);
     }
     this.emit('error', error);
   }

@@ -66,6 +66,17 @@ function convertToArray(input) {
   return outputArray;
 }
 
+function logError(error) {
+  if (error.stack) {
+    console.error(error.stack); // eslint-disable-line no-console
+  } else if (error.message && error.filename && error.lineno) {
+      var fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50 ? error.filename.substr(0, 50) + '...' : error.filename;
+      console.error(error.message + ' @' + fileName + ':' + error.lineno); // eslint-disable-line no-console
+    } else {
+        console.error(error); // eslint-disable-line no-console
+      }
+}
+
 var Worker = (function (_EventEmitter) {
   _inherits(Worker, _EventEmitter);
 
@@ -156,14 +167,7 @@ var Worker = (function (_EventEmitter) {
 
   Worker.prototype.handleError = function handleError(error) {
     if (!this.listeners('error', true)) {
-      if (error.stack) {
-        console.error(error.stack); // eslint-disable-line no-console
-      } else if (error.message && error.filename && error.lineno) {
-          var fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50 ? error.filename.substr(0, 50) + '...' : error.filename;
-          console.error(error.message + ' @' + fileName + ':' + error.lineno); // eslint-disable-line no-console
-        } else {
-            console.error(error); // eslint-disable-line no-console
-          }
+      logError(error);
     }
     this.emit('error', error);
   };
