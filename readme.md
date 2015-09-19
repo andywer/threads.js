@@ -1,17 +1,15 @@
 # threads.js - BETA
+[![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=master)](https://travis-ci.org/andywer/threads.js)
 
 **Attention: This is an early release. Use with care and be aware that the API might still change.**
 
 Javascript thread library. Uses web workers when run in browsers and child processes
 when run by node.js. Also supports browsers which do not support web workers.
 
-- Convenience API
 - For client and server use
 - Use different APIs (web worker, node child_process) transparently
 - Thread pools
-- example use cases
 - ES6 and backwards-compatible
-- Planned features: Shared workers
 
 
 ## How To
@@ -240,15 +238,12 @@ thread
 
 ### Use external dependencies
 
-TODO
--> gulp task to bundle deps using browserify and expose all of them -> dependency bundle
--> dependency bundle can be imported by importScripts()
--> code can just call `var axios = require('axios');`, no matter if browser or node.js
+Not yet completely implemented.
 
-
-## API
-
-You can find the API documentation in the [wiki](https://github.com/andywer/thread.js/wiki).
+To do:
+- gulp task to bundle dependencies using browserify and expose all of them -> dependency bundle
+- dependency bundle can be imported by importScripts()
+- code can just call `var myDependency = require('my-dependency');`, no matter if browser or node.js
 
 
 ## License
