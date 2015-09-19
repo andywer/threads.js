@@ -1,4 +1,6 @@
-# threads.js
+# threads.js - BETA
+
+**Attention: This is an early release. Use with care and be aware that the API might still change.**
 
 Javascript thread library. Uses web workers when run in browsers and child processes
 when run by node.js. Also supports browsers which do not support web workers.
