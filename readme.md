@@ -236,6 +236,12 @@ thread
   .send(jobData, [ largeArrayBuffer.buffer ]);
 ```
 
+### Web worker fallback
+
+You can provide a fallback if the user's browser does not support web workers.
+See [webworker-fallback](https://github.com/andywer/webworker-fallback). This will not have any effect if used by node.js code.
+
+
 ### Use external dependencies
 
 Not yet completely implemented.
