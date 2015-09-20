@@ -122,7 +122,10 @@ export default class Worker extends EventEmitter {
       logError(error);
     }
 
-    error.preventDefault();
+    if (error.preventDefault) {
+      error.preventDefault();
+    }
+
     this.emit('error', error);
   }
 }
