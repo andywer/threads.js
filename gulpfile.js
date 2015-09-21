@@ -94,14 +94,14 @@ gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], function() {
     .add('./lib/bundle.browser.js')
     .require('./lib/worker.browser/worker.js', { expose : './worker' })   // so the node worker won't make it's way into the bundle
     .bundle()
-    .pipe(source('thread.browser.js'))
+    .pipe(source('threads.browser.js'))
     .pipe(gulp.dest('dist/'));
 });
 
 gulp.task('uglify-lib', ['browserify-lib'], function() {
-  return gulp.src('dist/thread.browser.js')
+  return gulp.src('dist/threads.browser.js')
     .pipe(uglify())
-    .pipe(concat('thread.browser.min.js'))
+    .pipe(concat('threads.browser.min.js'))
     .pipe(gulp.dest('dist/'));
 });
 
