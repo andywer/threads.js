@@ -293,3 +293,6 @@ config.set({
 ## License
 
 This library is published under the MIT license. See [LICENSE](https://raw.githubusercontent.com/andywer/thread.js/master/LICENSE) for details.
+
+
+__Have fun and build something awesome!__
