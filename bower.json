@@ -7,5 +7,9 @@
     "Andy Wermke <andy@dev.next-step-software.com>"
   ],
   "description": "Easy to use, yet powerful multi-threading library for node.js and the browser!",
-  "license": "MIT"
+  "license": "MIT",
+  "ignore": [
+    "node_modules",
+    "test"
+  ]
 }
