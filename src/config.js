@@ -2,6 +2,9 @@ let configuration = {
   basepath : {
     node : '',
     web  : ''
+  },
+  fallback : {
+    slaveScriptUrl : ''
   }
 };
 

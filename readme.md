@@ -252,6 +252,25 @@ To do:
 - code can just call `var myDependency = require('my-dependency');`, no matter if browser or node.js
 
 
+## Configuration
+
+```javascript
+import { config } from 'threads';
+// ES5 syntax: var config = require('threads').config
+
+// These configuration properties are all optional
+config.set({
+  basepath : {
+    node : 'path/to/my/worker/scripts/directory',
+    web  : 'path-or-url/to/my/worker/scripts/directory'
+  },
+  fallback : {
+    slaveScriptUrl : 'path-or-url/to/dist/slave.js'    // used for IE where you cannot pass code to a worker using a data URI
+  }
+});
+```
+
+
 ## License
 
 This library is published under the MIT license. See [LICENSE](https://raw.githubusercontent.com/andywer/thread.js/master/LICENSE) for details.

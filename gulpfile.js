@@ -59,6 +59,13 @@ gulp.task('lint', function() {
 });
 
 
+gulp.task('copy-slave', function() {
+  return gulp.src('src/worker.browser/slave.js.txt')
+    .pipe(rename('slave.js'))
+    .pipe(gulp.dest('dist/'));
+});
+
+
 gulp.task('babel-lib', function() {
   return gulp.src('src/**/*.js')
     .pipe(sourcemaps.init())
@@ -91,12 +98,21 @@ gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], function() {
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('uglify', ['browserify-lib'], function() {
+gulp.task('uglify-lib', ['browserify-lib'], function() {
   return gulp.src('dist/thread.browser.js')
     .pipe(uglify())
     .pipe(concat('thread.browser.min.js'))
     .pipe(gulp.dest('dist/'));
 });
+
+gulp.task('uglify-slave', ['copy-slave'], function() {
+  return gulp.src('dist/slave.js')
+    .pipe(uglify())
+    .pipe(concat('slave.min.js'))
+    .pipe(gulp.dest('dist/'));
+});
+
+gulp.task('uglify', ['uglify-lib', 'uglify-slave']);
 
 
 gulp.task('test-browser', ['dist', 'babel-spec'], function(done) {

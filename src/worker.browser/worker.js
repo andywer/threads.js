@@ -46,12 +46,27 @@ export default class Worker extends EventEmitter {
   constructor(initialScript = null, importScripts = []) {
     super();
 
-    this.worker = new window.Worker(slaveCodeDataUri);
+    this.initWorker();
     this.worker.addEventListener('message', this.handleMessage.bind(this));
     this.worker.addEventListener('error', this.handleError.bind(this));
 
     if (initialScript) {
       this.run(initialScript, importScripts);
+    }
+  }
+
+  initWorker() {
+    try {
+      this.worker = new window.Worker(slaveCodeDataUri);
+    } catch (error) {
+      const slaveScriptUrl = getConfig().fallback.slaveScriptUrl;
+      if (slaveScriptUrl) {
+        // try using the slave script file instead of the data URI
+        this.worker = new window.Worker(slaveCodeDataUri);
+      } else {
+        // re-throw
+        throw error;
+      }
     }
   }
 
