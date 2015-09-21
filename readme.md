@@ -49,7 +49,25 @@ thread
 
 ### Installation
 
-TODO: npm, bower, script tag
+#### NPM (Node.js, Browserify, Webpack)
+
+```bash
+npm install --save threads
+```
+
+#### Bower
+
+```bash
+bower install --save threads
+```
+
+#### Script tag
+
+```html
+<script src="https://cdn.rawgit.com/andywer/threads.js/__VERSION__/dist/threads.browser.min.js"></script>
+```
+
+(where `__VERSION__` is the library's version to use, like `0.5.0`)
 
 
 ### Thread code in separate files
