@@ -1,5 +1,5 @@
 # threads.js - BETA
-[![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=master)](https://travis-ci.org/andywer/threads.js)
+[![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=master)](https://travis-ci.org/andywer/threads.js) [![NPM Version](https://img.shields.io/npm/v/threads.svg)](https://www.npmjs.com/package/threads)
 
 **Attention: This is an early release. Use with care and be aware that the API might still change.**
 
