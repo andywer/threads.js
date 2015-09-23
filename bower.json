@@ -8,6 +8,16 @@
   ],
   "description": "Easy to use, yet powerful multi-threading library for node.js and the browser!",
   "license": "MIT",
+  "keywords": [
+    "thread",
+    "web worker",
+    "cluster",
+    "child_process",
+    "threadpool",
+    "spawn",
+    "fork",
+    "parallel"
+  ],
   "ignore": [
     "node_modules",
     "test"
