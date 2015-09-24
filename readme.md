@@ -10,6 +10,8 @@ when run by node.js. Also supports browsers which do not support web workers.
 - For client and server use
 - Use different APIs (web worker, node child_process) transparently
 - Thread pools
+- Built-in error handling
+- Well tested
 - ES6 and backwards-compatible
 
 
