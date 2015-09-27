@@ -9,7 +9,7 @@
   "description": "Easy to use, yet powerful multi-threading library for node.js and the browser!",
   "license": "MIT",
   "keywords": [
-    "thread",
+    "threads",
     "web worker",
     "cluster",
     "child_process",
