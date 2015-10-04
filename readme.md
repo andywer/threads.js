@@ -1,8 +1,6 @@
-# threads.js - BETA
+# threads.js
 [![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=master)](https://travis-ci.org/andywer/threads.js)
 [![NPM Version](https://img.shields.io/npm/v/threads.svg)](https://www.npmjs.com/package/threads)
-
-**This is a pretty early release. Use with care and be aware that the API might still change.**
 
 Javascript thread library. Uses web workers when run in browsers and child processes
 when run by node.js. Also supports browsers which do not support web workers.
