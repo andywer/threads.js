@@ -152,7 +152,7 @@ pool
   })
   .on('finished', function() {
     console.log('Everything done, shutting down the thread pool.');
-    pool.destroy();
+    pool.killAll();
   });
 ```
 
