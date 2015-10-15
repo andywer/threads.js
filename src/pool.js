@@ -1,11 +1,12 @@
 import EventEmitter from 'eventemitter3';
 import Job          from './job';
+import { cpus }     from 'os';
 import { spawn }    from './';
 
 export default class Pool extends EventEmitter {
-  constructor(threads = 8) {
+  constructor(threads) {
     super();
-    this.threads = Pool.spawn(threads);
+    this.threads = Pool.spawn(threads || (cpus().length + 1));
     this.idleThreads = this.threads.slice();
     this.jobQueue = [];
     this.lastCreatedJob = null;
