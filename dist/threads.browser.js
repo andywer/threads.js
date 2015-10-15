@@ -1,4 +1,17 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"./defaults":[function(require,module,exports){
+/*eslint-env browser*/
+
+"use strict";
+
+exports.__esModule = true;
+exports["default"] = {
+  pool: {
+    size: navigator.hardwareConcurrency || 8
+  }
+};
+module.exports = exports["default"];
+//# sourceMappingURL=defaults.browser.js.map
+},{}],1:[function(require,module,exports){
 /*eslint-env browser, amd, commonjs*/
 /*global module*/
 
@@ -273,6 +286,10 @@ var _config = require('./config');
 
 var _config2 = _interopRequireDefault(_config);
 
+var _defaults = require('./defaults');
+
+var _defaults2 = _interopRequireDefault(_defaults);
+
 var _pool = require('./pool');
 
 var _pool2 = _interopRequireDefault(_pool);
@@ -282,6 +299,7 @@ var _worker = require('./worker');
 var _worker2 = _interopRequireDefault(_worker);
 
 exports.config = _config2['default'];
+exports.defaults = _defaults2['default'];
 exports.Pool = _pool2['default'];
 
 function spawn() {
@@ -293,12 +311,13 @@ function spawn() {
 
 exports['default'] = {
   config: _config2['default'],
+  defaults: _defaults2['default'],
   Pool: _pool2['default'],
   spawn: spawn,
   Worker: _worker2['default']
 };
 //# sourceMappingURL=index.js.map
-},{"./config":2,"./pool":5,"./worker":"./worker","native-promise-only":8}],4:[function(require,module,exports){
+},{"./config":2,"./defaults":"./defaults","./pool":5,"./worker":"./worker","native-promise-only":8}],4:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -429,18 +448,20 @@ var _job = require('./job');
 
 var _job2 = _interopRequireDefault(_job);
 
+var _defaults = require('./defaults');
+
+var _defaults2 = _interopRequireDefault(_defaults);
+
 var _ = require('./');
 
 var Pool = (function (_EventEmitter) {
   _inherits(Pool, _EventEmitter);
 
-  function Pool() {
-    var threads = arguments.length <= 0 || arguments[0] === undefined ? 8 : arguments[0];
-
+  function Pool(threads) {
     _classCallCheck(this, Pool);
 
     _EventEmitter.call(this);
-    this.threads = Pool.spawn(threads);
+    this.threads = Pool.spawn(threads || _defaults2['default'].pool.size);
     this.idleThreads = this.threads.slice();
     this.jobQueue = [];
     this.lastCreatedJob = null;
@@ -538,7 +559,7 @@ Pool.spawn = function (threadCount) {
 };
 module.exports = exports['default'];
 //# sourceMappingURL=pool.js.map
-},{"./":3,"./job":4,"eventemitter3":7}],6:[function(require,module,exports){
+},{"./":3,"./defaults":"./defaults","./job":4,"eventemitter3":7}],6:[function(require,module,exports){
 module.exports = "/*eslint-env worker*/\n/*global importScripts*/\n/*eslint-disable no-console*/\nself.module = {\n  exports : function() {\n    if (console) { console.error('No thread logic initialized.'); }\n  }\n};\n\nfunction handlerDone() {\n  var args = Array.prototype.slice.call(arguments, 0);\n  this.postMessage({ response : args });\n}\n\nfunction handlerDoneTransfer() {\n  var args = Array.prototype.slice.call(arguments);\n  var lastArg = args.pop();\n\n  if (!(lastArg instanceof Array) && this.console) {\n    console.error('Expected 2nd parameter of <doneCallback>.transfer() to be an array. Got:', lastArg);\n  }\n\n  this.postMessage({ response : args }, lastArg);\n}\n\nself.onmessage = function (event) {\n  var scripts = event.data.scripts;\n  if (scripts && scripts.length > 0 && typeof importScripts !== 'function') {\n    throw new Error('importScripts() not supported.');\n  }\n\n  if (event.data.initByScripts) {\n    importScripts.apply(null, scripts);\n  }\n\n  if (event.data.initByMethod) {\n    var method = event.data.method;\n    this.module.exports = Function.apply(null, method.args.concat(method.body));\n\n    if (scripts && scripts.length > 0) {\n      importScripts.apply(null, scripts);\n    }\n  }\n\n  if (event.data.doRun) {\n    var handler = this.module.exports;\n    if (typeof handler !== 'function') {\n      throw new Error('Cannot run thread logic. No handler has been exported.');\n    }\n\n    var preparedHandlerDone = handlerDone.bind(this);\n    preparedHandlerDone.transfer = handlerDoneTransfer.bind(this);\n\n    handler.call(this, event.data.param, preparedHandlerDone);\n  }\n}.bind(self);\n";
 },{}],7:[function(require,module,exports){
 'use strict';

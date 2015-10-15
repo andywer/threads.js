@@ -1,7 +1,7 @@
-import async        from 'async';
-import expect       from 'expect.js';
-import EventEmitter from 'eventemitter3';
-import { Pool }     from '../../lib/';
+import async              from 'async';
+import expect             from 'expect.js';
+import EventEmitter       from 'eventemitter3';
+import { Pool, defaults } from '../../lib/';
 
 
 let spawnedFakeWorkers = 0;
@@ -54,11 +54,14 @@ function doTimes(callback, times) {
 describe('Pool', () => {
 
   const origSpawn = Pool.spawn;
+  const origDefaultSize = defaults.pool.size;
+  const fixedDefaultSize = 3;
 
   before(() => {
     Pool.spawn = (threadCount) => {
       return doTimes(() => new FakeWorker(), threadCount);
     };
+    defaults.pool.size = fixedDefaultSize;
   });
 
   beforeEach(() => {
@@ -67,15 +70,16 @@ describe('Pool', () => {
 
   after(() => {
     Pool.spawn = origSpawn;
+    defaults.pool.size = origDefaultSize;
   });
 
 
   it('can be created (w/o arguments)', () => {
     const pool = new Pool();
 
-    expect(pool.threads.length).to.equal(8);
+    expect(pool.threads.length).to.equal(fixedDefaultSize);
     expect(pool.idleThreads).to.eql(pool.threads);
-    expect(spawnedFakeWorkers).to.equal(8);
+    expect(spawnedFakeWorkers).to.equal(fixedDefaultSize);
   });
 
   it('can be created with arguments', () => {

@@ -1,0 +1,1 @@
+{"version":3,"sources":["defaults.browser.js"],"names":[],"mappings":";;;;;qBAEe;AACb,MAAI,EAAG;AACL,QAAI,EAAG,SAAS,CAAC,mBAAmB,IAAI,CAAC;GAC1C;CACF","file":"defaults.browser.js","sourcesContent":["/*eslint-env browser*/\n\nexport default {\n  pool : {\n    size : navigator.hardwareConcurrency || 8\n  }\n};\n"],"sourceRoot":"/source/"}

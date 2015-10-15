@@ -92,7 +92,10 @@ gulp.task('browser-slave-module', function() {
 gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], function() {
   return browserify()
     .add('./lib/bundle.browser.js')
-    .require('./lib/worker.browser/worker.js', { expose : './worker' })   // so the node worker won't make it's way into the bundle
+
+    // overrides, so the node-specific files won't make their way into the bundle
+    .require('./lib/worker.browser/worker.js', { expose : './worker' })
+    .require('./lib/defaults.browser.js', { expose : './defaults' })
     .bundle()
     .pipe(source('threads.browser.js'))
     .pipe(gulp.dest('dist/'));

@@ -1,10 +1,11 @@
 import 'native-promise-only';
 
-import config from './config';
-import Pool   from './pool';
-import Worker from './worker';
+import config   from './config';
+import defaults from './defaults';
+import Pool     from './pool';
+import Worker   from './worker';
 
-export { config, Pool };
+export { config, defaults, Pool };
 
 export function spawn(runnable = null, importScripts = []) {
   return new Worker(runnable, importScripts);
@@ -12,6 +13,7 @@ export function spawn(runnable = null, importScripts = []) {
 
 export default {
   config,
+  defaults,
   Pool,
   spawn,
   Worker

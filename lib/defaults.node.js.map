@@ -1,0 +1,1 @@
+{"version":3,"sources":["defaults.node.js"],"names":[],"mappings":";;;;kBAAqB,IAAI;;qBAEV;AACb,MAAI,EAAG;AACL,QAAI,EAAG,UAAM,CAAC,MAAM;GACrB;CACF","file":"defaults.node.js","sourcesContent":["import { cpus } from 'os';\n\nexport default {\n  pool : {\n    size : cpus().length\n  }\n};\n"],"sourceRoot":"/source/"}

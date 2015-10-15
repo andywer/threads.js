@@ -198,7 +198,7 @@ describe('Worker', function () {
 
     it('can use transferables', function (done) {
       // for some reason this test consumes extra-ordinarily much time when run on travis ci
-      this.timeout(5000);
+      this.timeout(6000);
 
       var arrayBuffer = new Uint8Array(1024 * 2); // 2 KB
       var arrayBufferClone = new Uint8Array(1024 * 2);

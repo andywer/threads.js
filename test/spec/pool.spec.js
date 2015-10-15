@@ -92,6 +92,8 @@ function doTimes(callback, times) {
 describe('Pool', function () {
 
   var origSpawn = _lib.Pool.spawn;
+  var origDefaultSize = _lib.defaults.pool.size;
+  var fixedDefaultSize = 3;
 
   before(function () {
     _lib.Pool.spawn = function (threadCount) {
@@ -99,6 +101,7 @@ describe('Pool', function () {
         return new FakeWorker();
       }, threadCount);
     };
+    _lib.defaults.pool.size = fixedDefaultSize;
   });
 
   beforeEach(function () {
@@ -107,14 +110,15 @@ describe('Pool', function () {
 
   after(function () {
     _lib.Pool.spawn = origSpawn;
+    _lib.defaults.pool.size = origDefaultSize;
   });
 
   it('can be created (w/o arguments)', function () {
     var pool = new _lib.Pool();
 
-    (0, _expectJs2['default'])(pool.threads.length).to.equal(8);
+    (0, _expectJs2['default'])(pool.threads.length).to.equal(fixedDefaultSize);
     (0, _expectJs2['default'])(pool.idleThreads).to.eql(pool.threads);
-    (0, _expectJs2['default'])(spawnedFakeWorkers).to.equal(8);
+    (0, _expectJs2['default'])(spawnedFakeWorkers).to.equal(fixedDefaultSize);
   });
 
   it('can be created with arguments', function () {
