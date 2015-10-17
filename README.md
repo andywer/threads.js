@@ -13,9 +13,7 @@ when run by node.js. Also supports browsers which do not support web workers.
 - ES6 and backwards-compatible
 
 
-## How To
-
-### Basic use
+## Basic usage
 
 Spawn threads to do the time-consuming work and let the parent thread focus on
 daily business!
@@ -47,21 +45,21 @@ thread
 ```
 
 
-### Installation
+## Installation
 
-#### NPM (Node.js, Browserify, Webpack)
+### NPM (Node.js, Browserify, Webpack)
 
 ```bash
 npm install --save threads
 ```
 
-#### Bower
+### Bower
 
 ```bash
 bower install --save threads
 ```
 
-#### Script tag
+### Script tag
 
 ```html
 <script src="https://cdn.rawgit.com/andywer/threads.js/__VERSION__/dist/threads.browser.min.js"></script>
@@ -69,6 +67,8 @@ bower install --save threads
 
 (where `__VERSION__` is the library's version to use, like `0.5.0`)
 
+
+## How To
 
 ### Thread code in separate files
 
