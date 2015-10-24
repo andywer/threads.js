@@ -111,12 +111,15 @@ module.exports = function(input, done) {
 
 You can also create a thread pool that spawns a fixed no. of workers. Pass jobs
 to the thread pool which it will queue and pass to the next idle worker.
+You can also pass the number threads to be spawned. Defaults to the number of
+CPU cores.
 
 ```javascript
 import { Pool } from 'threads';
 // ES5 syntax: var Pool = require('threads').Pool;
 
 const pool = new Pool();
+// Alternatively: new Pool(<number of threads to spawn>)
 
 // Run a script
 const jobA = pool
