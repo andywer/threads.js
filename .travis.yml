@@ -10,4 +10,4 @@ env:
 before_script:
   - sh -e /etc/init.d/xvfb start
 after_success:
-  - istanbul cover node_modules/.bin/_mocha --report lcovonly -x "lib/worker.js" -x "lib/defaults.js" -- -R spec test/spec/*.spec.js && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
+  - ./node_modules/.bin/istanbul cover node_modules/.bin/_mocha --report lcovonly -x "lib/worker.js" -x "lib/defaults.js" -- -R spec test/spec/*.spec.js && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
