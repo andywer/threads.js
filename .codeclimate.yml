@@ -4,4 +4,9 @@ engines:
 
 ratings:
   paths:
-    - "src/**/*.js"
+  - "src/**/*.js"
+
+exclude_paths:
+- "dist/**/*"
+- "lib/**/*"
+- "test/**/*"
