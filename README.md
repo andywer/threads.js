@@ -1,5 +1,7 @@
 # threads.js
 [![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=master)](https://travis-ci.org/andywer/threads.js)
+[![Test Coverage](https://codeclimate.com/github/andywer/threads.js/badges/coverage.svg)](https://codeclimate.com/github/andywer/threads.js/coverage)
+[![Code Climate](https://codeclimate.com/github/andywer/threads.js/badges/gpa.svg)](https://codeclimate.com/github/andywer/threads.js)
 [![NPM Version](https://img.shields.io/npm/v/threads.svg)](https://www.npmjs.com/package/threads)
 
 Javascript thread library. Uses web workers when run in browsers and child processes
