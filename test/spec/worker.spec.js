@@ -26,6 +26,12 @@ function echoThread(param, done) {
   done(param);
 }
 
+function progressThread(param, done, progress) {
+  progress(0.3);
+  progress(0.6);
+  done();
+}
+
 function canSendAndReceive(worker, dataToSend, expectToRecv, done) {
   worker.once('message', function (data) {
     (0, _expectJs2['default'])(data).to.eql(expectToRecv);
@@ -159,6 +165,21 @@ describe('Worker', function () {
 
     promise['catch'](function (error) {
       (0, _expectJs2['default'])(error.message).to.match(/^((Uncaught )?Error: )?I fail$/);
+      done();
+    });
+  });
+
+  it('can update progress', function (done) {
+    var progressUpdates = [];
+    var worker = (0, _.spawn)(progressThread);
+
+    worker.on('progress', function (progress) {
+      progressUpdates.push(progress);
+    });
+    worker.send();
+
+    worker.on('message', function () {
+      (0, _expectJs2['default'])(progressUpdates).to.eql([0.3, 0.6]);
       done();
     });
   });

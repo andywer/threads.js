@@ -12,6 +12,10 @@ function handlerDone() {
   this.postMessage({ response : args });
 }
 
+function handlerProgress(progress) {
+  this.postMessage({ progress : progress });
+}
+
 function handlerDoneTransfer() {
   var args = Array.prototype.slice.call(arguments);
   var lastArg = args.pop();
@@ -51,6 +55,6 @@ self.onmessage = function (event) {
     var preparedHandlerDone = handlerDone.bind(this);
     preparedHandlerDone.transfer = handlerDoneTransfer.bind(this);
 
-    handler.call(this, event.data.param, preparedHandlerDone);
+    handler.call(this, event.data.param, preparedHandlerDone, handlerProgress.bind(this));
   }
 }.bind(self);

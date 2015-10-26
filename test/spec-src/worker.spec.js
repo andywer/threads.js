@@ -11,6 +11,12 @@ function echoThread(param, done) {
   done(param);
 }
 
+function progressThread(param, done, progress) {
+  progress(0.3);
+  progress(0.6);
+  done();
+}
+
 function canSendAndReceive(worker, dataToSend, expectToRecv, done) {
   worker
   .once('message', (data) => {
@@ -158,6 +164,21 @@ describe('Worker', () => {
 
     promise.catch(error => {
       expect(error.message).to.match(/^((Uncaught )?Error: )?I fail$/);
+      done();
+    });
+  });
+
+  it('can update progress', done => {
+    const progressUpdates = [];
+    const worker = spawn(progressThread);
+
+    worker.on('progress', progress => {
+      progressUpdates.push(progress);
+    });
+    worker.send();
+
+    worker.on('message', () => {
+      expect(progressUpdates).to.eql([ 0.3, 0.6 ]);
       done();
     });
   });

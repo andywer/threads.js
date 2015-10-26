@@ -126,10 +126,16 @@ export default class Worker extends EventEmitter {
   handleMessage(event) {
     if (event.data.error) {
       this.handleError(event.data.error);
+    } else if (event.data.progress) {
+      this.handleProgress(event.data.progress);
     } else {
       const responseArgs = convertToArray(event.data.response);
       this.emit('message', ...responseArgs);
     }
+  }
+
+  handleProgress(progress) {
+    this.emit('progress', progress);
   }
 
   handleError(error) {

@@ -46,6 +46,10 @@ messageHandlerDone.transfer = function(...args) {
   messageHandlerDone(...args);
 };
 
+function messageHandlerProgress(progress) {
+  process.send({ progress });
+}
+
 
 process.on('message', function(data) {
   if (data.initByScript) {
@@ -61,6 +65,6 @@ process.on('message', function(data) {
     // so initialization errors will be printed to console
     setupErrorCatcher();
 
-    messageHandler(data.param, messageHandlerDone);
+    messageHandler(data.param, messageHandlerDone, messageHandlerProgress);
   }
 });

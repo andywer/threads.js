@@ -231,7 +231,6 @@ Promise.all([
 });
 ```
 
-
 ### Transferable objects
 
 You can also use transferable objects to improve performance when passing large
@@ -260,11 +259,40 @@ thread
   .send(jobData, [ largeArrayBuffer.buffer ]);
 ```
 
+### Progress update
+
+The thread can also notify the main thread about its current progress.
+
+```javascript
+thread
+  .run(function(input, done, progress) {
+    setTimeout(done, 1000);
+    setTimeout(function() { progress(25); }, 250);
+    setTimeout(function() { progress(50); }, 500);
+    setTimeout(function() { progress(75); }, 750);
+  })
+  .send()
+  .on('progress', function(progress) {
+    console.log(`Progress: ${progress}%`);
+  })
+  .on('done', function() {
+    console.log(`Done.`);
+  });
+```
+
+Output:
+
+```
+Progress: 25%
+Progress: 50%
+Progress: 75%
+Done.
+```
+
 ### Web worker fallback
 
 You can provide a fallback if the user's browser does not support web workers.
 See [webworker-fallback](https://github.com/andywer/webworker-fallback). This will not have any effect if used by node.js code.
-
 
 ### Use external dependencies
 
