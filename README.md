@@ -67,7 +67,7 @@ bower install --save threads
 <script src="https://cdn.rawgit.com/andywer/threads.js/__VERSION__/dist/threads.browser.min.js"></script>
 ```
 
-(where `__VERSION__` is the library's version to use, like `0.5.0`)
+(where `__VERSION__` is the library's version to use, like `0.5.3`)
 
 
 ## How To
