@@ -21,8 +21,7 @@ Spawn threads to do the time-consuming work and let the parent thread focus on
 daily business!
 
 ```javascript
-import { spawn } from 'threads';
-// ES5 syntax: var spawn = require('threads').spawn;
+const spawn = require('threads').spawn;
 
 const thread = spawn(function(input, done) {
   // Everything we do here will be run in parallel in another execution context.
@@ -79,8 +78,9 @@ commonjs module (so something that uses `module.exports = ...`), for node and
 browser.
 
 ```javascript
-import { config, spawn } from 'threads';
-// ES5 syntax: var config = require('threads').config, spawn = require('threads').spawn;
+const threads = require('threads');
+const config  = threads.config;
+const spawn   = threads.spawn;
 
 // Set base paths to thread scripts
 config.set({
@@ -117,8 +117,7 @@ You can also pass the number threads to be spawned. Defaults to the number of
 CPU cores.
 
 ```javascript
-import { Pool } from 'threads';
-// ES5 syntax: var Pool = require('threads').Pool;
+const Pool = require('threads').Pool;
 
 const pool = new Pool();
 // Alternatively: new Pool(<number of threads to spawn>)
@@ -307,8 +306,7 @@ To do:
 ## Configuration
 
 ```javascript
-import { config } from 'threads';
-// ES5 syntax: var config = require('threads').config
+const config = require('threads').config;
 
 // These configuration properties are all optional
 config.set({
