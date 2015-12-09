@@ -56,5 +56,10 @@
   "dependencies": {
     "eventemitter3": "^1.1.1",
     "native-promise-only": "^0.8.1"
+  },
+  "browser": {
+    "child_process": false,
+    "os": false,
+    "path": false
   }
 }
