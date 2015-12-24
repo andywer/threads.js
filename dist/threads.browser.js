@@ -11,6 +11,7 @@ exports["default"] = {
 };
 module.exports = exports["default"];
 //# sourceMappingURL=defaults.browser.js.map
+
 },{}],1:[function(require,module,exports){
 /*eslint-env browser, amd, commonjs*/
 /*global module*/
@@ -35,6 +36,7 @@ if (typeof define === 'function') {
   module.exports = _index2['default'];
 }
 //# sourceMappingURL=bundle.browser.js.map
+
 },{"./index":3}],"./worker":[function(require,module,exports){
 'use strict';
 
@@ -50,17 +52,15 @@ var _eventemitter3 = require('eventemitter3');
 
 var _eventemitter32 = _interopRequireDefault(_eventemitter3);
 
-var _slaveCode = require('./slave-code');
+var _slaveCodeUri = require('./slave-code-uri');
 
-var _slaveCode2 = _interopRequireDefault(_slaveCode);
+var _slaveCodeUri2 = _interopRequireDefault(_slaveCodeUri);
 
 var _config = require('../config');
 
 if (typeof window.Worker !== 'object' && typeof window.Worker !== 'function') {
   throw new Error('Browser does not support web workers!');
 }
-
-var slaveCodeDataUri = 'data:text/javascript;charset=utf-8,' + encodeURI(_slaveCode2['default']);
 
 function prependScriptUrl(scriptUrl) {
   var prefix = _config.getConfig().basepath.web;
@@ -112,12 +112,12 @@ var Worker = (function (_EventEmitter) {
 
   Worker.prototype.initWorker = function initWorker() {
     try {
-      this.worker = new window.Worker(slaveCodeDataUri);
+      this.worker = new window.Worker(_slaveCodeUri2['default']);
     } catch (error) {
       var slaveScriptUrl = _config.getConfig().fallback.slaveScriptUrl;
       if (slaveScriptUrl) {
         // try using the slave script file instead of the data URI
-        this.worker = new window.Worker(slaveCodeDataUri);
+        this.worker = new window.Worker(_slaveCodeUri2['default']);
       } else {
         // re-throw
         throw error;
@@ -216,8 +216,9 @@ var Worker = (function (_EventEmitter) {
 
 exports['default'] = Worker;
 module.exports = exports['default'];
-//# sourceMappingURL=../worker.browser/worker.js.map
-},{"../config":2,"./slave-code":6,"eventemitter3":7}],2:[function(require,module,exports){
+//# sourceMappingURL=worker.js.map
+
+},{"../config":2,"./slave-code-uri":6,"eventemitter3":8}],2:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -278,6 +279,7 @@ function setConfig() {
   return config.set.apply(config, arguments);
 }
 //# sourceMappingURL=config.js.map
+
 },{}],3:[function(require,module,exports){
 'use strict';
 
@@ -323,7 +325,8 @@ exports['default'] = {
   Worker: _worker2['default']
 };
 //# sourceMappingURL=index.js.map
-},{"./config":2,"./defaults":"./defaults","./pool":5,"./worker":"./worker","native-promise-only":8}],4:[function(require,module,exports){
+
+},{"./config":2,"./defaults":"./defaults","./pool":5,"./worker":"./worker","native-promise-only":9}],4:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -435,7 +438,8 @@ var Job = (function (_EventEmitter) {
 exports['default'] = Job;
 module.exports = exports['default'];
 //# sourceMappingURL=job.js.map
-},{"eventemitter3":7}],5:[function(require,module,exports){
+
+},{"eventemitter3":8}],5:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -565,9 +569,47 @@ Pool.spawn = function (threadCount) {
 };
 module.exports = exports['default'];
 //# sourceMappingURL=pool.js.map
-},{"./":3,"./defaults":"./defaults","./job":4,"eventemitter3":7}],6:[function(require,module,exports){
+
+},{"./":3,"./defaults":"./defaults","./job":4,"eventemitter3":8}],6:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _slaveCode = require('./slave-code');
+
+var _slaveCode2 = _interopRequireDefault(_slaveCode);
+
+var slaveCodeDataUri = 'data:text/javascript;charset=utf-8,' + encodeURI(_slaveCode2['default']);
+var createBlobURL = window.createBlobURL || window.createObjectURL;
+
+if (!createBlobURL) {
+  var _URL = window.URL || window.webkitURL;
+
+  if (_URL) {
+    createBlobURL = _URL.createObjectURL;
+  } else {
+    throw new Error('No Blob creation implementation found.');
+  }
+}
+
+if (typeof window.BlobBuilder === 'function' && typeof createBlobURL === 'function') {
+  var blobBuilder = new window.BlobBuilder();
+  blobBuilder.append(_slaveCode2['default']);
+  slaveCodeDataUri = createBlobURL(blobBuilder.getBlob());
+} else if (typeof window.Blob === 'function' && typeof createBlobURL === 'function') {
+  var blob = new window.Blob([_slaveCode2['default']], { type: 'text/javascript' });
+  slaveCodeDataUri = createBlobURL(blob);
+}
+
+exports['default'] = slaveCodeDataUri;
+module.exports = exports['default'];
+//# sourceMappingURL=slave-code-uri.js.map
+
+},{"./slave-code":7}],7:[function(require,module,exports){
 module.exports = "/*eslint-env worker*/\n/*global importScripts*/\n/*eslint-disable no-console*/\nself.module = {\n  exports : function() {\n    if (console) { console.error('No thread logic initialized.'); }\n  }\n};\n\nfunction handlerDone() {\n  var args = Array.prototype.slice.call(arguments, 0);\n  this.postMessage({ response : args });\n}\n\nfunction handlerProgress(progress) {\n  this.postMessage({ progress : progress });\n}\n\nfunction handlerDoneTransfer() {\n  var args = Array.prototype.slice.call(arguments);\n  var lastArg = args.pop();\n\n  if (!(lastArg instanceof Array) && this.console) {\n    console.error('Expected 2nd parameter of <doneCallback>.transfer() to be an array. Got:', lastArg);\n  }\n\n  this.postMessage({ response : args }, lastArg);\n}\n\nself.onmessage = function (event) {\n  var scripts = event.data.scripts;\n  if (scripts && scripts.length > 0 && typeof importScripts !== 'function') {\n    throw new Error('importScripts() not supported.');\n  }\n\n  if (event.data.initByScripts) {\n    importScripts.apply(null, scripts);\n  }\n\n  if (event.data.initByMethod) {\n    var method = event.data.method;\n    this.module.exports = Function.apply(null, method.args.concat(method.body));\n\n    if (scripts && scripts.length > 0) {\n      importScripts.apply(null, scripts);\n    }\n  }\n\n  if (event.data.doRun) {\n    var handler = this.module.exports;\n    if (typeof handler !== 'function') {\n      throw new Error('Cannot run thread logic. No handler has been exported.');\n    }\n\n    var preparedHandlerDone = handlerDone.bind(this);\n    preparedHandlerDone.transfer = handlerDoneTransfer.bind(this);\n\n    handler.call(this, event.data.param, preparedHandlerDone, handlerProgress.bind(this));\n  }\n}.bind(self);\n";
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 //
@@ -831,7 +873,7 @@ if ('undefined' !== typeof module) {
   module.exports = EventEmitter;
 }
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 (function (global){
 /*! Native Promise Only
     v0.8.1 (c) Kyle Simpson

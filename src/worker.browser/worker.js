@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3';
-import slaveCode from './slave-code';
+import slaveCodeDataUri from './slave-code-uri';
 
 import { getConfig } from '../config';
 
@@ -7,8 +7,6 @@ import { getConfig } from '../config';
 if (typeof window.Worker !== 'object' && typeof window.Worker !== 'function') {
   throw new Error('Browser does not support web workers!');
 }
-
-const slaveCodeDataUri = 'data:text/javascript;charset=utf-8,' + encodeURI(slaveCode);
 
 
 function prependScriptUrl(scriptUrl) {
