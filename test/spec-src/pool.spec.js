@@ -36,6 +36,14 @@ class FakeWorker extends EventEmitter {
     this.emit('exit');
     return this;
   }
+
+  promise() {
+    return new Promise((resolve, reject) => {
+      this
+        .once('message', resolve)
+        .once('error', reject);
+    });
+  }
 }
 
 function noop() { return this; }

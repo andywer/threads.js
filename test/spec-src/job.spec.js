@@ -4,17 +4,23 @@ import EventEmitter from 'eventemitter3';
 import Job          from '../../lib/job';
 
 
-const fakeThreadPromise = new Promise(() => {});
-
 function noop() {
   return this;
+}
+
+function createThreadPromise() {
+  return new Promise((resolve, reject) => {
+    this
+      .once('message', resolve)
+      .once('error', reject);
+  });
 }
 
 function createFakeThread(response) {
   const thread = new EventEmitter();
 
   thread.run = noop;
-  thread.promise = () => fakeThreadPromise;
+  thread.promise = createThreadPromise;
 
   if (response.error) {
     thread.send = function() {
@@ -74,9 +80,10 @@ describe('Job', () => {
 
   it('can be executed', () => {
     const thread = {
-      once : noop,
-      run  : noop,
-      send : noop
+      once    : noop,
+      run     : noop,
+      send    : noop,
+      promise : createThreadPromise
     };
     const mock = sinon.mock(thread);
 
@@ -198,21 +205,23 @@ describe('Job', () => {
 
     const promise = job
       .run(noop)
-      .send()
-      .executeOn(thread)
       .promise();
 
-    expect(promise).to.equal(fakeThreadPromise);
+    job
+      .send()
+      .executeOn(thread);
+
+    expect(promise).to.be.a(Promise);
   });
 
-  it('prevents promise without .executeOn()', () => {
+  it('returns a promise without .executeOn()', () => {
     const job = new Job(pool);
 
     job
       .run(noop)
       .send();
 
-    expect(job.promise).to.throwError(/Cannot return promise, since job is not executed/);
+    expect(job.promise()).to.be.a(Promise);
   });
 
 });
