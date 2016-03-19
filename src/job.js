@@ -8,7 +8,7 @@ export default class Job extends EventEmitter {
     this.thread = null;
 
     this.runArgs = [];
-    this.clearSendParameter();
+    this.sendArgs = [];
 
     pool.emit('newJob', this);
   }
@@ -27,13 +27,7 @@ export default class Job extends EventEmitter {
       throw new Error('Cannot .send() before .run().');
     }
 
-    if (this.hasSendParameter()) {
-      // do not alter this job, clone it and set send param instead
-      return this.clone().clearSendParameter().send(...args);
-    }
-
     this.sendArgs = args;
-    this.parameterSet = true;
 
     this.emit('readyToRun');
     return this;
@@ -47,36 +41,22 @@ export default class Job extends EventEmitter {
       .send(...this.sendArgs);
 
     this.thread = thread;
+
+    this.emit('threadChanged');
     return this;
   }
 
   promise() {
-    if (!this.thread) {
-      throw new Error('Cannot return promise, since job is not executed.');
-    }
-    return this.thread.promise();
-  }
-
-  clone() {
-    const clone = new Job(this.pool);
-
-    if (this.runArgs.length > 0) {
-      clone.run(...this.runArgs);
-    }
-    if (this.parameterSet) {
-      clone.send(...this.sendArgs);
-    }
-
-    return clone;
-  }
-
-  hasSendParameter() {
-    return this.parameterSet;
-  }
-
-  clearSendParameter() {
-    this.parameterSet  = false;
-    this.sendArgs = [];
-    return this;
+    // Always return a promise
+    return new Promise((resolve) => {
+      // If the thread isn't set, listen for the threadChanged event
+      if (!this.thread) {
+        this.once('threadChanged', () => {
+          resolve(this.thread.promise());
+        });
+      } else {
+        resolve(this.thread.promise());
+      }
+    });
   }
 }
