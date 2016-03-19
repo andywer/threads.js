@@ -10,7 +10,6 @@ export default class Pool extends EventEmitter {
     this.idleThreads = this.threads.slice();
     this.jobQueue = [];
     this.runArgs = [];
-    this.jobHistory = [];
 
     this.on('newJob', this.handleNewJob.bind(this));
 
