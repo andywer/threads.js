@@ -134,66 +134,6 @@ describe('Job', () => {
     sinon.assert.calledWith(job.emit, 'error', error);
   });
 
-  xit('can clone empty job', () => {
-    const job = new Job(pool);
-    const clone = job.clone();
-
-    expect(clone.runArgs).to.eql(job.runArgs);
-    expect(clone.sendArgs).to.eql(job.sendArgs);
-    expect(clone.hasSendParameter()).to.equal(job.hasSendParameter());
-  });
-
-  xit('can clone with runnable (w/o parameter)', () => {
-    const job = new Job(pool);
-    const runnable      = noop;
-    const importScripts = [];
-
-    job.run(runnable, importScripts);
-    const clone = job.clone();
-
-    expect(clone.runArgs).to.eql(job.runArgs);
-    expect(clone.sendArgs).to.eql(job.sendArgs);
-    expect(clone.hasSendParameter()).to.equal(job.hasSendParameter());
-  });
-
-  xit('can clone with runnable & parameter', () => {
-    const job = new Job(pool);
-    const runnable      = noop;
-    const importScripts = [];
-    const param         = 'some data';
-    const transferables = [];
-
-    job
-      .run(runnable, importScripts)
-      .send(param, transferables);
-
-    const clone = job.clone();
-
-    expect(clone.runArgs).to.eql(job.runArgs);
-    expect(clone.sendArgs).to.eql(job.sendArgs);
-    expect(clone.hasSendParameter()).to.equal(job.hasSendParameter());
-  });
-
-  xit('clones on 2nd .send()', () => {
-    const job = new Job(pool);
-    const runnable = noop;
-    const paramA   = { foo : 'bar' };
-    const paramB   = 'foo bar';
-
-    job
-      .run(runnable)
-      .send(paramA);
-
-    const clone = job.send(paramB);
-
-    expect(clone).not.to.equal(job);
-    expect(clone.runArgs).to.eql(job.runArgs);
-    expect(clone.sendArgs).to.eql([ paramB ]);
-    expect(clone.hasSendParameter()).to.equal(true);
-    expect(job.sendArgs).to.eql([ paramA ]);
-    expect(job.hasSendParameter()).to.equal(true);
-  });
-
   it('proxies the promise', (done) => {
     const job = new Job(pool);
     const thread = createFakeThread({

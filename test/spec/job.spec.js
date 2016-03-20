@@ -147,62 +147,6 @@ describe('Job', function () {
     _sinon2['default'].assert.calledWith(job.emit, 'error', error);
   });
 
-  xit('can clone empty job', function () {
-    var job = new _libJob2['default'](pool);
-    var clone = job.clone();
-
-    (0, _expectJs2['default'])(clone.runArgs).to.eql(job.runArgs);
-    (0, _expectJs2['default'])(clone.sendArgs).to.eql(job.sendArgs);
-    (0, _expectJs2['default'])(clone.hasSendParameter()).to.equal(job.hasSendParameter());
-  });
-
-  xit('can clone with runnable (w/o parameter)', function () {
-    var job = new _libJob2['default'](pool);
-    var runnable = noop;
-    var importScripts = [];
-
-    job.run(runnable, importScripts);
-    var clone = job.clone();
-
-    (0, _expectJs2['default'])(clone.runArgs).to.eql(job.runArgs);
-    (0, _expectJs2['default'])(clone.sendArgs).to.eql(job.sendArgs);
-    (0, _expectJs2['default'])(clone.hasSendParameter()).to.equal(job.hasSendParameter());
-  });
-
-  xit('can clone with runnable & parameter', function () {
-    var job = new _libJob2['default'](pool);
-    var runnable = noop;
-    var importScripts = [];
-    var param = 'some data';
-    var transferables = [];
-
-    job.run(runnable, importScripts).send(param, transferables);
-
-    var clone = job.clone();
-
-    (0, _expectJs2['default'])(clone.runArgs).to.eql(job.runArgs);
-    (0, _expectJs2['default'])(clone.sendArgs).to.eql(job.sendArgs);
-    (0, _expectJs2['default'])(clone.hasSendParameter()).to.equal(job.hasSendParameter());
-  });
-
-  xit('clones on 2nd .send()', function () {
-    var job = new _libJob2['default'](pool);
-    var runnable = noop;
-    var paramA = { foo: 'bar' };
-    var paramB = 'foo bar';
-
-    job.run(runnable).send(paramA);
-
-    var clone = job.send(paramB);
-
-    (0, _expectJs2['default'])(clone).not.to.equal(job);
-    (0, _expectJs2['default'])(clone.runArgs).to.eql(job.runArgs);
-    (0, _expectJs2['default'])(clone.sendArgs).to.eql([paramB]);
-    (0, _expectJs2['default'])(clone.hasSendParameter()).to.equal(true);
-    (0, _expectJs2['default'])(job.sendArgs).to.eql([paramA]);
-    (0, _expectJs2['default'])(job.hasSendParameter()).to.equal(true);
-  });
-
   it('proxies the promise', function (done) {
     var job = new _libJob2['default'](pool);
     var thread = createFakeThread({
