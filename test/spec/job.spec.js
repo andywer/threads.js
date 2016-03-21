@@ -20,7 +20,11 @@ var _libJob = require('../../lib/job');
 
 var _libJob2 = _interopRequireDefault(_libJob);
 
-var fakeThreadPromise = new Promise(function () {});
+var fakeThreadPromise = new Promise(function (resolve) {
+  setTimeout(function () {
+    resolve(100);
+  });
+});
 
 function noop() {
   return this;
@@ -63,7 +67,7 @@ describe('Job', function () {
   it('can be created', function () {
     var job = new _libJob2['default'](pool);
 
-    (0, _expectJs2['default'])(job.hasSendParameter()).to.equal(false);
+    (0, _expectJs2['default'])(job.sendArgs).to.eql([]);
     _sinon2['default'].assert.calledOnce(pool.emit);
     _sinon2['default'].assert.calledWith(pool.emit, 'newJob', job);
   });
@@ -143,63 +147,7 @@ describe('Job', function () {
     _sinon2['default'].assert.calledWith(job.emit, 'error', error);
   });
 
-  it('can clone empty job', function () {
-    var job = new _libJob2['default'](pool);
-    var clone = job.clone();
-
-    (0, _expectJs2['default'])(clone.runArgs).to.eql(job.runArgs);
-    (0, _expectJs2['default'])(clone.sendArgs).to.eql(job.sendArgs);
-    (0, _expectJs2['default'])(clone.hasSendParameter()).to.equal(job.hasSendParameter());
-  });
-
-  it('can clone with runnable (w/o parameter)', function () {
-    var job = new _libJob2['default'](pool);
-    var runnable = noop;
-    var importScripts = [];
-
-    job.run(runnable, importScripts);
-    var clone = job.clone();
-
-    (0, _expectJs2['default'])(clone.runArgs).to.eql(job.runArgs);
-    (0, _expectJs2['default'])(clone.sendArgs).to.eql(job.sendArgs);
-    (0, _expectJs2['default'])(clone.hasSendParameter()).to.equal(job.hasSendParameter());
-  });
-
-  it('can clone with runnable & parameter', function () {
-    var job = new _libJob2['default'](pool);
-    var runnable = noop;
-    var importScripts = [];
-    var param = 'some data';
-    var transferables = [];
-
-    job.run(runnable, importScripts).send(param, transferables);
-
-    var clone = job.clone();
-
-    (0, _expectJs2['default'])(clone.runArgs).to.eql(job.runArgs);
-    (0, _expectJs2['default'])(clone.sendArgs).to.eql(job.sendArgs);
-    (0, _expectJs2['default'])(clone.hasSendParameter()).to.equal(job.hasSendParameter());
-  });
-
-  it('clones on 2nd .send()', function () {
-    var job = new _libJob2['default'](pool);
-    var runnable = noop;
-    var paramA = { foo: 'bar' };
-    var paramB = 'foo bar';
-
-    job.run(runnable).send(paramA);
-
-    var clone = job.send(paramB);
-
-    (0, _expectJs2['default'])(clone).not.to.equal(job);
-    (0, _expectJs2['default'])(clone.runArgs).to.eql(job.runArgs);
-    (0, _expectJs2['default'])(clone.sendArgs).to.eql([paramB]);
-    (0, _expectJs2['default'])(clone.hasSendParameter()).to.equal(true);
-    (0, _expectJs2['default'])(job.sendArgs).to.eql([paramA]);
-    (0, _expectJs2['default'])(job.hasSendParameter()).to.equal(true);
-  });
-
-  it('proxies the promise', function () {
+  it('proxies the promise', function (done) {
     var job = new _libJob2['default'](pool);
     var thread = createFakeThread({
       response: ['foo bar']
@@ -207,14 +155,17 @@ describe('Job', function () {
 
     var promise = job.run(noop).send().executeOn(thread).promise();
 
-    (0, _expectJs2['default'])(promise).to.equal(fakeThreadPromise);
+    Promise.all([promise, fakeThreadPromise]).then(function (results) {
+      (0, _expectJs2['default'])(results[0]).to.equal(results[1]);
+      done();
+    });
   });
 
-  it('prevents promise without .executeOn()', function () {
+  it('Creates a promise even if there is no thread', function () {
     var job = new _libJob2['default'](pool);
 
     job.run(noop).send();
 
-    (0, _expectJs2['default'])(job.promise).to.throwError(/Cannot return promise, since job is not executed/);
+    (0, _expectJs2['default'])(job.promise() instanceof Promise).to.equal(true);
   });
 });

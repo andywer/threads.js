@@ -352,7 +352,7 @@ var Job = (function (_EventEmitter) {
     this.thread = null;
 
     this.runArgs = [];
-    this.clearSendParameter();
+    this.sendArgs = [];
 
     pool.emit('newJob', this);
   }
@@ -379,15 +379,7 @@ var Job = (function (_EventEmitter) {
       args[_key2] = arguments[_key2];
     }
 
-    if (this.hasSendParameter()) {
-      var _clone$clearSendParameter;
-
-      // do not alter this job, clone it and set send param instead
-      return (_clone$clearSendParameter = this.clone().clearSendParameter()).send.apply(_clone$clearSendParameter, args);
-    }
-
     this.sendArgs = args;
-    this.parameterSet = true;
 
     this.emit('readyToRun');
     return this;
@@ -399,37 +391,25 @@ var Job = (function (_EventEmitter) {
     (_thread$once$once$run = (_thread$once$once = thread.once('message', this.emit.bind(this, 'done')).once('error', this.emit.bind(this, 'error'))).run.apply(_thread$once$once, this.runArgs)).send.apply(_thread$once$once$run, this.sendArgs);
 
     this.thread = thread;
+
+    this.emit('threadChanged');
     return this;
   };
 
   Job.prototype.promise = function promise() {
-    if (!this.thread) {
-      throw new Error('Cannot return promise, since job is not executed.');
-    }
-    return this.thread.promise();
-  };
+    var _this = this;
 
-  Job.prototype.clone = function clone() {
-    var clone = new Job(this.pool);
-
-    if (this.runArgs.length > 0) {
-      clone.run.apply(clone, this.runArgs);
-    }
-    if (this.parameterSet) {
-      clone.send.apply(clone, this.sendArgs);
-    }
-
-    return clone;
-  };
-
-  Job.prototype.hasSendParameter = function hasSendParameter() {
-    return this.parameterSet;
-  };
-
-  Job.prototype.clearSendParameter = function clearSendParameter() {
-    this.parameterSet = false;
-    this.sendArgs = [];
-    return this;
+    // Always return a promise
+    return new Promise(function (resolve) {
+      // If the thread isn't set, listen for the threadChanged event
+      if (!_this.thread) {
+        _this.once('threadChanged', function () {
+          resolve(_this.thread.promise());
+        });
+      } else {
+        resolve(_this.thread.promise());
+      }
+    });
   };
 
   return Job;
@@ -474,26 +454,24 @@ var Pool = (function (_EventEmitter) {
     this.threads = Pool.spawn(threads || _defaults2['default'].pool.size);
     this.idleThreads = this.threads.slice();
     this.jobQueue = [];
-    this.lastCreatedJob = null;
+    this.runArgs = [];
 
     this.on('newJob', this.handleNewJob.bind(this));
   }
 
-  Pool.prototype.run = function run() {
-    var _ref;
-
-    return (_ref = new _job2['default'](this)).run.apply(_ref, arguments);
+  Pool.prototype.run = function run(args) {
+    this.runArgs = args;
+    return this;
   };
 
   Pool.prototype.send = function send() {
-    var _lastCreatedJob;
-
-    if (!this.lastCreatedJob) {
+    if (!this.runArgs) {
       throw new Error('Pool.send() called without prior Pool.run(). You need to define what to run first.');
     }
 
-    // this will not alter the last job, but rather clone it and set this params on the new job
-    return (_lastCreatedJob = this.lastCreatedJob).send.apply(_lastCreatedJob, arguments);
+    var job = new _job2['default'](this);
+    job.run(this.runArgs);
+    return job.send.apply(job, arguments);
   };
 
   Pool.prototype.killAll = function killAll() {
@@ -509,20 +487,20 @@ var Pool = (function (_EventEmitter) {
 
   Pool.prototype.dequeue = function dequeue() {
     if (this.jobQueue.length === 0 || this.idleThreads.length === 0) {
-      return;
+      return this.once('threadAvailable', this.dequeue);
     }
 
     var job = this.jobQueue.shift();
     var thread = this.idleThreads.shift();
 
-    job.on('done', this.handleJobSuccess.bind(this, thread, job)).on('error', this.handleJobError.bind(this, thread, job));
+    job.once('done', this.handleJobSuccess.bind(this, thread, job)).once('error', this.handleJobError.bind(this, thread, job));
 
     job.executeOn(thread);
   };
 
   Pool.prototype.handleNewJob = function handleNewJob(job) {
     this.lastCreatedJob = job;
-    job.on('readyToRun', this.queueJob.bind(this, job)); // triggered by job.send()
+    job.once('readyToRun', this.queueJob.bind(this, job)); // triggered by job.send()
   };
 
   Pool.prototype.handleJobSuccess = function handleJobSuccess(thread, job) {
@@ -543,7 +521,7 @@ var Pool = (function (_EventEmitter) {
     var _this = this;
 
     this.idleThreads.push(thread);
-    this.dequeue();
+    this.emit('threadAvailable');
 
     if (this.idleThreads.length === this.threads.length) {
       // run deferred to give other job.on('done') handlers time to run first

@@ -9,22 +9,25 @@ export default class Pool extends EventEmitter {
     this.threads = Pool.spawn(threads || defaults.pool.size);
     this.idleThreads = this.threads.slice();
     this.jobQueue = [];
-    this.lastCreatedJob = null;
+    this.runArgs = [];
 
     this.on('newJob', this.handleNewJob.bind(this));
+
   }
 
-  run(...args) {
-    return (new Job(this)).run(...args);
+  run(args) {
+    this.runArgs = args;
+    return this;
   }
 
   send(...args) {
-    if (!this.lastCreatedJob) {
+    if (!this.runArgs) {
       throw new Error('Pool.send() called without prior Pool.run(). You need to define what to run first.');
     }
 
-    // this will not alter the last job, but rather clone it and set this params on the new job
-    return this.lastCreatedJob.send(...args);
+    let job = new Job(this);
+    job.run(this.runArgs);
+    return job.send(...args);
   }
 
   killAll() {
@@ -40,22 +43,22 @@ export default class Pool extends EventEmitter {
 
   dequeue() {
     if (this.jobQueue.length === 0 || this.idleThreads.length === 0) {
-      return;
+      return this.once('threadAvailable', this.dequeue);
     }
 
     const job = this.jobQueue.shift();
     const thread = this.idleThreads.shift();
 
     job
-      .on('done', this.handleJobSuccess.bind(this, thread, job))
-      .on('error', this.handleJobError.bind(this, thread, job));
+      .once('done', this.handleJobSuccess.bind(this, thread, job))
+      .once('error', this.handleJobError.bind(this, thread, job));
 
     job.executeOn(thread);
   }
 
   handleNewJob(job) {
     this.lastCreatedJob = job;
-    job.on('readyToRun', this.queueJob.bind(this, job));    // triggered by job.send()
+    job.once('readyToRun', this.queueJob.bind(this, job));    // triggered by job.send()
   }
 
   handleJobSuccess(thread, job, ...responseArgs) {
@@ -70,7 +73,7 @@ export default class Pool extends EventEmitter {
 
   handleJobDone(thread) {
     this.idleThreads.push(thread);
-    this.dequeue();
+    this.emit('threadAvailable');
 
     if (this.idleThreads.length === this.threads.length) {
       // run deferred to give other job.on('done') handlers time to run first
