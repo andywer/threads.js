@@ -320,6 +320,13 @@ config.set({
 });
 ```
 
+## Changelog
+
+### 0.6.0
+
+Fixes promise and async issues. `Job.clone()` has been dropped.
+Credit goes to https://github.com/maysale01
+
 
 ## License
 
