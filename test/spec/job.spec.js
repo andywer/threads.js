@@ -20,23 +20,19 @@ var _libJob = require('../../lib/job');
 
 var _libJob2 = _interopRequireDefault(_libJob);
 
+var fakeThreadPromise = new Promise(function () {});
+
 function noop() {
   return this;
-}
-
-function createThreadPromise() {
-  var _this = this;
-
-  return new Promise(function (resolve, reject) {
-    _this.once('message', resolve).once('error', reject);
-  });
 }
 
 function createFakeThread(response) {
   var thread = new _eventemitter32['default']();
 
   thread.run = noop;
-  thread.promise = createThreadPromise;
+  thread.promise = function () {
+    return fakeThreadPromise;
+  };
 
   if (response.error) {
     thread.send = function () {
@@ -102,8 +98,7 @@ describe('Job', function () {
     var thread = {
       once: noop,
       run: noop,
-      send: noop,
-      promise: createThreadPromise
+      send: noop
     };
     var mock = _sinon2['default'].mock(thread);
 
@@ -210,18 +205,16 @@ describe('Job', function () {
       response: ['foo bar']
     });
 
-    var promise = job.run(noop).promise();
+    var promise = job.run(noop).send().executeOn(thread).promise();
 
-    job.send().executeOn(thread);
-
-    (0, _expectJs2['default'])(promise).to.be.a(Promise);
+    (0, _expectJs2['default'])(promise).to.equal(fakeThreadPromise);
   });
 
-  it('returns a promise without .executeOn()', function () {
+  it('prevents promise without .executeOn()', function () {
     var job = new _libJob2['default'](pool);
 
     job.run(noop).send();
 
-    (0, _expectJs2['default'])(job.promise()).to.be.a(Promise);
+    (0, _expectJs2['default'])(job.promise).to.throwError(/Cannot return promise, since job is not executed/);
   });
 });

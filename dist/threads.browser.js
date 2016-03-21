@@ -345,20 +345,11 @@ var Job = (function (_EventEmitter) {
   _inherits(Job, _EventEmitter);
 
   function Job(pool) {
-    var _this = this;
-
     _classCallCheck(this, Job);
 
     _EventEmitter.call(this);
     this.pool = pool;
     this.thread = null;
-
-    this.promiseBoundToThread = false;
-    this.promiseControlMethods = {};
-    this.jobPromise = new Promise(function (resolve, reject) {
-      _this.promiseControlMethods.resolve = resolve;
-      _this.promiseControlMethods.reject = reject;
-    });
 
     this.runArgs = [];
     this.clearSendParameter();
@@ -407,31 +398,15 @@ var Job = (function (_EventEmitter) {
 
     (_thread$once$once$run = (_thread$once$once = thread.once('message', this.emit.bind(this, 'done')).once('error', this.emit.bind(this, 'error'))).run.apply(_thread$once$once, this.runArgs)).send.apply(_thread$once$once$run, this.sendArgs);
 
-    if (!this.promiseBoundToThread) {
-      this.bindPromiseTo(thread.promise());
-    }
-
     this.thread = thread;
     return this;
   };
 
-  Job.prototype.bindPromiseTo = function bindPromiseTo(anotherPromise) {
-    var _this2 = this;
-
-    anotherPromise.then(function (result) {
-      _this2.promiseControlMethods.resolve(result);
-      return result;
-    })['catch'](function () {
-      var _promiseControlMethods;
-
-      (_promiseControlMethods = _this2.promiseControlMethods).reject.apply(_promiseControlMethods, arguments);
-    });
-
-    this.promiseBoundToThread = true;
-  };
-
   Job.prototype.promise = function promise() {
-    return this.jobPromise;
+    if (!this.thread) {
+      throw new Error('Cannot return promise, since job is not executed.');
+    }
+    return this.thread.promise();
   };
 
   Job.prototype.clone = function clone() {

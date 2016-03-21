@@ -70,15 +70,6 @@ var FakeWorker = (function (_EventEmitter) {
       this.emit('exit');
       return this;
     }
-  }, {
-    key: 'promise',
-    value: function promise() {
-      var _this2 = this;
-
-      return new Promise(function (resolve, reject) {
-        _this2.once('message', resolve).once('error', reject);
-      });
-    }
   }]);
 
   return FakeWorker;

@@ -7,13 +7,6 @@ export default class Job extends EventEmitter {
     this.pool   = pool;
     this.thread = null;
 
-    this.promiseBoundToThread = false;
-    this.promiseControlMethods = {};
-    this.jobPromise = new Promise((resolve, reject) => {
-      this.promiseControlMethods.resolve = resolve;
-      this.promiseControlMethods.reject = reject;
-    });
-
     this.runArgs = [];
     this.clearSendParameter();
 
@@ -53,29 +46,15 @@ export default class Job extends EventEmitter {
       .run(...this.runArgs)
       .send(...this.sendArgs);
 
-    if (!this.promiseBoundToThread) {
-      this.bindPromiseTo(thread.promise());
-    }
-
     this.thread = thread;
     return this;
   }
 
-  bindPromiseTo(anotherPromise) {
-    anotherPromise
-      .then(result => {
-        this.promiseControlMethods.resolve(result);
-        return result;
-      })
-      .catch((...errors) => {
-        this.promiseControlMethods.reject(...errors);
-      });
-
-    this.promiseBoundToThread = true;
-  }
-
   promise() {
-    return this.jobPromise;
+    if (!this.thread) {
+      throw new Error('Cannot return promise, since job is not executed.');
+    }
+    return this.thread.promise();
   }
 
   clone() {
