@@ -286,7 +286,7 @@ thread
   .on('progress', function(progress) {
     console.log(`Progress: ${progress}%`);
   })
-  .on('message', function() {
+  .on('done', function() {
     console.log(`Done.`);
     thread.kill();
   });
@@ -343,7 +343,7 @@ Credit goes to https://github.com/maysale01
 
 ## License
 
-This library is published under the MIT license. See [LICENSE](https://raw.githubusercontent.com/andywer/thread.js/master/LICENSE) for details.
+This library is published under the MIT license. See [LICENSE](./LICENSE) for details.
 
 
 __Have fun and build something awesome!__
