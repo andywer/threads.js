@@ -192,6 +192,7 @@ var Worker = (function (_EventEmitter) {
     } else {
       var responseArgs = convertToArray(event.data.response);
       this.emit.apply(this, ['message'].concat(responseArgs));
+      this.emit.apply(this, ['done'].concat(responseArgs)); // this one is just for convenience
     }
   };
 

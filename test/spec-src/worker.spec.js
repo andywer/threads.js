@@ -183,6 +183,21 @@ describe('Worker', () => {
     });
   });
 
+  it('does also emit "done" event', done => {
+    const progressUpdates = [];
+    const worker = spawn(progressThread);
+
+    worker.on('progress', progress => {
+      progressUpdates.push(progress);
+    });
+    worker.send();
+
+    worker.on('done', () => {
+      expect(progressUpdates).to.eql([ 0.3, 0.6 ]);
+      done();
+    });
+  });
+
 
   if (env === 'node') {
 

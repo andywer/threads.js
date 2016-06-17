@@ -129,6 +129,7 @@ export default class Worker extends EventEmitter {
     } else {
       const responseArgs = convertToArray(event.data.response);
       this.emit('message', ...responseArgs);
+      this.emit('done', ...responseArgs);    // this one is just for convenience
     }
   }
 

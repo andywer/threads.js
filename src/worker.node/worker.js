@@ -78,6 +78,7 @@ export default class Worker extends EventEmitter {
       this.handleProgress(message.progress);
     } else {
       this.emit('message', ...message.response);
+      this.emit('done', ...message.response);    // this one is just for convenience
     }
   }
 

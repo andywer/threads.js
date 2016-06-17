@@ -184,6 +184,21 @@ describe('Worker', function () {
     });
   });
 
+  it('does also emit "done" event', function (done) {
+    var progressUpdates = [];
+    var worker = (0, _.spawn)(progressThread);
+
+    worker.on('progress', function (progress) {
+      progressUpdates.push(progress);
+    });
+    worker.send();
+
+    worker.on('done', function () {
+      (0, _expectJs2['default'])(progressUpdates).to.eql([0.3, 0.6]);
+      done();
+    });
+  });
+
   if (env === 'node') {
 
     it('thread code can use setTimeout, setInterval', function (done) {
