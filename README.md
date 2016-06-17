@@ -335,6 +335,11 @@ config.set({
 
 ## Changelog
 
+### 0.6.1
+
+Added alias for threads: Event `done` as alias for `message`. Updated README example code.
+Credit goes to https://github.com/andrakis
+
 ### 0.6.0
 
 Fixes promise and async issues. `Job.clone()` has been dropped.
