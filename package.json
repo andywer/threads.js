@@ -23,7 +23,7 @@
     "url": "https://github.com/andywer/thread.js.git"
   },
   "scripts": {
-    "compile": "./node_modules/.bin/gulp dist",
+    "build": "./node_modules/.bin/gulp dist",
     "test": "./node_modules/.bin/gulp test"
   },
   "devDependencies": {
