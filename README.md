@@ -167,6 +167,10 @@ a very simple use case where you keep feeding numbers to the background task
 and it will return the minimum and maximum of all values you ever passed.
 
 ```javascript
+const threads = require('threads');
+const spawn   = threads.spawn;
+const thread  = spawn(function() {});
+
 thread
   .run(function minmax(int, done) {
     if (typeof this.min === 'undefined') {
@@ -240,6 +244,10 @@ See [Transferable Objects: Lightning Fast!](http://updates.html5rocks.com/2011/1
 Both features will be ignored by node.js version for now.
 
 ```javascript
+const threads = require('threads');
+const spawn   = threads.spawn;
+const thread  = spawn(function() {});
+
 const largeArrayBuffer = new Uint8Array(1024 * 1024 * 32); // 32MB
 const jobData = { label : 'huge thing', data: largeArrayBuffer.buffer };
 
@@ -263,6 +271,10 @@ thread
 The thread can also notify the main thread about its current progress.
 
 ```javascript
+const threads = require('threads');
+const spawn   = threads.spawn;
+const thread  = spawn(function() {});
+
 thread
   .run(function(input, done, progress) {
     setTimeout(done, 1000);
@@ -274,8 +286,9 @@ thread
   .on('progress', function(progress) {
     console.log(`Progress: ${progress}%`);
   })
-  .on('done', function() {
+  .on('message', function() {
     console.log(`Done.`);
+    thread.kill();
   });
 ```
 
