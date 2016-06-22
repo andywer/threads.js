@@ -3,6 +3,10 @@ node_js:
   - 0.12
   - 4
   - 5
+  
+script:
+  - npm run test
+  - npm run build
 env:
   global:
     - CHROME_BIN=chromium-browser
