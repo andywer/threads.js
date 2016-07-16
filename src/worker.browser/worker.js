@@ -9,9 +9,19 @@ if (typeof window.Worker !== 'object' && typeof window.Worker !== 'function') {
 }
 
 
+function joinPaths (path1, path2) {
+  if (!path1 || !path2) {
+    return path1 + path2;
+  } else if (path1.charAt(path1.length - 1) === '/' || path2.charAt(0) === '/') {
+    return path1 + path2;
+  } else {
+    return path1 + '/' + path2;
+  }
+}
+
 function prependScriptUrl(scriptUrl) {
   const prefix = getConfig().basepath.web;
-  return prefix ? prefix + '/' + scriptUrl : scriptUrl;
+  return prefix ? joinPaths(prefix, scriptUrl) : scriptUrl;
 }
 
 function convertToArray(input) {
