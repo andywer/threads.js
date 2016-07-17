@@ -335,6 +335,11 @@ config.set({
 
 ## Changelog
 
+### 0.7.0
+
+Fixes a critical issue that prevented thread pools from running all jobs.
+Also brings some major performance improvements for browser (web worker) - based setups.
+
 ### 0.6.1
 
 Added alias for threads: Event `done` as alias for `message`. Updated README example code.
