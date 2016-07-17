@@ -250,4 +250,23 @@ describe('Pool', function () {
 
     _async2['default'].series([part1, part2], done);
   });
+
+  it('can run a lot of jobs', function (done) {
+    var pool = new _lib.Pool(3);
+    var calledJob = 0;
+
+    function onDone() {
+      calledJob++;
+      // pool.dequeue();    // <- this fixes it
+    }
+
+    for (var jobIndex = 0; jobIndex < 50; jobIndex++) {
+      pool.run(noop).send({ jobIndex: jobIndex }).on('done', onDone);
+    }
+
+    pool.once('finished', function () {
+      (0, _expectJs2['default'])(calledJob).to.equal(50);
+      done();
+    });
+  });
 });

@@ -227,4 +227,26 @@ describe('Pool', () => {
     ], done);
   });
 
+  it('can run a lot of jobs', (done) => {
+    const pool = new Pool(3);
+    let calledJob = 0;
+
+    function onDone () {
+      calledJob++;
+      // pool.dequeue();    // <- this fixes it
+    }
+
+    for (let jobIndex = 0; jobIndex < 50; jobIndex++) {
+      pool
+        .run(noop)
+        .send({ jobIndex })
+        .on('done', onDone);
+    }
+
+    pool.once('finished', () => {
+      expect(calledJob).to.equal(50);
+      done();
+    });
+  });
+
 });
