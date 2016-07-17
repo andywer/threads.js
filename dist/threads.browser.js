@@ -459,6 +459,8 @@ var Pool = (function (_EventEmitter) {
   _inherits(Pool, _EventEmitter);
 
   function Pool(threads) {
+    var _this = this;
+
     _classCallCheck(this, Pool);
 
     _EventEmitter.call(this);
@@ -467,7 +469,12 @@ var Pool = (function (_EventEmitter) {
     this.jobQueue = [];
     this.runArgs = [];
 
-    this.on('newJob', this.handleNewJob.bind(this));
+    this.on('newJob', function (job) {
+      return _this.handleNewJob(job);
+    });
+    this.on('threadAvailable', function () {
+      return _this.dequeue();
+    });
   }
 
   Pool.prototype.run = function run(args) {
@@ -497,26 +504,44 @@ var Pool = (function (_EventEmitter) {
   };
 
   Pool.prototype.dequeue = function dequeue() {
+    var _this2 = this;
+
     if (this.jobQueue.length === 0 || this.idleThreads.length === 0) {
-      return this.once('threadAvailable', this.dequeue);
+      return;
     }
 
     var job = this.jobQueue.shift();
     var thread = this.idleThreads.shift();
 
-    job.once('done', this.handleJobSuccess.bind(this, thread, job)).once('error', this.handleJobError.bind(this, thread, job));
+    job.once('done', function () {
+      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      return _this2.handleJobSuccess.apply(_this2, [thread, job].concat(args));
+    }).once('error', function () {
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
+      return _this2.handleJobError.apply(_this2, [thread, job].concat(args));
+    });
 
     job.executeOn(thread);
   };
 
   Pool.prototype.handleNewJob = function handleNewJob(job) {
+    var _this3 = this;
+
     this.lastCreatedJob = job;
-    job.once('readyToRun', this.queueJob.bind(this, job)); // triggered by job.send()
+    job.once('readyToRun', function () {
+      return _this3.queueJob(job);
+    }); // triggered by job.send()
   };
 
   Pool.prototype.handleJobSuccess = function handleJobSuccess(thread, job) {
-    for (var _len = arguments.length, responseArgs = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-      responseArgs[_key - 2] = arguments[_key];
+    for (var _len3 = arguments.length, responseArgs = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
+      responseArgs[_key3 - 2] = arguments[_key3];
     }
 
     this.emit.apply(this, ['done', job].concat(responseArgs));
@@ -529,7 +554,7 @@ var Pool = (function (_EventEmitter) {
   };
 
   Pool.prototype.handleJobDone = function handleJobDone(thread) {
-    var _this = this;
+    var _this4 = this;
 
     this.idleThreads.push(thread);
     this.emit('threadAvailable');
@@ -537,7 +562,7 @@ var Pool = (function (_EventEmitter) {
     if (this.idleThreads.length === this.threads.length) {
       // run deferred to give other job.on('done') handlers time to run first
       setTimeout(function () {
-        _this.emit('finished');
+        _this4.emit('finished');
       }, 0);
     }
   };

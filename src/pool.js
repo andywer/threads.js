@@ -11,8 +11,8 @@ export default class Pool extends EventEmitter {
     this.jobQueue = [];
     this.runArgs = [];
 
-    this.on('newJob', this.handleNewJob.bind(this));
-
+    this.on('newJob', (job) => this.handleNewJob(job));
+    this.on('threadAvailable', () => this.dequeue());
   }
 
   run(args) {
@@ -43,22 +43,22 @@ export default class Pool extends EventEmitter {
 
   dequeue() {
     if (this.jobQueue.length === 0 || this.idleThreads.length === 0) {
-      return this.once('threadAvailable', this.dequeue);
+      return;
     }
 
     const job = this.jobQueue.shift();
     const thread = this.idleThreads.shift();
 
     job
-      .once('done', this.handleJobSuccess.bind(this, thread, job))
-      .once('error', this.handleJobError.bind(this, thread, job));
+      .once('done', (...args) => this.handleJobSuccess(thread, job, ...args))
+      .once('error', (...args) => this.handleJobError(thread, job, ...args));
 
     job.executeOn(thread);
   }
 
   handleNewJob(job) {
     this.lastCreatedJob = job;
-    job.once('readyToRun', this.queueJob.bind(this, job));    // triggered by job.send()
+    job.once('readyToRun', () => this.queueJob(job));    // triggered by job.send()
   }
 
   handleJobSuccess(thread, job, ...responseArgs) {
