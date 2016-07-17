@@ -339,6 +339,7 @@ config.set({
 
 Fixes a critical issue that prevented thread pools from running all jobs.
 Also brings some major performance improvements for browser (web worker) - based setups.
+Thank you, https://github.com/FlorianBruckner, for reporting the issues and helping to debug them!
 
 ### 0.6.1
 
