@@ -54,6 +54,10 @@ export default class Worker extends EventEmitter {
   constructor(initialScript = null, importScripts = []) {
     super();
 
+    // used by `run()` to decide if the worker must be re-initialized
+    this.currentRunnable = null;
+    this.currentImportScripts = [];
+
     this.initWorker();
     this.worker.addEventListener('message', this.handleMessage.bind(this));
     this.worker.addEventListener('error', this.handleError.bind(this));
@@ -79,11 +83,20 @@ export default class Worker extends EventEmitter {
   }
 
   run(toRun, importScripts = []) {
+    if (this.alreadyInitializedToRun(toRun, importScripts)) {
+      // don't re-initialize with the new logic if it already has been
+      return this;
+    }
+
     if (typeof toRun === 'function') {
       this.runMethod(toRun, importScripts);
     } else {
       this.runScripts(toRun, importScripts);
     }
+
+    this.currentRunnable = toRun;
+    this.currentImportScripts = importScripts;
+
     return this;
   }
 
@@ -129,6 +142,14 @@ export default class Worker extends EventEmitter {
         .once('message', resolve)
         .once('error', reject);
     });
+  }
+
+  alreadyInitializedToRun(toRun, importScripts) {
+    const runnablesMatch = this.currentRunnable === toRun;
+    const importScriptsMatch = this.currentImportScripts === importScripts
+      || (importScripts.length === 0 && this.currentImportScripts.length === 0);
+
+    return runnablesMatch && importScriptsMatch;
   }
 
   handleMessage(event) {
