@@ -74,7 +74,7 @@ export default class Worker extends EventEmitter {
       const slaveScriptUrl = getConfig().fallback.slaveScriptUrl;
       if (slaveScriptUrl) {
         // try using the slave script file instead of the data URI
-        this.worker = new window.Worker(slaveCodeDataUri);
+        this.worker = new window.Worker(slaveScriptUrl);
       } else {
         // re-throw
         throw error;
