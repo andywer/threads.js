@@ -233,7 +233,6 @@ describe('Pool', () => {
 
     function onDone () {
       calledJob++;
-      // pool.dequeue();    // <- this fixes it
     }
 
     for (let jobIndex = 0; jobIndex < 50; jobIndex++) {
