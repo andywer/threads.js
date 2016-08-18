@@ -422,7 +422,6 @@ var Job = (function (_EventEmitter) {
     (_thread$once$once$run = (_thread$once$once = thread.once('message', this.emit.bind(this, 'done')).once('error', this.emit.bind(this, 'error'))).run.apply(_thread$once$once, this.runArgs)).send.apply(_thread$once$once$run, this.sendArgs);
 
     this.thread = thread;
-
     this.emit('threadChanged');
     return this;
   };
@@ -441,6 +440,12 @@ var Job = (function (_EventEmitter) {
         resolve(_this.thread.promise());
       }
     });
+  };
+
+  Job.prototype.destroy = function destroy() {
+    this.removeAllListeners();
+    delete this.runArgs;
+    delete this.sendArgs;
   };
 
   return Job;
@@ -503,13 +508,14 @@ var Pool = (function (_EventEmitter) {
   };
 
   Pool.prototype.send = function send() {
+    var _job$run;
+
     if (!this.runArgs) {
       throw new Error('Pool.send() called without prior Pool.run(). You need to define what to run first.');
     }
 
     var job = new _job2['default'](this);
-    job.run(this.runArgs);
-    return job.send.apply(job, arguments);
+    return (_job$run = job.run(this.runArgs)).send.apply(_job$run, arguments);
   };
 
   Pool.prototype.killAll = function killAll() {
@@ -553,7 +559,6 @@ var Pool = (function (_EventEmitter) {
   Pool.prototype.handleNewJob = function handleNewJob(job) {
     var _this3 = this;
 
-    this.lastCreatedJob = job;
     job.once('readyToRun', function () {
       return _this3.queueJob(job);
     }); // triggered by job.send()
@@ -565,17 +570,18 @@ var Pool = (function (_EventEmitter) {
     }
 
     this.emit.apply(this, ['done', job].concat(responseArgs));
-    this.handleJobDone(thread);
+    this.handleJobDone(thread, job);
   };
 
   Pool.prototype.handleJobError = function handleJobError(thread, job, error) {
     this.emit('error', job, error);
-    this.handleJobDone(thread);
+    this.handleJobDone(thread, job);
   };
 
-  Pool.prototype.handleJobDone = function handleJobDone(thread) {
+  Pool.prototype.handleJobDone = function handleJobDone(thread, job) {
     var _this4 = this;
 
+    job.destroy(); // to prevent memory leak
     this.idleThreads.push(thread);
     this.emit('threadAvailable');
 
