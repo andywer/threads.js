@@ -15,7 +15,7 @@ export default class Pool extends EventEmitter {
     this.on('threadAvailable', () => this.dequeue());
   }
 
-  run(args) {
+  run(...args) {
     this.runArgs = args;
     return this;
   }
@@ -26,7 +26,7 @@ export default class Pool extends EventEmitter {
     }
 
     let job = new Job(this);
-    job.run(this.runArgs);
+    job.run(...this.runArgs);
     return job.send(...args);
   }
 
