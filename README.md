@@ -343,6 +343,11 @@ config.set({
 
 ## Changelog
 
+### 0.7.1
+
+`Pool.prototype.run()` now accepts more than one parameter. See [#31](https://github.com/andywer/threads.js/pull/31).
+Credit goes to https://github.com/DatenMetzgerX
+
 ### 0.7.0
 
 Fixes a critical issue that prevented thread pools from running all jobs.
