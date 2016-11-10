@@ -40,7 +40,9 @@ function expectEqualBuffers(buffer1, buffer2) {
 }
 
 
-describe('Worker', () => {
+describe('Worker', function () {
+
+  this.timeout(4000);
 
   before(() => {
     sinon
