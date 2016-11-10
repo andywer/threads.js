@@ -1,17 +1,10 @@
 {
-  "ecmaFeatures" : {
-    "arrowFunctions" : true,
-    "blockBindings"  : true,
-    "classes"        : true,
-    "defaultParams"  : true,
-    "destructuring"  : true,
-    "jsx"            : true,
-    "modules"        : true,
-    "restParams"     : true,
-    "templateStrings": true
-  },
   "globals" : {
     "setTimeout" : true
+  },
+  "parserOptions": {
+    "ecmaVersion": "2015",
+    "sourceType": "module"
   },
   "rules" : {
     "global-strict"   : 0,
