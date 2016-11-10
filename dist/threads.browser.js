@@ -203,7 +203,18 @@ var Worker = (function (_EventEmitter) {
     var _this = this;
 
     return new Promise(function (resolve, reject) {
-      _this.once('message', resolve).once('error', reject);
+      var resolved = undefined,
+          rejected = undefined;
+      resolved = function (result) {
+        _this.removeListener('error', rejected);
+        resolve(result);
+      };
+      rejected = function (err) {
+        _this.removeListener('message', resolved);
+        reject(err);
+      };
+
+      _this.once('message', resolved).once('error', rejected);
     });
   };
 

@@ -1,2 +1,4 @@
-node_modules
+lib/
+node_modules/
+test/spec-build/
 npm-debug.log

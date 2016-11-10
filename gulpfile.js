@@ -52,7 +52,7 @@ gulp.doneCallback = function (err) {
 
 
 gulp.task('lint', function() {
-  return gulp.src(['src/**/*.js', 'src/**/*.js.txt', 'test/spec-src/*.js'])
+  return gulp.src(['src/**/*.js', 'src/**/*.js.txt', 'test/spec/*.js'])
     .pipe(eslint())
     .pipe(eslint.format())
     .pipe(eslint.failOnError());
@@ -75,9 +75,9 @@ gulp.task('babel-lib', function() {
 });
 
 gulp.task('babel-spec', function() {
-  return gulp.src('test/spec-src/**/*.js')
+  return gulp.src('test/spec/**/*.js')
     .pipe(babel())
-    .pipe(gulp.dest('test/spec'));
+    .pipe(gulp.dest('test/spec-build'));
 });
 
 
@@ -127,7 +127,7 @@ gulp.task('test-browser-after-node', ['test-node'], function(done) {
 });
 
 gulp.task('test-node', ['dist', 'babel-spec'], function() {
-  return gulp.src('test/spec/*.spec.js', { read: false })
+  return gulp.src('test/spec-build/*.spec.js', { read: false })
     .pipe(mocha());
 });
 
