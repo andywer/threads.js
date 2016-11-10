@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "async": "^1.4.2",
-    "browserify": "^9.0.8",
+    "browserify": "^13.1.1",
     "codeclimate-test-reporter": "^0.4.0",
     "coveralls": "^2.11.4",
     "expect.js": "^0.3.1",
