@@ -69,7 +69,7 @@ gulp.task('copy-slave', function() {
 gulp.task('babel-lib', function() {
   return gulp.src('src/**/*.js')
     .pipe(sourcemaps.init())
-    .pipe(babel({ loose : 'all' }))
+    .pipe(babel())
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('lib/'));
 });

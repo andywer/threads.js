@@ -1,15 +1,14 @@
 require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"./defaults":[function(require,module,exports){
-/*eslint-env browser*/
-
 "use strict";
 
 exports.__esModule = true;
-exports["default"] = {
+/*eslint-env browser*/
+
+exports.default = {
   pool: {
     size: navigator.hardwareConcurrency || 8
   }
 };
-module.exports = exports["default"];
 
 
 },{}],"./worker":[function(require,module,exports){
@@ -17,15 +16,11 @@ module.exports = exports["default"];
 
 exports.__esModule = true;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+var _eventemitter = require('eventemitter3');
 
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _eventemitter3 = require('eventemitter3');
-
-var _eventemitter32 = _interopRequireDefault(_eventemitter3);
+var _eventemitter2 = _interopRequireDefault(_eventemitter);
 
 var _slaveCodeUri = require('./slave-code-uri');
 
@@ -33,7 +28,15 @@ var _slaveCodeUri2 = _interopRequireDefault(_slaveCodeUri);
 
 var _config = require('../config');
 
-if (typeof window.Worker !== 'object' && typeof window.Worker !== 'function') {
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+if (_typeof(window.Worker) !== 'object' && typeof window.Worker !== 'function') {
   throw new Error('Browser does not support web workers!');
 }
 
@@ -48,7 +51,7 @@ function joinPaths(path1, path2) {
 }
 
 function prependScriptUrl(scriptUrl) {
-  var prefix = _config.getConfig().basepath.web;
+  var prefix = (0, _config.getConfig)().basepath.web;
   return prefix ? joinPaths(prefix, scriptUrl) : scriptUrl;
 }
 
@@ -68,45 +71,46 @@ function logError(error) {
   if (error.stack) {
     console.error(error.stack); // eslint-disable-line no-console
   } else if (error.message && error.filename && error.lineno) {
-      var fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50 ? error.filename.substr(0, 50) + '...' : error.filename;
-      console.error(error.message + ' @' + fileName + ':' + error.lineno); // eslint-disable-line no-console
-    } else {
-        console.error(error); // eslint-disable-line no-console
-      }
+    var fileName = error.filename.match(/^data:text\/javascript/) && error.filename.length > 50 ? error.filename.substr(0, 50) + '...' : error.filename;
+    console.error(error.message + ' @' + fileName + ':' + error.lineno); // eslint-disable-line no-console
+  } else {
+    console.error(error); // eslint-disable-line no-console
+  }
 }
 
-var Worker = (function (_EventEmitter) {
+var Worker = function (_EventEmitter) {
   _inherits(Worker, _EventEmitter);
 
   function Worker() {
-    var initialScript = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
-    var importScripts = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+    var initialScript = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var importScripts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
     _classCallCheck(this, Worker);
 
-    _EventEmitter.call(this);
-
     // used by `run()` to decide if the worker must be re-initialized
-    this.currentRunnable = null;
-    this.currentImportScripts = [];
+    var _this = _possibleConstructorReturn(this, _EventEmitter.call(this));
 
-    this.initWorker();
-    this.worker.addEventListener('message', this.handleMessage.bind(this));
-    this.worker.addEventListener('error', this.handleError.bind(this));
+    _this.currentRunnable = null;
+    _this.currentImportScripts = [];
+
+    _this.initWorker();
+    _this.worker.addEventListener('message', _this.handleMessage.bind(_this));
+    _this.worker.addEventListener('error', _this.handleError.bind(_this));
 
     if (initialScript) {
-      this.run(initialScript, importScripts);
+      _this.run(initialScript, importScripts);
     }
+    return _this;
   }
 
   Worker.prototype.initWorker = function initWorker() {
     try {
-      this.worker = new window.Worker(_slaveCodeUri2['default']);
+      this.worker = new window.Worker(_slaveCodeUri2.default);
     } catch (error) {
-      var slaveScriptUrl = _config.getConfig().fallback.slaveScriptUrl;
+      var slaveScriptUrl = (0, _config.getConfig)().fallback.slaveScriptUrl;
       if (slaveScriptUrl) {
         // try using the slave script file instead of the data URI
-        this.worker = new window.Worker(_slaveCodeUri2['default']);
+        this.worker = new window.Worker(_slaveCodeUri2.default);
       } else {
         // re-throw
         throw error;
@@ -115,7 +119,7 @@ var Worker = (function (_EventEmitter) {
   };
 
   Worker.prototype.run = function run(toRun) {
-    var importScripts = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+    var importScripts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
     if (this.alreadyInitializedToRun(toRun, importScripts)) {
       // don't re-initialize with the new logic if it already has been
@@ -159,7 +163,7 @@ var Worker = (function (_EventEmitter) {
   };
 
   Worker.prototype.send = function send(param) {
-    var transferables = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+    var transferables = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
     this.worker.postMessage({
       doRun: true,
@@ -175,21 +179,21 @@ var Worker = (function (_EventEmitter) {
   };
 
   Worker.prototype.promise = function promise() {
-    var _this = this;
+    var _this2 = this;
 
     return new Promise(function (resolve, reject) {
-      var resolved = undefined,
-          rejected = undefined;
-      resolved = function (result) {
-        _this.removeListener('error', rejected);
+      var resolved = void 0,
+          rejected = void 0;
+      resolved = function resolved(result) {
+        _this2.removeListener('error', rejected);
         resolve(result);
       };
-      rejected = function (err) {
-        _this.removeListener('message', resolved);
+      rejected = function rejected(err) {
+        _this2.removeListener('message', resolved);
         reject(err);
       };
 
-      _this.once('message', resolved).once('error', rejected);
+      _this2.once('message', resolved).once('error', rejected);
     });
   };
 
@@ -229,34 +233,33 @@ var Worker = (function (_EventEmitter) {
   };
 
   return Worker;
-})(_eventemitter32['default']);
+}(_eventemitter2.default);
 
-exports['default'] = Worker;
-module.exports = exports['default'];
+exports.default = Worker;
 
 
 },{"../config":2,"./slave-code-uri":6,"eventemitter3":8}],1:[function(require,module,exports){
-/*eslint-env browser, amd, commonjs*/
-/*global module*/
-
 'use strict';
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; /*eslint-env browser, amd, commonjs*/
+/*global module*/
 
 var _index = require('./index');
 
 var _index2 = _interopRequireDefault(_index);
 
-if (typeof window === 'object') {
-  window.thread = _index2['default'];
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+if ((typeof window === 'undefined' ? 'undefined' : _typeof(window)) === 'object') {
+  window.thread = _index2.default;
 }
 
 if (typeof define === 'function') {
   define([], function () {
-    return _index2['default'];
+    return _index2.default;
   });
-} else if (typeof module === 'object') {
-  module.exports = _index2['default'];
+} else if ((typeof module === 'undefined' ? 'undefined' : _typeof(module)) === 'object') {
+  module.exports = _index2.default;
 }
 
 
@@ -264,6 +267,9 @@ if (typeof define === 'function') {
 'use strict';
 
 exports.__esModule = true;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 exports.getConfig = getConfig;
 exports.setConfig = setConfig;
 var configuration = {
@@ -277,19 +283,19 @@ var configuration = {
 };
 
 function configDeepMerge(destObj, srcObj) {
-  var ancestorProps = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
+  var ancestorProps = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
 
   Object.keys(srcObj).forEach(function (propKey) {
     var srcValue = srcObj[propKey];
     var ancestorPropsAndThis = ancestorProps.concat([propKey]);
 
-    if (typeof srcValue === 'object') {
-      if (typeof destObj[propKey] !== 'undefined' && typeof destObj[propKey] !== 'object') {
+    if ((typeof srcValue === 'undefined' ? 'undefined' : _typeof(srcValue)) === 'object') {
+      if (typeof destObj[propKey] !== 'undefined' && _typeof(destObj[propKey]) !== 'object') {
         throw new Error('Expected config property not to be an object: ' + ancestorPropsAndThis.join('.'));
       }
       configDeepMerge(destObj[propKey], srcValue, ancestorPropsAndThis);
     } else {
-      if (typeof destObj[propKey] === 'object') {
+      if (_typeof(destObj[propKey]) === 'object') {
         throw new Error('Expected config property to be an object: ' + ancestorPropsAndThis.join('.'));
       }
       destObj[propKey] = srcValue;
@@ -303,7 +309,7 @@ var config = {
   },
 
   set: function set(newConfig) {
-    if (typeof newConfig !== 'object') {
+    if ((typeof newConfig === 'undefined' ? 'undefined' : _typeof(newConfig)) !== 'object') {
       throw new Error('Expected config object.');
     }
 
@@ -311,8 +317,7 @@ var config = {
   }
 };
 
-exports['default'] = config;
-
+exports.default = config;
 function getConfig() {
   return config.get();
 }
@@ -326,9 +331,8 @@ function setConfig() {
 'use strict';
 
 exports.__esModule = true;
+exports.Pool = exports.defaults = exports.config = undefined;
 exports.spawn = spawn;
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 require('native-promise-only');
 
@@ -348,23 +352,24 @@ var _worker = require('./worker');
 
 var _worker2 = _interopRequireDefault(_worker);
 
-exports.config = _config2['default'];
-exports.defaults = _defaults2['default'];
-exports.Pool = _pool2['default'];
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+exports.config = _config2.default;
+exports.defaults = _defaults2.default;
+exports.Pool = _pool2.default;
 function spawn() {
-  var runnable = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
-  var importScripts = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+  var runnable = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+  var importScripts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
-  return new _worker2['default'](runnable, importScripts);
+  return new _worker2.default(runnable, importScripts);
 }
 
-exports['default'] = {
-  config: _config2['default'],
-  defaults: _defaults2['default'],
-  Pool: _pool2['default'],
+exports.default = {
+  config: _config2.default,
+  defaults: _defaults2.default,
+  Pool: _pool2.default,
   spawn: spawn,
-  Worker: _worker2['default']
+  Worker: _worker2.default
 };
 
 
@@ -373,30 +378,34 @@ exports['default'] = {
 
 exports.__esModule = true;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+var _eventemitter = require('eventemitter3');
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+var _eventemitter2 = _interopRequireDefault(_eventemitter);
 
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _eventemitter3 = require('eventemitter3');
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var _eventemitter32 = _interopRequireDefault(_eventemitter3);
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-var Job = (function (_EventEmitter) {
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Job = function (_EventEmitter) {
   _inherits(Job, _EventEmitter);
 
   function Job(pool) {
     _classCallCheck(this, Job);
 
-    _EventEmitter.call(this);
-    this.pool = pool;
-    this.thread = null;
+    var _this = _possibleConstructorReturn(this, _EventEmitter.call(this));
 
-    this.runArgs = [];
-    this.sendArgs = [];
+    _this.pool = pool;
+    _this.thread = null;
 
-    pool.emit('newJob', this);
+    _this.runArgs = [];
+    _this.sendArgs = [];
+
+    pool.emit('newJob', _this);
+    return _this;
   }
 
   Job.prototype.run = function run() {
@@ -439,26 +448,25 @@ var Job = (function (_EventEmitter) {
   };
 
   Job.prototype.promise = function promise() {
-    var _this = this;
+    var _this2 = this;
 
     // Always return a promise
     return new Promise(function (resolve) {
       // If the thread isn't set, listen for the threadChanged event
-      if (!_this.thread) {
-        _this.once('threadChanged', function () {
-          resolve(_this.thread.promise());
+      if (!_this2.thread) {
+        _this2.once('threadChanged', function () {
+          resolve(_this2.thread.promise());
         });
       } else {
-        resolve(_this.thread.promise());
+        resolve(_this2.thread.promise());
       }
     });
   };
 
   return Job;
-})(_eventemitter32['default']);
+}(_eventemitter2.default);
 
-exports['default'] = Job;
-module.exports = exports['default'];
+exports.default = Job;
 
 
 },{"eventemitter3":8}],5:[function(require,module,exports){
@@ -466,15 +474,9 @@ module.exports = exports['default'];
 
 exports.__esModule = true;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+var _eventemitter = require('eventemitter3');
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _eventemitter3 = require('eventemitter3');
-
-var _eventemitter32 = _interopRequireDefault(_eventemitter3);
+var _eventemitter2 = _interopRequireDefault(_eventemitter);
 
 var _job = require('./job');
 
@@ -486,26 +488,34 @@ var _defaults2 = _interopRequireDefault(_defaults);
 
 var _ = require('./');
 
-var Pool = (function (_EventEmitter) {
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Pool = function (_EventEmitter) {
   _inherits(Pool, _EventEmitter);
 
   function Pool(threads) {
-    var _this = this;
-
     _classCallCheck(this, Pool);
 
-    _EventEmitter.call(this);
-    this.threads = Pool.spawn(threads || _defaults2['default'].pool.size);
-    this.idleThreads = this.threads.slice();
-    this.jobQueue = [];
-    this.runArgs = [];
+    var _this = _possibleConstructorReturn(this, _EventEmitter.call(this));
 
-    this.on('newJob', function (job) {
+    _this.threads = Pool.spawn(threads || _defaults2.default.pool.size);
+    _this.idleThreads = _this.threads.slice();
+    _this.jobQueue = [];
+    _this.runArgs = [];
+
+    _this.on('newJob', function (job) {
       return _this.handleNewJob(job);
     });
-    this.on('threadAvailable', function () {
+    _this.on('threadAvailable', function () {
       return _this.dequeue();
     });
+    return _this;
   }
 
   Pool.prototype.run = function run() {
@@ -522,7 +532,7 @@ var Pool = (function (_EventEmitter) {
       throw new Error('Pool.send() called without prior Pool.run(). You need to define what to run first.');
     }
 
-    var job = new _job2['default'](this);
+    var job = new _job2.default(this);
     job.run.apply(job, this.runArgs);
     return job.send.apply(job, arguments);
   };
@@ -603,20 +613,20 @@ var Pool = (function (_EventEmitter) {
   };
 
   return Pool;
-})(_eventemitter32['default']);
+}(_eventemitter2.default);
 
-exports['default'] = Pool;
+exports.default = Pool;
+
 
 Pool.spawn = function (threadCount) {
   var threads = [];
 
   for (var threadIndex = 0; threadIndex < threadCount; threadIndex++) {
-    threads.push(_.spawn());
+    threads.push((0, _.spawn)());
   }
 
   return threads;
 };
-module.exports = exports['default'];
 
 
 },{"./":3,"./defaults":"./defaults","./job":4,"eventemitter3":8}],6:[function(require,module,exports){
@@ -624,20 +634,20 @@ module.exports = exports['default'];
 
 exports.__esModule = true;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
 var _slaveCode = require('./slave-code');
 
 var _slaveCode2 = _interopRequireDefault(_slaveCode);
 
-var slaveCodeDataUri = 'data:text/javascript;charset=utf-8,' + encodeURI(_slaveCode2['default']);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var slaveCodeDataUri = 'data:text/javascript;charset=utf-8,' + encodeURI(_slaveCode2.default);
 var createBlobURL = window.createBlobURL || window.createObjectURL;
 
 if (!createBlobURL) {
-  var _URL = window.URL || window.webkitURL;
+  var URL = window.URL || window.webkitURL;
 
-  if (_URL) {
-    createBlobURL = _URL.createObjectURL;
+  if (URL) {
+    createBlobURL = URL.createObjectURL;
   } else {
     throw new Error('No Blob creation implementation found.');
   }
@@ -645,15 +655,14 @@ if (!createBlobURL) {
 
 if (typeof window.BlobBuilder === 'function' && typeof createBlobURL === 'function') {
   var blobBuilder = new window.BlobBuilder();
-  blobBuilder.append(_slaveCode2['default']);
+  blobBuilder.append(_slaveCode2.default);
   slaveCodeDataUri = createBlobURL(blobBuilder.getBlob());
 } else if (typeof window.Blob === 'function' && typeof createBlobURL === 'function') {
-  var blob = new window.Blob([_slaveCode2['default']], { type: 'text/javascript' });
+  var blob = new window.Blob([_slaveCode2.default], { type: 'text/javascript' });
   slaveCodeDataUri = createBlobURL(blob);
 }
 
-exports['default'] = slaveCodeDataUri;
-module.exports = exports['default'];
+exports.default = slaveCodeDataUri;
 
 
 },{"./slave-code":7}],7:[function(require,module,exports){
