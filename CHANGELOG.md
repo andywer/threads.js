@@ -1,6 +1,6 @@
 # threads.js - Changelog
 
-## Upcoming release
+## 0.7.2
 
 - Fixes another memory leak. Credit goes to https://github.com/ChiperSoft
 - Depedencies have been updated. threads.js will cannot be built and tested anymore on node 0.12. Node >= 4.0 is from now on required. The lib will still work on Node 0.12, though.
