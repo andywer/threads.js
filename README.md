@@ -44,7 +44,7 @@ thread
     console.log('Worker has been terminated.');
   });
 ```
-
+If you are using arrow function syntax be sure to add brackets, e.g `(input, done) => { done() }` instead of `(input, done) => done()`.
 
 ## Installation
 
