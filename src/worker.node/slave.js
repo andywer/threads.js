@@ -48,9 +48,9 @@ function messageHandlerProgress(progress) {
 }
 
 function messageHandlerError(error) {
-    process.send({
-        error : { message : error.message, stack : error.stack }
-    });
+  process.send({
+    error : { message : error.message, stack : error.stack }
+  });
 }
 
 process.on('message', function(data) {
