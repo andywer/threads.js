@@ -10,11 +10,8 @@ let messageHandler = function() {
 function setupErrorCatcher() {
   if (errorCatcherInPlace) { return; }
 
-  process.on('uncaughtException', function(error) {
-    process.send({
-      error : { message : error.message, stack : error.stack }
-    });
-  });
+  process.on('uncaughtException', messageHandlerError);
+  process.on('unhandledRejection', messageHandlerError);
 
   errorCatcherInPlace = true;
 }
@@ -50,6 +47,11 @@ function messageHandlerProgress(progress) {
   process.send({ progress });
 }
 
+function messageHandlerError(error) {
+    process.send({
+        error : { message : error.message, stack : error.stack }
+    });
+}
 
 process.on('message', function(data) {
   if (data.initByScript) {
