@@ -1,0 +1,27 @@
+# threads.js - Changelog
+
+## 0.7.2
+
+- Fixes another memory leak. Credit goes to https://github.com/ChiperSoft
+- Depedencies have been updated. threads.js will cannot be built and tested anymore on node 0.12. Node >= 4.0 is from now on required. The lib will still work on Node 0.12, though.
+- The `lib/` directory and the transpiled unit test files are now gitignored. `lib/` will of course still be published to npm.
+
+## 0.7.1
+
+- `Pool.prototype.run()` now accepts more than one parameter. See [#31](https://github.com/andywer/threads.js/pull/31).
+- Credit goes to https://github.com/DatenMetzgerX
+
+## 0.7.0
+
+- Fixes a critical issue that prevented thread pools from running all jobs.
+- Also brings some major performance improvements for browser (web worker) - based setups.
+
+## 0.6.1
+
+- Added alias for threads: Event `done` as alias for `message`. Updated README example code.
+- Credit goes to https://github.com/andrakis
+
+## 0.6.0
+
+- Fixes promise and async issues. `Job.clone()` has been dropped.
+- Credit goes to https://github.com/maysale01

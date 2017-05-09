@@ -66,7 +66,7 @@ bower install --save threads
 <script src="https://cdn.rawgit.com/andywer/threads.js/__VERSION__/dist/threads.browser.min.js"></script>
 ```
 
-(where `__VERSION__` is the library's version to use, like `0.5.3`)
+(where `__VERSION__` is the library's version to use, like `v0.7.2`)
 
 
 ## How To
@@ -333,23 +333,18 @@ config.set({
 });
 ```
 
-## Changelog
 
-### 0.7.0
+## FAQ: Frequently Asked Questions
 
-Fixes a critical issue that prevented thread pools from running all jobs.
-Also brings some major performance improvements for browser (web worker) - based setups.
+#### Node: `require()`-ing relative paths in worker does not work (`Error: Cannot find module`)
 Thank you, https://github.com/FlorianBruckner, for reporting the issues and helping to debug them!
 
-### 0.6.1
+**Solution**: Pass down `__dirname` to worker and use it in `require()` (see [Issue 28](https://github.com/andywer/threads.js/issues/28#issuecomment-248505917))
 
-Added alias for threads: Event `done` as alias for `message`. Updated README example code.
-Credit goes to https://github.com/andrakis
 
-### 0.6.0
+## Change log
 
-Fixes promise and async issues. `Job.clone()` has been dropped.
-Credit goes to https://github.com/maysale01
+See [CHANGELOG.md](./CHANGELOG.md).
 
 
 ## License
