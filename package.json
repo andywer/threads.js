@@ -18,7 +18,7 @@
   "scripts": {
     "build": "gulp dist",
     "test": "gulp test",
-    "prepublish": "gulp dist test"
+    "prepublishOnly": "gulp dist test"
   },
   "engines": {
     "node": ">= 4.0"
