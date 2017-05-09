@@ -25,9 +25,8 @@ export default class Pool extends EventEmitter {
       throw new Error('Pool.send() called without prior Pool.run(). You need to define what to run first.');
     }
 
-    let job = new Job(this);
-    job.run(...this.runArgs);
-    return job.send(...args);
+    const job = new Job(this);
+    return job.run(...this.runArgs).send(...args);
   }
 
   killAll() {
@@ -57,21 +56,21 @@ export default class Pool extends EventEmitter {
   }
 
   handleNewJob(job) {
-    this.lastCreatedJob = job;
     job.once('readyToRun', () => this.queueJob(job));    // triggered by job.send()
   }
 
   handleJobSuccess(thread, job, ...responseArgs) {
     this.emit('done', job, ...responseArgs);
-    this.handleJobDone(thread);
+    this.handleJobDone(thread, job);
   }
 
   handleJobError(thread, job, error) {
     this.emit('error', job, error);
-    this.handleJobDone(thread);
+    this.handleJobDone(thread, job);
   }
 
-  handleJobDone(thread) {
+  handleJobDone(thread, job) {
+    job.destroy();                    // to prevent memory leak
     this.idleThreads.push(thread);
     this.emit('threadAvailable');
 

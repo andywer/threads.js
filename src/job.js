@@ -41,7 +41,6 @@ export default class Job extends EventEmitter {
       .send(...this.sendArgs);
 
     this.thread = thread;
-
     this.emit('threadChanged');
     return this;
   }
@@ -58,5 +57,11 @@ export default class Job extends EventEmitter {
         resolve(this.thread.promise());
       }
     });
+  }
+
+  destroy () {
+    this.removeAllListeners();
+    delete this.runArgs;
+    delete this.sendArgs;
   }
 }

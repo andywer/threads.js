@@ -337,6 +337,7 @@ config.set({
 ## FAQ: Frequently Asked Questions
 
 #### Node: `require()`-ing relative paths in worker does not work (`Error: Cannot find module`)
+Thank you, https://github.com/FlorianBruckner, for reporting the issues and helping to debug them!
 
 **Solution**: Pass down `__dirname` to worker and use it in `require()` (see [Issue 28](https://github.com/andywer/threads.js/issues/28#issuecomment-248505917))
 
