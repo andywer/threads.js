@@ -55,16 +55,8 @@ function prependScriptUrl(scriptUrl) {
   return prefix ? joinPaths(prefix, scriptUrl) : scriptUrl;
 }
 
-function convertToArray(input) {
-  var outputArray = [];
-  var index = 0;
-
-  while (typeof input[index] !== 'undefined') {
-    outputArray.push(input[index]);
-    index++;
-  }
-
-  return outputArray;
+function argsToArray(argumentsList) {
+  return Array.prototype.slice.call(argumentsList);
 }
 
 function logError(error) {
@@ -210,7 +202,7 @@ var Worker = function (_EventEmitter) {
     } else if (event.data.progress) {
       this.handleProgress(event.data.progress);
     } else {
-      var responseArgs = convertToArray(event.data.response);
+      var responseArgs = argsToArray(event.data.response);
       this.emit.apply(this, ['message'].concat(responseArgs));
       this.emit.apply(this, ['done'].concat(responseArgs)); // this one is just for convenience
     }

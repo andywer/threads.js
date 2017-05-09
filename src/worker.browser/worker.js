@@ -3,11 +3,9 @@ import slaveCodeDataUri from './slave-code-uri';
 
 import { getConfig } from '../config';
 
-
 if (typeof window.Worker !== 'object' && typeof window.Worker !== 'function') {
   throw new Error('Browser does not support web workers!');
 }
-
 
 function joinPaths (path1, path2) {
   if (!path1 || !path2) {
@@ -24,16 +22,8 @@ function prependScriptUrl(scriptUrl) {
   return prefix ? joinPaths(prefix, scriptUrl) : scriptUrl;
 }
 
-function convertToArray(input) {
-  let outputArray = [];
-  let index = 0;
-
-  while (typeof input[index] !== 'undefined') {
-    outputArray.push(input[index]);
-    index++;
-  }
-
-  return outputArray;
+function argsToArray(argumentsList) {
+  return Array.prototype.slice.call(argumentsList);
 }
 
 function logError(error) {
@@ -168,7 +158,7 @@ export default class Worker extends EventEmitter {
     } else if (event.data.progress) {
       this.handleProgress(event.data.progress);
     } else {
-      const responseArgs = convertToArray(event.data.response);
+      const responseArgs = argsToArray(event.data.response);
       this.emit('message', ...responseArgs);
       this.emit('done', ...responseArgs);    // this one is just for convenience
     }
