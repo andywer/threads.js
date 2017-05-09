@@ -1,5 +1,10 @@
 # threads.js - Changelog
 
+## Next release
+
+- Trigger worker error event on unhandled promise rejection in worker [#49](https://github.com/andywer/threads.js/issues/49)
+- Merged lost commits stuck in the `develop` branch [#51](https://github.com/andywer/threads.js/pull/51)
+
 ## 0.7.2
 
 - Fixes another memory leak. Credit goes to https://github.com/ChiperSoft
