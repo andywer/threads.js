@@ -1,6 +1,6 @@
 # threads.js - Changelog
 
-## Next release
+## 0.7.3
 
 - Trigger worker error event on unhandled promise rejection in worker [#49](https://github.com/andywer/threads.js/issues/49)
 - Merged lost commits stuck in the `develop` branch [#51](https://github.com/andywer/threads.js/pull/51)
