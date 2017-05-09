@@ -1,23 +1,23 @@
 /*eslint-env node*/
 'use strict';
 
-var gulp       = require('gulp');
-var babel      = require('gulp-babel');
-var browserify = require('browserify');
-var concat     = require('gulp-concat');
-var eslint     = require('gulp-eslint');
-var karma      = require('karma');
-var mocha      = require('gulp-mocha');
-var path       = require('path');
-var rename     = require('gulp-rename');
-var source     = require('vinyl-source-stream');
-var sourcemaps = require('gulp-sourcemaps');
-var through    = require('through2');
-var uglify     = require('gulp-uglify');
+const gulp       = require('gulp');
+const babel      = require('gulp-babel');
+const browserify = require('browserify');
+const concat     = require('gulp-concat');
+const eslint     = require('gulp-eslint');
+const karma      = require('karma');
+const mocha      = require('gulp-mocha');
+const path       = require('path');
+const rename     = require('gulp-rename');
+const source     = require('vinyl-source-stream');
+const sourcemaps = require('gulp-sourcemaps');
+const through    = require('through2');
+const uglify     = require('gulp-uglify');
 
 
 function toStringModule() {
-  return through.obj(function(file, enc, done) {
+  return through.obj((file, enc, done) => {
     if (file.isBuffer()) {
       var newContents = 'module.exports = ' + JSON.stringify(file.contents.toString(enc)) + ';';
       file.contents = new Buffer(newContents, enc);
@@ -35,7 +35,7 @@ function runKarma(options, done) {
   }
   options.configFile = path.join(__dirname, '/karma.conf.js');
 
-  new karma.Server(options, function(exitCode) {
+  new karma.Server(options, exitCode => {
     if (exitCode === 0) {
       done();
     } else {
@@ -46,12 +46,12 @@ function runKarma(options, done) {
 
 
 // Fix for gulp not terminating after mocha finishes
-gulp.doneCallback = function (err) {
-  process.exit(err ? 1 : 0);          // eslint-disable-line no-process-exit
+gulp.doneCallback = error => {
+  process.exit(error ? 1 : 0);          // eslint-disable-line no-process-exit
 };
 
 
-gulp.task('lint', function() {
+gulp.task('lint', () => {
   return gulp.src(['src/**/*.js', 'src/**/*.js.txt', 'test/spec/*.js'])
     .pipe(eslint())
     .pipe(eslint.format())
@@ -59,14 +59,14 @@ gulp.task('lint', function() {
 });
 
 
-gulp.task('copy-slave', function() {
+gulp.task('copy-slave', () => {
   return gulp.src('src/worker.browser/slave.js.txt')
     .pipe(rename('slave.js'))
     .pipe(gulp.dest('dist/'));
 });
 
 
-gulp.task('babel-lib', function() {
+gulp.task('babel-lib', () => {
   return gulp.src('src/**/*.js')
     .pipe(sourcemaps.init())
     .pipe(babel())
@@ -74,14 +74,14 @@ gulp.task('babel-lib', function() {
     .pipe(gulp.dest('lib/'));
 });
 
-gulp.task('babel-spec', function() {
+gulp.task('babel-spec', () => {
   return gulp.src('test/spec/**/*.js')
     .pipe(babel())
     .pipe(gulp.dest('test/spec-build'));
 });
 
 
-gulp.task('browser-slave-module', function() {
+gulp.task('browser-slave-module', () => {
   return gulp.src('./src/worker.browser/slave.js.txt')
     .pipe(toStringModule())
     .pipe(rename('slave-code.js'))
@@ -89,7 +89,7 @@ gulp.task('browser-slave-module', function() {
 });
 
 
-gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], function() {
+gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], () => {
   return browserify()
     .add('./lib/bundle.browser.js')
 
@@ -101,14 +101,14 @@ gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], function() {
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('uglify-lib', ['browserify-lib'], function() {
+gulp.task('uglify-lib', ['browserify-lib'], () => {
   return gulp.src('dist/threads.browser.js')
     .pipe(uglify())
     .pipe(concat('threads.browser.min.js'))
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('uglify-slave', ['copy-slave'], function() {
+gulp.task('uglify-slave', ['copy-slave'], () => {
   return gulp.src('dist/slave.js')
     .pipe(uglify())
     .pipe(concat('slave.min.js'))
@@ -118,15 +118,15 @@ gulp.task('uglify-slave', ['copy-slave'], function() {
 gulp.task('uglify', ['uglify-lib', 'uglify-slave']);
 
 
-gulp.task('test-browser', ['dist', 'babel-spec'], function(done) {
+gulp.task('test-browser', ['dist', 'babel-spec'], done => {
   runKarma(done);
 });
 
-gulp.task('test-browser-after-node', ['test-node'], function(done) {
+gulp.task('test-browser-after-node', ['test-node'], done => {
   runKarma(done);
 });
 
-gulp.task('test-node', ['dist', 'babel-spec'], function() {
+gulp.task('test-node', ['dist', 'babel-spec'], () => {
   return gulp.src('test/spec-build/*.spec.js', { read: false })
     .pipe(mocha());
 });

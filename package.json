@@ -15,6 +15,9 @@
   "author": "Andy Wermke <andy@dev.next-step-software.com>",
   "license": "MIT",
   "main": "lib/index.js",
+  "engines": {
+    "node": ">= 4.0"
+  },
   "bugs": {
     "url": "https://github.com/andywer/thread.js/issues"
   },
