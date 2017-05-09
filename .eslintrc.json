@@ -1,0 +1,16 @@
+{
+  "globals" : {
+    "setTimeout" : true
+  },
+  "parserOptions": {
+    "ecmaVersion": "2015",
+    "sourceType": "module"
+  },
+  "rules" : {
+    "global-strict"   : "off",
+    "key-spacing"     : ["off", { "beforeColon": false, "afterColon": true }],
+    "no-console"      : "warn",
+    "no-multi-spaces" : "off",
+    "quotes"          : ["warn", "single", "avoid-escape"]
+  }
+}

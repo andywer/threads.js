@@ -1,6 +1,6 @@
 // Karma configuration
 
-module.exports = function(config) {
+module.exports = function configureKarma(config) {
   config.set({
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
@@ -28,10 +28,9 @@ module.exports = function(config) {
 
     browserify: {
       debug     : true,
-      configure : function(bundle) {
-        bundle.on('prebundle', function() {
-          bundle
-            .require('./lib/worker.browser/worker.js', { expose : './worker' })   // keep the node worker out of the bundle
+      configure(bundle) {
+        bundle.on('prebundle', () => {
+          bundle.require('./lib/worker.browser/worker.js', { expose : './worker' })   // keep the node worker out of the bundle
         });
       }
     },

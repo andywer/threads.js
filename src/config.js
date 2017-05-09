@@ -1,4 +1,4 @@
-let configuration = {
+const configuration = {
   basepath : {
     node : '',
     web  : ''
@@ -10,7 +10,7 @@ let configuration = {
 
 function configDeepMerge(destObj, srcObj, ancestorProps = []) {
   Object.keys(srcObj).forEach((propKey) => {
-    let srcValue = srcObj[ propKey ];
+    const srcValue = srcObj[ propKey ];
     const ancestorPropsAndThis = ancestorProps.concat([ propKey ]);
 
     if (typeof srcValue === 'object') {
