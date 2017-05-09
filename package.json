@@ -15,19 +15,17 @@
   "author": "Andy Wermke <andy@dev.next-step-software.com>",
   "license": "MIT",
   "main": "lib/index.js",
+  "scripts": {
+    "build": "gulp dist",
+    "test": "gulp test",
+    "prepublish": "gulp dist test"
+  },
   "engines": {
     "node": ">= 4.0"
   },
+  "repository": "andywer/thread.js",
   "bugs": {
     "url": "https://github.com/andywer/thread.js/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/andywer/thread.js.git"
-  },
-  "scripts": {
-    "build": "./node_modules/.bin/gulp dist",
-    "test": "./node_modules/.bin/gulp test"
   },
   "babel": {
     "presets": [
