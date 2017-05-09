@@ -63,10 +63,10 @@ bower install --save threads
 ### Script tag
 
 ```html
-<script src="https://cdn.rawgit.com/andywer/threads.js/__VERSION__/dist/threads.browser.min.js"></script>
+<script src="https://unpkg.com/threads@VERSION/dist/threads.browser.min.js"></script>
 ```
 
-(where `__VERSION__` is the library's version to use, like `v0.7.2`)
+(where `VERSION` is the library's version to use, like `v0.7.3`)
 
 
 ## How To
