@@ -203,6 +203,18 @@ describe('Worker', function () {
 
   if (env === 'node') {
 
+    it('can emit error on unhandled promise rejection', done => {
+      const worker = spawn(() => {
+        new Promise((resolve, reject) => reject(new Error('Test message')));
+      });
+
+      worker.on('error', error => {
+        expect(error.message).to.match(/^((Uncaught )?Error: )?Test message$/);
+        done();
+      });
+      worker.send();
+    });
+
     it('thread code can use setTimeout, setInterval', done => {
       let messageCount = 0;
 
