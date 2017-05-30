@@ -35,6 +35,8 @@ export default class Job extends EventEmitter {
 
   executeOn(thread) {
     thread
+      .off('progress')
+      .on('progress', (e) => {this.emit('progress', e)} )
       .once('message', this.emit.bind(this, 'done'))
       .once('error', this.emit.bind(this, 'error'))
       .run(...this.runArgs)
