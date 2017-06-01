@@ -81,8 +81,7 @@ describe('Job', () => {
       once : noop,
       run  : noop,
       send : noop,
-      off  : noop,
-      on   : noop,
+      on   : noop
     };
     const mock = sinon.mock(thread);
 
@@ -94,7 +93,6 @@ describe('Job', () => {
 
     mock.expects('run').once().withArgs(runnable, importScripts).returnsThis();
     mock.expects('send').once().withArgs(param, transferables).returnsThis();
-    mock.expects('off').once().withArgs('progress').returnsThis();
     mock.expects('on').once().withArgs('progress').returnsThis();
 
     job

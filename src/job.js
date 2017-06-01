@@ -33,10 +33,13 @@ export default class Job extends EventEmitter {
     return this;
   }
 
+  onProgress(progress){
+    this.emit('progress', progress);
+  }
+
   executeOn(thread) {
     thread
-      .off('progress')
-      .on('progress', (e) => {this.emit('progress', e)} )
+      .on('progress', this.onProgress.bind(this))
       .once('message', this.emit.bind(this, 'done'))
       .once('error', this.emit.bind(this, 'error'))
       .run(...this.runArgs)
