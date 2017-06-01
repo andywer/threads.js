@@ -36,7 +36,7 @@ export default class Job extends EventEmitter {
   executeOn(thread) {
     const onProgress = (...args) => this.emit('progress', ...args);
     const onMessage = (...args) => {
-      this.emit('message', ...args);
+      this.emit('done', ...args);
       thread.removeListener('progress', onProgress);
     };
     const onError = (...args) => {
