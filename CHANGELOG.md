@@ -1,6 +1,6 @@
 # threads.js - Changelog
 
-## Next release
+## 0.8.0
 
 - Support for async thread functions
 - Job class now emits 'progress' events [#56](https://github.com/andywer/threads.js/pull/56), credits to https://github.com/mmcardle

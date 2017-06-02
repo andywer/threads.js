@@ -1,6 +1,6 @@
 {
   "name": "threads",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "main": "dist/threads.browser.js",
   "homepage": "https://github.com/andywer/threads.js",
   "authors": [
