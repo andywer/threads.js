@@ -16,6 +16,16 @@ function handlerProgress(progress) {
   this.postMessage({ progress : progress });
 }
 
+function handlerError(error) {
+  // Need to clone error manually to avoid DataCloneError, since errors cannot be send
+  var cloned = {
+    message: error.message,
+    name: error.name,
+    stack: error.stack
+  };
+  this.postMessage({ error : cloned });
+}
+
 function handlerDoneTransfer() {
   var args = Array.prototype.slice.call(arguments);
   var lastArg = args.pop();
@@ -25,6 +35,10 @@ function handlerDoneTransfer() {
   }
 
   this.postMessage({ response : args }, lastArg);
+}
+
+function isPromise (thing) {
+  return thing && typeof thing.then === 'function';
 }
 
 self.onmessage = function (event) {
@@ -48,6 +62,7 @@ self.onmessage = function (event) {
 
   if (event.data.doRun) {
     var handler = this.module.exports;
+
     if (typeof handler !== 'function') {
       throw new Error('Cannot run thread logic. No handler has been exported.');
     }
@@ -55,6 +70,10 @@ self.onmessage = function (event) {
     var preparedHandlerDone = handlerDone.bind(this);
     preparedHandlerDone.transfer = handlerDoneTransfer.bind(this);
 
-    handler.call(this, event.data.param, preparedHandlerDone, handlerProgress.bind(this));
+    var returned = handler.call(this, event.data.param, preparedHandlerDone, handlerProgress.bind(this));
+
+    if (isPromise(returned)) {
+      returned.then(preparedHandlerDone, handlerError.bind(this));
+    }
   }
 }.bind(self);

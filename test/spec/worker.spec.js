@@ -4,7 +4,6 @@ import sinon  from 'sinon';
 import Worker from '../../lib/worker';
 import { config, spawn } from '../../';
 
-
 const env = typeof window === 'object' ? 'browser' : 'node';
 
 function echoThread(param, done) {
@@ -39,7 +38,6 @@ function expectEqualBuffers(buffer1, buffer2) {
   }
 }
 
-
 describe('Worker', function () {
 
   this.timeout(4000);
@@ -54,7 +52,6 @@ describe('Worker', function () {
         }
       });
   });
-
 
   it('can be spawned', () => {
     const worker = spawn();
@@ -173,6 +170,8 @@ describe('Worker', function () {
   it('can update progress', done => {
     const progressUpdates = [];
     const worker = spawn(progressThread);
+    let messageHandlerInvoked = false;
+    let doneHandlerInvoked = false;
 
     worker.on('progress', progress => {
       progressUpdates.push(progress);
@@ -181,23 +180,21 @@ describe('Worker', function () {
 
     worker.on('message', () => {
       expect(progressUpdates).to.eql([ 0.3, 0.6 ]);
-      done();
+      messageHandlerInvoked = true;
+      maybeDone();
     });
-  });
-
-  it('does also emit "done" event', done => {
-    const progressUpdates = [];
-    const worker = spawn(progressThread);
-
-    worker.on('progress', progress => {
-      progressUpdates.push(progress);
-    });
-    worker.send();
 
     worker.on('done', () => {
       expect(progressUpdates).to.eql([ 0.3, 0.6 ]);
-      done();
+      doneHandlerInvoked = true;
+      maybeDone();
     });
+
+    function maybeDone () {
+      if (messageHandlerInvoked && doneHandlerInvoked) {
+        done();
+      }
+    }
   });
 
 
@@ -278,5 +275,23 @@ describe('Worker', function () {
     });
 
   }
+
+  // For unknown reasons Firefox will choke on the last test cases
+  // if the following test cases are not at the end:
+  // (Only in Firefox, not in Chrome, not in node)
+
+  it('can run async method (returning a Promise)', done => {
+    const worker = spawn((param) => Promise.resolve(param));
+    canSendAndReceiveEcho(worker, done);
+  });
+
+  it('can handle errors in an async method', done => {
+    const worker = spawn(() => Promise.reject(new Error('Some error')));
+    worker.on('error', error => {
+      expect(error.message).to.match(/^Some error$/);
+      done();
+    });
+    worker.send();
+  });
 
 });

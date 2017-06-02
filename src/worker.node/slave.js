@@ -53,6 +53,10 @@ function messageHandlerError(error) {
   });
 }
 
+function isPromise (thing) {
+  return thing && typeof thing.then === 'function';
+}
+
 process.on('message', function(data) {
   if (data.initByScript) {
     messageHandler = require(data.script);
@@ -67,6 +71,13 @@ process.on('message', function(data) {
     // so initialization errors will be printed to console
     setupErrorCatcher();
 
-    messageHandler(data.param, messageHandlerDone, messageHandlerProgress);
+    const returned = messageHandler(data.param, messageHandlerDone, messageHandlerProgress);
+
+    if (isPromise(returned)) {
+      returned.then(
+        (result) => messageHandlerDone(result),
+        (error) => messageHandlerError(error)
+      );
+    }
   }
 });
