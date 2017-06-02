@@ -1,5 +1,9 @@
 # threads.js - Changelog
 
+## 0.8.1
+
+- Bug fix: Some outdated transpiled files were published as `v0.8.0`
+
 ## 0.8.0
 
 - Support for async thread functions
