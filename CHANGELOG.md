@@ -1,5 +1,11 @@
 # threads.js - Changelog
 
+## Next release
+
+- Job class now emits 'progress' events
+[#56](https://github.com/andywer/threads.js/pull/56)
+- Credits to https://github.com/mmcardle
+
 ## 0.7.3
 
 - Trigger worker error event on unhandled promise rejection in worker [#49](https://github.com/andywer/threads.js/issues/49)
