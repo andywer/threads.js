@@ -24,6 +24,11 @@ function createFakeThread(response) {
     thread.send = function() {
       thread.emit('error', response.error);
     };
+  } else if (response.progress) {
+    thread.send = function() {
+      // Emit multiple progress events
+      response.progress.forEach((p) => {thread.emit('progress', p)});
+    };
   } else {
     thread.send = function() {
       thread.emit('message', ...response.response);
@@ -101,6 +106,25 @@ describe('Job', () => {
       .executeOn(thread);
 
     mock.verify();
+  });
+
+  it('triggers multiple progress events', () => {
+    const progress1 = { progress: 'progress1' };
+    const progress2 = { progress: 'progress2' };
+    const thread = createFakeThread({
+      progress : [ progress1, progress2 ]
+    });
+
+    const job = new Job(pool);
+    sinon.spy(job, 'emit');
+
+    job
+      .run(noop)
+      .send()
+      .executeOn(thread);
+
+    sinon.assert.calledWith(job.emit, 'progress', progress1);
+    sinon.assert.calledWith(job.emit, 'progress', progress2);
   });
 
   it('triggers done event', () => {
