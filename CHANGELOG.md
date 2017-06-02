@@ -2,9 +2,8 @@
 
 ## Next release
 
-- Job class now emits 'progress' events
-[#56](https://github.com/andywer/threads.js/pull/56)
-- Credits to https://github.com/mmcardle
+- Support for async thread functions
+- Job class now emits 'progress' events [#56](https://github.com/andywer/threads.js/pull/56), credits to https://github.com/mmcardle
 
 ## 0.7.3
 

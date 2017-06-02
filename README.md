@@ -108,6 +108,29 @@ module.exports = function(input, done) {
 };
 ```
 
+### Async functions
+
+You can also pass async functions, a.k.a. functions returning a Promise, to spawn threads.
+
+```javascript
+const spawn = require('threads').spawn;
+
+const thread = spawn(function ([a, b]) {
+  // Remember that this function will be run in another execution context.
+  return new Promise(resolve => {
+    setTimeout(() => resolve(a + b), 1000)
+  })
+});
+
+thread
+  .send([ 9, 12 ])
+  // The handlers come here: (none of them is mandatory)
+  .on('message', function(response) {
+    console.log('9 + 12 = ', response);
+    thread.kill();
+  });
+```
+
 
 ### Thread Pool
 
