@@ -1,6 +1,6 @@
 # threads.js
 [![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=master)](https://travis-ci.org/andywer/threads.js)
-[![Test Coverage](https://codeclimate.com/github/andywer/threads.js/badges/coverage.svg)](https://codeclimate.com/github/andywer/threads.js/coverage)
+[![Coverage Status](https://coveralls.io/repos/github/andywer/threads.js/badge.svg?branch=master)](https://coveralls.io/github/andywer/threads.js?branch=master)
 [![Code Climate](https://codeclimate.com/github/andywer/threads.js/badges/gpa.svg)](https://codeclimate.com/github/andywer/threads.js)
 [![NPM Version](https://img.shields.io/npm/v/threads.svg)](https://www.npmjs.com/package/threads)
 
