@@ -18,7 +18,10 @@ function joinPaths (path1, path2) {
 }
 
 function prependScriptUrl(scriptUrl) {
-  const prefix = getConfig().basepath.web;
+  let prefix = getConfig().basepath.web;
+  if (prefix && prefix.startsWith('/')) {
+    prefix = `${document.location.protocol}//${document.location.host}${prefix}`;
+  }
   return prefix ? joinPaths(prefix, scriptUrl) : scriptUrl;
 }
 
