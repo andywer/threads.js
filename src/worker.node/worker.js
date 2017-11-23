@@ -9,6 +9,11 @@ export default class Worker extends EventEmitter {
   constructor(initialRunnable, options = {}) {
     super();
 
+    const config = getConfig();
+    if (config.forkOptions.execArgv.length > 0) {
+      options.execArgv = (options.execArgv === undefined ? config.forkOptions.execArgv : options.execArgv.concat(config.forkOptions.execArgv));
+    }
+
     this.slave = child.fork(path.join(__dirname, 'slave.js'), [], options);
     this.slave.on('message', this.handleMessage.bind(this));
     this.slave.on('error', this.handleError.bind(this));

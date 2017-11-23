@@ -5,6 +5,9 @@ const configuration = {
   },
   fallback : {
     slaveScriptUrl : ''
+  },
+  forkOptions : {
+    execArgv: []
   }
 };
 
