@@ -6,7 +6,7 @@ const configuration = {
   fallback : {
     slaveScriptUrl : ''
   },
-  forkOptions : {
+  workerOptions : {
     execArgv: []
   }
 };
