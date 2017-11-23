@@ -49,6 +49,9 @@ describe('Worker', function () {
         basepath : {
           node : __dirname + '/../thread-scripts',
           web  : 'http://localhost:9876/base/test/thread-scripts'
+        },
+        workerOptions: {
+          execArgv: []
         }
       });
   });
