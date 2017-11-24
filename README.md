@@ -85,8 +85,8 @@ const spawn   = threads.spawn;
 // Set base paths to thread scripts
 config.set({
   basepath : {
-    browser : 'http://myserver.local/thread-scripts',
-    node    : __dirname + '/../thread-scripts'
+    node : __dirname + '/../thread-scripts',
+    web  : 'http://myserver.local/thread-scripts'
   }
 });
 
