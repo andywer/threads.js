@@ -1,7 +1,9 @@
 import expect   from 'expect.js';
 import { Pool } from '../../lib/';
 
-describe('Pool (functional test)', () => {
+describe('Pool (functional test)', function () {
+  this.timeout(10000)
+
   const pool = new Pool();
   const jobs = [], promises = [];
 
@@ -9,9 +11,9 @@ describe('Pool (functional test)', () => {
     done(input);
   };
 
-  pool.run(handler);
-
   it('can send data and run promisified', () => {
+    pool.run(handler);
+
     for (let i = 0; i < 10; i++) {
       const job = pool.send(i);
       if (jobs.indexOf(job) > -1) {
