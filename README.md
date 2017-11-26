@@ -329,6 +329,25 @@ Done.
 You can provide a fallback if the user's browser does not support web workers.
 See [webworker-fallback](https://github.com/andywer/webworker-fallback). This will not have any effect if used by node.js code.
 
+### Debugging threads
+
+When the main process uses `--inspect` to debug Node.js, each thread will be started with the `--inspect` flag too, but
+in a different port so they don't interfere with the main process. Each created thread will have an incremental port, so
+you can create and debug as many as you want.
+
+This also works with `--inspect-brk`. As expected, each thread will pause on the first line when created.
+
+All other flags are passed to the thread unchanged. To override this behaviour, you can pass your own `execArgv` array
+when creating a thread:
+
+```javascript
+// Always open an inspect port on 1234, no matter what the main process is doing.
+spawn(myThreadFile, { execArgv: ['--inspect=1234'] })
+
+// Pass this flag to the thread. Ignore any other flag provided by the main process.
+spawn(myThreadFile, { execArgv: ['--throw-deprecation'] })
+```
+
 ### Use external dependencies
 
 Not yet completely implemented.
