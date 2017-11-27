@@ -5,9 +5,6 @@ const configuration = {
   },
   fallback : {
     slaveScriptUrl : ''
-  },
-  workerOptions : {
-    execArgv: []
   }
 };
 
