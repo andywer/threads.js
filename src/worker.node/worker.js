@@ -7,8 +7,9 @@ import { getConfig } from '../config';
 
 export default class Worker extends EventEmitter {
   constructor(initialRunnable, importScripts = [], options = {}) {
+    // `importScripts` cannot be consumed, it's just there to keep the API compatible to the browser worker
     super();
-
+    
     this.slave = child.fork(path.join(__dirname, 'slave.js'), [], options);
     this.slave.on('message', this.handleMessage.bind(this));
     this.slave.on('error', this.handleError.bind(this));
