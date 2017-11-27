@@ -253,14 +253,6 @@ describe('Worker', function () {
         worker.kill();
         done();
       });
-
-      it('default options', done => {
-        process.execArgv=['--arg1'];
-        worker = spawn(null, [], {});
-        expect(worker.slave.spawnargs[1]).to.eql('--arg1');
-        worker.kill();
-        done();
-      });
     });
   }
 
