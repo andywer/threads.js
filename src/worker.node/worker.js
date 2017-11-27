@@ -6,7 +6,7 @@ import { getConfig } from '../config';
 
 
 export default class Worker extends EventEmitter {
-  constructor(initialRunnable, importScripts, options) {
+  constructor(initialRunnable, importScripts = [], options = {}) {
     super();
 
     this.slave = child.fork(path.join(__dirname, 'slave.js'), [], options);
