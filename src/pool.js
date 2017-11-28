@@ -4,9 +4,9 @@ import defaults     from './defaults';
 import { spawn }    from './';
 
 export default class Pool extends EventEmitter {
-  constructor(threads) {
+  constructor(threads, options = {}) {
     super();
-    this.threads = Pool.spawn(threads || defaults.pool.size);
+    this.threads = Pool.spawn(threads || defaults.pool.size, options);
     this.idleThreads = this.threads.slice();
     this.jobQueue = [];
     this.runArgs = [];
@@ -81,11 +81,11 @@ export default class Pool extends EventEmitter {
   }
 }
 
-Pool.spawn = (threadCount) => {
+Pool.spawn = (threadCount, options) => {
   const threads = [];
 
   for (let threadIndex = 0; threadIndex < threadCount; threadIndex++) {
-    threads.push(spawn());
+    threads.push(spawn(null, [], options));
   }
 
   return threads;

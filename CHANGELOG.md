@@ -1,5 +1,9 @@
 # threads.js - Changelog
 
+## 0.9.0
+
+- Add option parameter to Pool for passing arguments to worker processes [#66](https://github.com/andywer/threads.js/pull/66), credits to https://github.com/ryanchristopherwong8
+
 ## 0.8.1
 
 - Bug fix: Some outdated transpiled files were published as `v0.8.0`

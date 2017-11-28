@@ -28,7 +28,8 @@ export const resetPortCounter = () => {
 }
 
 export default class Worker extends EventEmitter {
-  constructor(initialRunnable, options = {}) {
+  constructor(initialRunnable, importScripts = [], options = {}) {
+    // `importScripts` cannot be consumed, it's just there to keep the API compatible to the browser worker
     super();
 
     this.slave = child.fork(path.join(__dirname, 'slave.js'), [], Object.assign(
