@@ -7,8 +7,8 @@ import Worker   from './worker';
 
 export { config, defaults, Pool };
 
-export function spawn(runnable = null, importScripts = []) {
-  return new Worker(runnable, importScripts);
+export function spawn(runnable = null, importScripts = [], options = {}) {
+  return new Worker(runnable, importScripts, options);
 }
 
 export default {

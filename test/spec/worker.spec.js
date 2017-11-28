@@ -197,7 +197,6 @@ describe('Worker', function () {
     }
   });
 
-
   if (env === 'node') {
 
     it('can emit error on unhandled promise rejection', done => {
@@ -231,6 +230,30 @@ describe('Worker', function () {
         });
     });
 
+    describe('handle option parameters', () => {
+      let worker;
+      let initialArgs;
+
+      before(() => {
+        initialArgs = process.execArgv;
+      });
+
+      after(() => {
+        process.execArgv = initialArgs;
+      });
+
+      afterEach(() => {
+        worker.kill();
+      });
+
+      it('can override options', done => {
+        process.execArgv=['--arg1'];
+        worker = spawn(null, [], { execArgv: ['--arg2'] });
+        expect(worker.slave.spawnargs[1]).to.eql('--arg2');
+        worker.kill();
+        done();
+      });
+    });
   }
 
 
