@@ -4,13 +4,38 @@ import EventEmitter from 'eventemitter3';
 
 import { getConfig } from '../config';
 
+// Mutable variable with the last port used for inspect/inspect-brk.
+// This value is shared among all workers.
+let lastPort = 0;
+
+// Port used by Node.JS when there is no port specified. See
+// https://nodejs.org/en/docs/inspector/#command-line-options
+const DEFAULT_PORT = 9229;
+const buildExecArgv = () => process.execArgv.map(arg => {
+  const matches = arg.match(/^(--inspect(?:-brk)?)(?:=(\d+))?/);
+  if (!matches) return arg;
+
+  const command = matches[1];
+  if (lastPort === 0) lastPort = Number(matches[2]) || 9229;
+  lastPort++;
+  return `${command}=${lastPort}`
+});
+
+// This function will reset the counter of ports used for inspect/inspect-brk.
+// Used for testing.
+export const resetPortCounter = () => {
+  lastPort = 0;
+}
 
 export default class Worker extends EventEmitter {
   constructor(initialRunnable, importScripts = [], options = {}) {
     // `importScripts` cannot be consumed, it's just there to keep the API compatible to the browser worker
     super();
-    
-    this.slave = child.fork(path.join(__dirname, 'slave.js'), [], options);
+
+    this.slave = child.fork(path.join(__dirname, 'slave.js'), [], Object.assign(
+      { execArgv: buildExecArgv() },
+      options
+    ));
     this.slave.on('message', this.handleMessage.bind(this));
     this.slave.on('error', this.handleError.bind(this));
     this.slave.on('exit', this.emit.bind(this, 'exit'));

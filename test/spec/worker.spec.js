@@ -1,7 +1,9 @@
 import async  from 'async';
 import expect from 'expect.js';
 import sinon  from 'sinon';
-import Worker from '../../lib/worker';
+import Worker, { resetPortCounter } from '../../lib/worker';
+import child_process from 'child_process';
+import EventEmitter from 'eventemitter3';
 import { config, spawn } from '../../';
 
 const env = typeof window === 'object' ? 'browser' : 'node';
@@ -229,6 +231,89 @@ describe('Worker', function () {
           }
         });
     });
+
+    // Note: these tests set a value in `process.execArgv` to test it is correctly used to generate
+    // the values for the worker. If you run these tests in an IDE (for example, VS Code), it might
+    // add extra values to `process.execArgv` and it will cause unexpected results in these tests.
+    describe('can handle process argv', () => {
+      let forkStub;
+      class ForkMock extends EventEmitter {
+        send(){}
+      }
+
+      beforeEach(() => {
+        forkStub = sinon.stub(child_process, 'fork').returns(new ForkMock());
+        resetPortCounter();
+      })
+
+      afterEach(() => {
+        forkStub.restore();
+      })
+
+      it('can receive main process flags', () => {
+        process.execArgv=['--arg1', '--arg2'];
+        const worker = spawn();
+
+        expect(forkStub.calledOnce).to.be.ok();
+        expect(forkStub.lastCall.args[2]).to.eql({
+          execArgv: ['--arg1', '--arg2']
+        })
+      });
+
+      it('increments manual port for --inspect', () => {
+        process.execArgv=['--inspect=1234'];
+        const worker = spawn();
+
+        expect(forkStub.lastCall.args[2]).to.eql({
+          execArgv: ['--inspect=1235']
+        })
+      });
+
+      it('increments manual port for --inspect-brk', () => {
+        process.execArgv=['--inspect-brk=1234'];
+        const worker = spawn();
+
+        expect(forkStub.lastCall.args[2]).to.eql({
+          execArgv: ['--inspect-brk=1235']
+        })
+      });
+
+      it('increments default port for --inspect', () => {
+        process.execArgv=['--inspect'];
+        const worker = spawn();
+
+        expect(forkStub.lastCall.args[2]).to.eql({
+          execArgv: ['--inspect=9230']
+        })
+      });
+
+      it('increments default port for --inspect-brk', () => {
+        process.execArgv=['--inspect-brk'];
+        const worker = spawn();
+
+        expect(forkStub.lastCall.args[2]).to.eql({
+          execArgv: ['--inspect-brk=9230']
+        })
+      });
+
+      it('increments the port in multiple workers', () => {
+        process.execArgv=['--inspect'];
+        const worker1 = spawn();
+        const worker2 = spawn();
+        const worker3 = spawn();
+
+        expect(forkStub.firstCall.args[2]).to.eql({ execArgv: ['--inspect=9230'] })
+        expect(forkStub.secondCall.args[2]).to.eql({ execArgv: ['--inspect=9231'] })
+        expect(forkStub.thirdCall.args[2]).to.eql({ execArgv: ['--inspect=9232'] })
+      });
+
+      it('can override execArgv', () => {
+        process.execArgv=['--inspect'];
+        const worker = spawn( echoThread, [], { execArgv: ['--my-args'] } );
+
+        expect(forkStub.lastCall.args[2]).to.eql({ execArgv: ['--my-args'] })
+      });
+    })
 
     describe('handle option parameters', () => {
       let worker;
