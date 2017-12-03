@@ -309,7 +309,7 @@ describe('Worker', function () {
 
       it('can override execArgv', () => {
         process.execArgv=['--inspect'];
-        const worker = spawn( echoThread, { execArgv: ['--my-args'] } );
+        const worker = spawn( echoThread, [], { execArgv: ['--my-args'] } );
 
         expect(forkStub.lastCall.args[2]).to.eql({ execArgv: ['--my-args'] })
       });
