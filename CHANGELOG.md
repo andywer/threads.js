@@ -1,5 +1,9 @@
 # threads.js - Changelog
 
+## 0.10.0
+
+- Make threads debuggable / inspectable by auto-incrementing debugger ports (#68, credits to @scinos)
+
 ## 0.9.0
 
 - Add option parameter to Pool for passing arguments to worker processes [#66](https://github.com/andywer/threads.js/pull/66), credits to https://github.com/ryanchristopherwong8
