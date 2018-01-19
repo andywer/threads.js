@@ -52,7 +52,8 @@ self.onmessage = function (event) {
   }
 
   if (event.data.initByMethod) {
-    delete this.module.exports;
+    // Clear `this.module.exports` first, to avoid trouble with importScripts' CommonJS detection
+    delete this.module.exports;
   
     if (scripts && scripts.length > 0) {
       importScripts.apply(null, scripts);
