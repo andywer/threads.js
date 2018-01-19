@@ -1,5 +1,9 @@
 # threads.js - Changelog
 
+## 0.10.1
+
+- Fix issue with Common JS detection in imported web worker scripts (#72, credits to @Keyholder)
+
 ## 0.10.0
 
 - Make threads debuggable / inspectable by auto-incrementing debugger ports (#68, credits to @scinos)
