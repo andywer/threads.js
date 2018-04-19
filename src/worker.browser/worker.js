@@ -18,11 +18,12 @@ function joinPaths (path1, path2) {
 }
 
 function prependScriptUrl(scriptUrl) {
-  let prefix = getConfig().basepath.web;
-  if (prefix && prefix.startsWith('/')) {
-    prefix = `${document.location.protocol}//${document.location.host}${prefix}`;
+  let basePath = getConfig().basepath.web;
+  if (basePath && !basePath.match(/^\w+:\/\//)) {
+    // Turn path into full URL, since referencing a `http://` path from a `blob://` URL won't work
+    basePath = `${document.location.protocol}//${document.location.host}${basePath}`;
   }
-  return prefix ? joinPaths(prefix, scriptUrl) : scriptUrl;
+  return basePath ? joinPaths(basePath, scriptUrl) : scriptUrl;
 }
 
 function argsToArray(argumentsList) {
