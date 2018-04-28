@@ -1,5 +1,9 @@
 # threads.js - Changelog
 
+## 0.11.0
+
+- Implement job abortion (#78, credits to @Liu233w)
+
 ## 0.10.1
 
 - Fix issue with Common JS detection in imported web worker scripts (#72, credits to @Keyholder)
