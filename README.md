@@ -183,6 +183,25 @@ pool
   });
 ```
 
+#### Job Abortion
+
+You can abort a job by calling `job.abort()`.
+
+```javascript
+const Pool = require('threads').Pool;
+
+const pool = new Pool();
+
+const job = pool
+  .run('/path/to/worker')
+  .send({ do : 'something' });
+  
+job.on('abort', () => { console.log('Job Aborted'); });
+  
+// somewhere else
+job.abort();
+```
+
 ### Streaming
 
 You can also spawn a thread for streaming purposes. The following example shows
