@@ -38,6 +38,23 @@ class FakeWorker extends EventEmitter {
   }
 }
 
+class RunnableFakeWorker extends FakeWorker {
+  send(parameter, transferables = []) {
+
+    this.parameter = parameter;
+    this.transferables = transferables;
+
+    setTimeout(() => {
+      if (parameter.error) {
+        this.emit('error', parameter.error);
+      } else {
+        this.runnable(this.parameter, () => this.emit('message', parameter));
+      }
+    }, 0);
+    return this;
+  }
+}
+
 function noop() { return this; }
 
 function doTimes(callback, times) {
@@ -49,7 +66,6 @@ function doTimes(callback, times) {
 
   return returns;
 }
-
 
 describe('Pool', () => {
 
@@ -245,6 +261,97 @@ describe('Pool', () => {
     pool.once('finished', () => {
       expect(calledJob).to.equal(50);
       done();
+    });
+  });
+
+  describe('', () => {
+    let fakeSpawn;
+
+    before(() => {
+      fakeSpawn = RunnableFakeWorker;
+      Pool.spawn = origSpawn;
+    });
+
+    after(() => {
+      Pool.spawn = fakeSpawn;
+    });
+
+    it('can abort a running job', (done) => {
+      const pool = new Pool(5);
+      let jobDone = false;
+      const job = pool.run(
+        (input, done) => setTimeout(() => { jobDone = true; done(); }, 20)
+      ).send('...');
+
+      setTimeout(() => {
+        job.abort();
+      }, 0)
+
+      setTimeout(() => {
+        expect(jobDone).to.equal(false);
+
+        done();
+      }, 100);
+    });
+
+    it('can abort a job before it is started', (done) => {
+      const pool = new Pool(1);
+      const theThread = pool.threads[0];
+      let jobDone = false;
+
+      pool.run((input, done) => setTimeout(() => { done(); }, 100)).send('...');
+
+      const job = pool.run(
+        (input, done) => setTimeout(() => { jobDone = true; done(); }, 20)
+      ).send('...');
+
+      setTimeout(() => {
+        job.abort();
+      }, 10)
+
+      setTimeout(() => {
+        expect(jobDone).to.equal(false);
+
+        expect(pool.threads.length).to.equal(1)
+        expect(pool.idleThreads.length).to.equal(1)
+
+        // the original thread are not been deleted
+        expect(pool.threads[0]).to.equal(theThread)
+        expect(pool.idleThreads[0]).to.equal(theThread)
+
+        done();
+      }, 500);
+    });
+
+    it('can remove old thread and spawn new thread when a job is aborted', (done) => {
+      const pool = new Pool(5);
+      let killedThreads = 0;
+
+      pool.threads.forEach(thread => {
+        thread.on('exit', () => {
+          ++killedThreads;
+        });
+      });
+
+      const job = pool.run(() => null)
+        .send('...');
+      const thread = job.thread;
+
+      setTimeout(() => {
+        job.abort();
+      }, 10)
+
+      setTimeout(() => {
+        expect(killedThreads).to.equal(1);
+
+        expect(pool.threads.length).to.equal(5);
+        expect(pool.idleThreads.length).to.equal(5);
+
+        expect(pool.threads.indexOf(thread)).to.equal(-1);
+        expect(pool.idleThreads.indexOf(thread)).to.equal(-1);
+
+        done();
+      }, 100);
     });
   });
 

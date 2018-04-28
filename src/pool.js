@@ -10,6 +10,7 @@ export default class Pool extends EventEmitter {
     this.idleThreads = this.threads.slice();
     this.jobQueue = [];
     this.runArgs = [];
+    this.spawnOptions = options;
 
     this.on('newJob', (job) => this.handleNewJob(job));
     this.on('threadAvailable', () => this.dequeue());
@@ -36,8 +37,16 @@ export default class Pool extends EventEmitter {
   }
 
   queueJob(job) {
+    job.once('abort', () => this.dropJob(job));  // triggered by job.abort()
     this.jobQueue.push(job);
     this.dequeue();
+  }
+
+  dropJob(job) {
+    const index = this.jobQueue.indexOf(job);
+    if (index !== -1) {
+      this.jobQueue.splice(index, 1);
+    }
   }
 
   dequeue() {
@@ -48,9 +57,12 @@ export default class Pool extends EventEmitter {
     const job = this.jobQueue.shift();
     const thread = this.idleThreads.shift();
 
+    job.removeAllListeners('abort'); // remove previous listener
+
     job
       .once('done', (...args) => this.handleJobSuccess(thread, job, ...args))
-      .once('error', (...args) => this.handleJobError(thread, job, ...args));
+      .once('error', (...args) => this.handleJobError(thread, job, ...args))
+      .once('abort', () => this.handleJobAbort(thread, job));
 
     job.executeOn(thread);
   }
@@ -78,6 +90,16 @@ export default class Pool extends EventEmitter {
       // run deferred to give other job.on('done') handlers time to run first
       setTimeout(() => { this.emit('finished'); }, 0);
     }
+  }
+
+  handleJobAbort(thread, job) {
+    thread.kill();
+
+    const index = this.threads.indexOf(thread);
+    const newThread = spawn(null, [], this.spawnOptions);
+
+    this.threads.splice(index, 1, newThread);
+    this.handleJobDone(newThread, job);
   }
 }
 

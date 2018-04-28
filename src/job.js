@@ -43,7 +43,7 @@ export default class Job extends EventEmitter {
       this.emit('error', ...args);
       thread.removeListener('progress', onProgress);
     };
-    
+
     thread
       .on('progress', onProgress)
       .once('message', onMessage)
@@ -68,6 +68,10 @@ export default class Job extends EventEmitter {
         resolve(this.thread.promise());
       }
     });
+  }
+
+  abort() {
+    this.emit('abort');
   }
 
   destroy () {
