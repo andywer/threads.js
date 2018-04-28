@@ -96,12 +96,10 @@ export default class Pool extends EventEmitter {
     thread.kill();
 
     const index = this.threads.indexOf(thread);
-    this.threads.splice(index, 1);
+    const newThread = spawn(null, [], this.spawnOptions);
 
-    const newThread = spawn(null, [], this.spawnOptions)
-    this.threads.push(newThread)
-
-    this.handleJobDone(newThread, job)
+    this.threads.splice(index, 1, newThread);
+    this.handleJobDone(newThread, job);
   }
 }
 
