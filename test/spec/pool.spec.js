@@ -276,7 +276,7 @@ describe('Pool', () => {
       Pool.spawn = fakeSpawn;
     });
 
-    it('can abort a job', (done) => {
+    it('can abort a running job', (done) => {
       const pool = new Pool(5);
       let jobDone = false;
       const job = pool.run(

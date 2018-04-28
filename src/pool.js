@@ -37,8 +37,16 @@ export default class Pool extends EventEmitter {
   }
 
   queueJob(job) {
+    job.once('abort', () => this.dropJob(job));  // triggered by job.abort()
     this.jobQueue.push(job);
     this.dequeue();
+  }
+
+  dropJob(job) {
+    const index = this.jobQueue.indexOf(job);
+    if (index !== -1) {
+      this.jobQueue.splice(index, 1);
+    }
   }
 
   dequeue() {
@@ -47,13 +55,9 @@ export default class Pool extends EventEmitter {
     }
 
     const job = this.jobQueue.shift();
-
-    if (job.isAborted) {
-      job.destroy();
-      return this.dequeue();
-    }
-
     const thread = this.idleThreads.shift();
+
+    job.removeAllListeners('abort'); // remove previous listener
 
     job
       .once('done', (...args) => this.handleJobSuccess(thread, job, ...args))

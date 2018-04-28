@@ -10,8 +10,6 @@ export default class Job extends EventEmitter {
     this.runArgs = [];
     this.sendArgs = [];
 
-    this.isAborted = false;
-
     pool.emit('newJob', this);
   }
 
@@ -73,7 +71,6 @@ export default class Job extends EventEmitter {
   }
 
   abort() {
-    this.isAborted = true;
     this.emit('abort');
   }
 
