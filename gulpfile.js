@@ -90,8 +90,8 @@ gulp.task('browser-slave-module', () => {
 
 
 gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], () => {
-  return browserify()
-    .add('./lib/bundle.browser.js')
+  return browserify({ standalone: 'threads' })
+    .add('./lib/index.js')
 
     // overrides, so the node-specific files won't make their way into the bundle
     .require('./lib/worker.browser/worker.js', { expose : './worker' })
