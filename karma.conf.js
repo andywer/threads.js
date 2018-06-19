@@ -57,12 +57,12 @@ module.exports = function configureKarma(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: process.env.TRAVISCI ? ['Firefox'] : ['ChromeInsecure', 'Firefox'],
+    browsers: ['ChromeInsecure', 'Firefox'],
 
     customLaunchers: {
       ChromeInsecure: {
         base: 'Chrome',
-        flags: ['--disable-web-security', '--no-sandbox']
+        flags: ['--disable-web-security', '--headless', '--no-sandbox']
       }
     },
 
