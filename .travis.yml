@@ -10,6 +10,10 @@ env:
     - DISPLAY=:99.0
     - TRAVISCI=1
 
+sudo: required
+addons:
+  chrome: stable
+
 before_script:
   - sh -e /etc/init.d/xvfb start
 
