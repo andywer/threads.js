@@ -66,7 +66,7 @@ bower install --save threads
 <script src="https://unpkg.com/threads@VERSION/dist/threads.browser.min.js"></script>
 ```
 
-(where `VERSION` is the library's version to use, like `v0.7.3`)
+Note: Replace `VERSION` with the library's version you want to use, like `v0.12.0`. The library will be exposed on the global window scope as `threads`.
 
 
 ## How To
