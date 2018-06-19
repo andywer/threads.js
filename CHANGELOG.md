@@ -1,5 +1,9 @@
 # threads.js - Changelog
 
+## 0.12.0
+
+- Fix UMD bundling (#84)
+
 ## 0.11.0
 
 - Implement job abortion (#78, credits to @Liu233w)
