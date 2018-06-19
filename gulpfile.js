@@ -90,7 +90,7 @@ gulp.task('browser-slave-module', () => {
 
 
 gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], () => {
-  return browserify()
+  return browserify({ standalone: 'threads' })
     .add('./lib/bundle.browser.js')
 
     // overrides, so the node-specific files won't make their way into the bundle
