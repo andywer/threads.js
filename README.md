@@ -14,6 +14,8 @@ when run by node.js. Also supports browsers which do not support web workers.
 - Well tested
 - ES6 and backwards-compatible
 
+Side note: Using threads.js? Check out the [Version 1.0 API draft](https://github.com/andywer/threads.js/issues/88) and feel free to leave feedback!
+
 
 ## Basic usage
 
