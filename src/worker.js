@@ -5,7 +5,7 @@
  * configuring a browserify override.
  */
 
-if (typeof process !== 'undefined' && 'pid' in process) {
+if (typeof process !== 'undefined' && process.arch !== 'browser' && 'pid' in process) {
   module.exports = require('./worker.node/worker');
 } else {
   module.exports = require('./worker.browser/worker');
