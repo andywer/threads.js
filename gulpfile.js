@@ -128,7 +128,7 @@ gulp.task('test-browser-after-node', ['test-node'], done => {
 
 gulp.task('test-node', ['dist', 'babel-spec'], () => {
   return gulp.src('test/spec-build/*.spec.js', { read: false })
-    .pipe(mocha());
+    .pipe(mocha({ exit: true }));
 });
 
 
