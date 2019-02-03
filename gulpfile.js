@@ -89,7 +89,7 @@ gulp.task('browser-slave-module', () => {
 });
 
 
-gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], () => {
+gulp.task('browserify-lib', gulp.parallel(['babel-lib', 'browser-slave-module']), () => {
   return browserify({ standalone: 'threads' })
     .add('./lib/index.js')
 
@@ -101,38 +101,37 @@ gulp.task('browserify-lib', ['babel-lib', 'browser-slave-module'], () => {
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('uglify-lib', ['browserify-lib'], () => {
+gulp.task('uglify-lib', gulp.parallel(['browserify-lib']), () => {
   return gulp.src('dist/threads.browser.js')
     .pipe(uglify())
     .pipe(concat('threads.browser.min.js'))
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('uglify-slave', ['copy-slave'], () => {
+gulp.task('uglify-slave', gulp.parallel(['copy-slave']), () => {
   return gulp.src('dist/slave.js')
     .pipe(uglify())
     .pipe(concat('slave.min.js'))
     .pipe(gulp.dest('dist/'));
 });
 
-gulp.task('uglify', ['uglify-lib', 'uglify-slave']);
+gulp.task('uglify', gulp.parallel(['uglify-lib', 'uglify-slave']));
 
+gulp.task('dist', gulp.parallel(['lint', gulp.series([ 'browserify-lib', 'uglify' ])]));
 
-gulp.task('test-browser', ['dist', 'babel-spec'], done => {
+gulp.task('test-browser', gulp.parallel(['dist', 'babel-spec']), done => {
   runKarma(done);
 });
 
-gulp.task('test-browser-after-node', ['test-node'], done => {
+gulp.task('test-browser-after-node', done => {
   runKarma(done);
 });
 
-gulp.task('test-node', ['dist', 'babel-spec'], () => {
+gulp.task('test-node', gulp.parallel(['dist', 'babel-spec']), () => {
   return gulp.src('test/spec-build/*.spec.js', { read: false })
     .pipe(mocha({ exit: true }));
 });
 
+gulp.task('test', gulp.series(['test-node', 'test-browser-after-node']));
 
-gulp.task('dist', ['lint', 'browserify-lib', 'uglify']);
-gulp.task('test', ['test-node', 'test-browser-after-node']);
-
-gulp.task('default', ['dist', 'test']);
+gulp.task('default', gulp.series(['dist', 'test']));
