@@ -1,2 +1,6 @@
 test/
+*.yml
+.*.yml
+gulpfile.js
+karma.conf.js
 npm-debug.log
