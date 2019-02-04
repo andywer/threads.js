@@ -1,5 +1,9 @@
 # threads.js - Changelog
 
+## 0.12.1
+
+- Avoid to use node workers in browser (#96, credits to @francoisc-wemaik)
+
 ## 0.12.0
 
 - Fix UMD bundling (#84)
