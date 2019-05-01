@@ -1,0 +1,62 @@
+{
+  "name": "threads",
+  "version": "1.0.0-alpha",
+  "description": "Easy to use, yet powerful multi-threading library for node.js and the browser!",
+  "main": "dist/index.js",
+  "scripts": {
+    "prebuild": "rimraf dist/",
+    "build": "tsc",
+    "test": "ava test/**/*.test.ts",
+    "posttest": "tslint --project .",
+    "prepare": "build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andywer/threads.git"
+  },
+  "author": "Andy Wermke (https://github.com/andywer)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andywer/threads/issues"
+  },
+  "homepage": "https://github.com/andywer/threads#readme",
+  "keywords": [
+    "thread",
+    "web worker",
+    "pool",
+    "spawn",
+    "isomorphic",
+    "parallel",
+    "observable"
+  ],
+  "devDependencies": {
+    "@types/node": "^11.13.8",
+    "ava": "^1.4.1",
+    "rimraf": "^2.6.3",
+    "ts-node": "^8.1.0",
+    "tslint": "^5.16.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "@types/zen-observable": "^0.8.0",
+    "zen-observable": "^0.8.14"
+  },
+  "optionalDependencies": {
+    "tiny-worker": "2.*"
+  },
+  "ava": {
+    "compileEnhancements": false,
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
+  },
+  "files": [
+    "dist/**",
+    "*.js",
+    "*.ts"
+  ]
+}
