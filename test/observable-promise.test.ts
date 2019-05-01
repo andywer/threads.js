@@ -1,12 +1,14 @@
 import test from "ava"
-import ObservablePromise from "../src/observable-promise"
+import { ObservablePromise, makeHot } from "../src/observable-promise"
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-test("can create an observable promise", t => {
-  ObservablePromise((resolve) => {
+test("can create an observable promise", async t => {
+  t.plan(1)
+
+  await ObservablePromise((resolve) => {
+    t.true(true)
     resolve()
-    t.pass()
   })
 })
 
@@ -65,7 +67,7 @@ test("can proxy a promise rejection", async t => {
 test("can proxy a promise rejection caused by a sync throw", async t => {
   let handlerCallCount = 0
 
-  const async = ObservablePromise((resolve, reject) => {
+  const async = ObservablePromise(() => {
     throw Error("I am supposed to be rejected.")
   })
 
@@ -81,4 +83,86 @@ test("can proxy a promise rejection caused by a sync throw", async t => {
 
   await Promise.all([promise1, promise2])
   t.is(handlerCallCount, 2)
+})
+
+test("can subscribe to values and completion", async t => {
+  let capturedValues: any[] = []
+  let capturedCompletions = 0
+
+  const async = ObservablePromise((resolve, reject, observer) => {
+    setTimeout(() => observer.next(1), 10)
+    setTimeout(() => observer.next(2), 20)
+    setTimeout(() => observer.complete(), 30)
+  })
+
+  for (let index = 0; index < 2; index++) {
+    async.subscribe(
+      value => capturedValues.push(value),
+      () => undefined,
+      () => capturedCompletions++
+    )
+  }
+
+  await async.finally()
+  await sleep(1)
+
+  t.deepEqual(capturedValues, [1, 1, 2, 2])
+  t.is(capturedCompletions, 2)
+})
+
+test("can subscribe to errors", async t => {
+  let capturedErrorMessages: string[] = []
+  let capturedValues: any[] = []
+  let capturedCompletions = 0
+
+  const async = ObservablePromise((resolve, reject, observer) => {
+    setTimeout(() => observer.next(1), 10)
+    setTimeout(() => observer.error(Error("Fails as expected.")), 20)
+    setTimeout(() => observer.next(2), 30)
+    setTimeout(() => observer.complete(), 40)
+  })
+
+  for (let index = 0; index < 2; index++) {
+    async.subscribe(
+      value => capturedValues.push(value),
+      error => capturedErrorMessages.push(error.message),
+      () => capturedCompletions++
+    )
+  }
+
+  await async.finally()
+  await sleep(1)
+
+  t.deepEqual(capturedValues, [1, 1])
+  t.deepEqual(capturedErrorMessages, ["Fails as expected.", "Fails as expected."])
+  t.is(capturedCompletions, 0)
+})
+
+test("makeHot() causes a single immediate init() call for multiple subscriptions", async t => {
+  let capturedCompletions = 0
+  let capturedValues: any[] = []
+  let initRuns = 0
+
+  const async = ObservablePromise((resolve, reject, observer) => {
+    initRuns++
+    setTimeout(() => observer.next(1), 10)
+    setTimeout(() => observer.next(2), 20)
+    setTimeout(() => observer.complete(), 30)
+  })
+  const hot = makeHot(async)
+
+  for (let index = 0; index < 2; index++) {
+    hot.subscribe(
+      value => capturedValues.push(value),
+      () => undefined,
+      () => capturedCompletions++
+    )
+  }
+
+  await async.finally()
+  await sleep(1)
+
+  t.is(initRuns, 1)
+  t.deepEqual(capturedValues, [1, 1, 2, 2])
+  t.is(capturedCompletions, 2)
 })
