@@ -14,7 +14,12 @@ type Initializer<T> = (
 type UnsubscribeFn = () => void
 
 const doNothing = () => undefined
+const returnInput = <T>(input: T): T => input
 const runDeferred = (fn: () => void) => Promise.resolve().then(fn)
+
+function fail(error: Error): never {
+  throw error
+}
 
 /**
  * Creates a hybrid, combining the APIs of an Observable and a Promise.
@@ -31,8 +36,13 @@ const runDeferred = (fn: () => void) => Promise.resolve().then(fn)
  */
 export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T> {
   let initHasRun = false
-  const fulfillmentCallbacks: OnFulfilled<T>[] = []
+  const fulfillmentCallbacks: Array<OnFulfilled<T>> = []
   const rejectionCallbacks: OnRejected[] = []
+
+  let firstValue: T | undefined
+  let firstValueSet = false
+  let rejection: Error | undefined
+  let state: "fulfilled" | "pending" | "rejected" = "pending"
 
   const onNext = (value: T) => {
     if (!firstValueSet) {
@@ -42,6 +52,7 @@ export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T>
   }
   const onError = (error: Error) => {
     state = "rejected"
+    rejection = error
 
     for (const onRejected of rejectionCallbacks) {
       // Promisifying the call to turn errors into unhandled promise rejections
@@ -91,48 +102,37 @@ export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T>
     }
   })
 
-  let firstValue: T | undefined
-  let firstValueSet = false
-  let rejection: Error | undefined
-  let state: "fulfilled" | "pending" | "rejected" = "pending"
-
   function then<Result1 = T, Result2 = never>(
-    onFulfilled: OnFulfilled<T, Result1> | null | undefined,
-    onRejected?: OnRejected<Result2> | null | undefined
+    onFulfilledRaw: OnFulfilled<T, Result1> | null | undefined,
+    onRejectedRaw?: OnRejected<Result2> | null | undefined
   ): Promise<Result1 | Result2> {
+    const onFulfilled: OnFulfilled<T, Result1> = onFulfilledRaw || returnInput as any
+    const onRejected = onRejectedRaw || fail
+
     return new Promise<Result1 | Result2>((resolve, reject) => {
       if (!initHasRun) {
         observable.subscribe({ error: reject })
       }
-      if (state === "fulfilled" && onFulfilled) {
+      if (state === "fulfilled") {
         return resolve(onFulfilled(firstValue as T))
       }
-      if (state === "rejected" && onRejected) {
+      if (state === "rejected") {
         return resolve(onRejected(rejection as Error))
       }
-      if (!onFulfilled && !onRejected) {
-        return resolve()
-      }
-      if (onFulfilled) {
-        fulfillmentCallbacks.push(value => {
-          try {
-            resolve(onFulfilled(value))
-          } catch (error) {
-            reject(error)
-          }
-        })
-      }
-      if (onRejected) {
-        rejectionCallbacks.push(error => {
-          try {
-            resolve(onRejected(error))
-          } catch (anotherError) {
-            reject(anotherError)
-          }
-        })
-      } else {
-        rejectionCallbacks.push(reject)
-      }
+      fulfillmentCallbacks.push(value => {
+        try {
+          resolve(onFulfilled(value))
+        } catch (error) {
+          reject(error)
+        }
+      })
+      rejectionCallbacks.push(error => {
+        try {
+          resolve(onRejected(error))
+        } catch (anotherError) {
+          reject(anotherError)
+        }
+      })
     })
   }
 
@@ -152,6 +152,7 @@ export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T>
     )
   }
 
+  // tslint:disable-next-line prefer-object-spread
   return Object.assign(observable, {
     [Symbol.toStringTag]: "[object ObservablePromise]",
 

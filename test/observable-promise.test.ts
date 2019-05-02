@@ -33,12 +33,12 @@ test("can proxy a promise fulfillment", async t => {
   t.plan(2)
 
   const async = ObservablePromise((resolve) => {
-    resolve()
+    setTimeout(() => resolve(123), 1)
   })
 
-  const promise1 = async.then(() => t.true(true), t.fail)
+  const promise1 = async.then(value => t.is(value, 123), t.fail)
   await sleep(10)
-  const promise2 = async.then(() => t.true(true), t.fail)
+  const promise2 = async.then(value => t.is(value, 123), t.fail)
 
   await Promise.all([promise1, promise2])
 })
@@ -47,7 +47,7 @@ test("can proxy a promise rejection", async t => {
   let handlerCallCount = 0
 
   const async = ObservablePromise((resolve, reject) => {
-    reject(Error("I am supposed to be rejected."))
+    setTimeout(() => reject(Error("I am supposed to be rejected.")), 1)
   })
 
   const promise1 = async.then(
@@ -60,7 +60,7 @@ test("can proxy a promise rejection", async t => {
     () => Promise.resolve(handlerCallCount++)
   )
 
-  await Promise.all([promise1, promise2])
+  await Promise.all([promise1.catch(() => true), promise2.catch(() => true)])
   t.is(handlerCallCount, 2)
 })
 
