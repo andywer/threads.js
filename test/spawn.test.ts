@@ -8,7 +8,15 @@ test("can spawn and terminate a thread", async t => {
   t.pass()
 })
 
-test.todo("can call a function thread more than once")
+test("can call a function thread more than once", async t => {
+  const increment = await spawn<() => number>(new Worker("./workers/increment"))
+  t.is(await increment(), 1)
+  t.is(await increment(), 2)
+  t.is(await increment(), 3)
+  await Thread.terminate(increment)
+  t.pass()
+})
+
 test.todo("can subscribe to an observable returned by a thread call")
 test.todo("can spawn a module thread")
 test.todo("can subscribe to thread errors")
