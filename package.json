@@ -33,6 +33,7 @@
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
     "callsites": "^3.1.0",
+    "debug": "^4.1.1",
     "is-observable": "^1.1.0",
     "zen-observable": "^0.8.14"
   },
@@ -41,6 +42,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.4.4",
     "@babel/plugin-transform-typescript": "^7.4.4",
     "@types/callsites": "^3.0.0",
+    "@types/debug": "^4.1.4",
     "@types/node": "^11.13.8",
     "ava": "^1.4.1",
     "rimraf": "^2.6.3",

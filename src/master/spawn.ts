@@ -1,3 +1,4 @@
+import DebugLogger from "debug"
 import Observable from "zen-observable"
 import { createPromiseWithResolver } from "../promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
@@ -31,6 +32,9 @@ type StripAsync<Type> =
   : Type extends Observable<infer ObservableBaseType>
   ? ObservableBaseType
   : Type
+
+const debugSpawn = DebugLogger("threads:master:spawn")
+const debugThreadUtils = DebugLogger("threads:master:thread-utils")
 
 const isInitMessage = (data: any): data is WorkerInitMessage => data && data.type === ("init" as WorkerInitMessage["type"])
 
@@ -91,6 +95,7 @@ function createEventObservable(worker: WorkerType, workerTermination: Promise<an
 function createTerminator(worker: WorkerType): { termination: Promise<void>, terminate: () => Promise<void> } {
   const [termination, resolver] = createPromiseWithResolver<void>()
   const terminate = async () => {
+    debugThreadUtils("Terminating worker")
     // FIXME: Use worker.terminate() callback if it's a node worker thread
     worker.terminate()
     resolver()
@@ -113,6 +118,8 @@ function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Obse
 }
 
 export async function spawn<Exposed extends WorkerFunction | WorkerModule<any>>(worker: WorkerType): Promise<ExposedToThreadType<Exposed>> {
+  debugSpawn("Initializing new thread")
+
   const initMessage = await withTimeout(receiveInitMessage(worker), 2000, "Timeout: Did not receive an init message from worker. Make sure the worker calls expose().")
   const exposed = initMessage.exposed
 

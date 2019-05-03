@@ -1,3 +1,4 @@
+import DebugLogger from "debug"
 import { rehydrateError } from "../common"
 import { makeHot, ObservablePromise } from "../observable-promise"
 import {
@@ -15,6 +16,8 @@ import {
   WorkerMessageType
 } from "../types/messages"
 
+const debugMessages = DebugLogger("threads:master:messages")
+
 let nextJobUID = 1
 
 const isJobErrorMessage = (data: any): data is WorkerJobErrorMessage => data && data.type === WorkerMessageType.error
@@ -26,6 +29,7 @@ function createObservablePromiseForJob<ResultType>(worker: WorkerType, jobUID: n
 
   return ObservablePromise((resolve, reject, observer) => {
     const messageHandler = ((event: MessageEvent) => {
+      debugMessages("Message from worker:", event.data)
       if (!event.data || event.data.uid !== jobUID) return
 
       if (isJobStartMessage(event.data)) {
@@ -67,6 +71,7 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
       method,
       args
     }
+    debugMessages("Sending command to run function to worker:", runMessage)
     worker.postMessage(runMessage)
     return makeHot(createObservablePromiseForJob<ReturnType>(worker, uid))
   }) as ProxyableFunction<Args, ReturnType>
