@@ -1,4 +1,5 @@
 import test from "ava"
+import Observable from "zen-observable"
 import { spawn, Thread, Worker } from "../src/index"
 
 test("can spawn and terminate a thread", async t => {
@@ -17,7 +18,17 @@ test("can call a function thread more than once", async t => {
   t.pass()
 })
 
-test.todo("can subscribe to an observable returned by a thread call")
+test("can subscribe to an observable returned by a thread call", async t => {
+  const countToFive = await spawn<() => Observable<number>>(new Worker("./workers/count-to-five"))
+  const encounteredValues: any[] = []
+
+  const observable = countToFive()
+  observable.subscribe(value => encounteredValues.push(value))
+  await observable
+
+  t.deepEqual(encounteredValues, [1, 2, 3, 4, 5])
+})
+
 test.todo("can spawn a module thread")
 test.todo("can subscribe to thread errors")
 test.todo("can subscribe to thread events")
