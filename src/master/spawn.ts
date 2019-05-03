@@ -3,6 +3,8 @@ import { createPromiseWithResolver } from "../promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
 import {
   FunctionParams,
+  FunctionThread,
+  ModuleThread,
   PrivateThreadProps,
   Thread as ThreadType,
   Worker as WorkerType,
@@ -10,9 +12,7 @@ import {
   WorkerEventType,
   WorkerInternalErrorEvent,
   WorkerMessageEvent,
-  WorkerTerminationEvent,
-  FunctionThread,
-  ModuleThread
+  WorkerTerminationEvent
 } from "../types/master"
 import { WorkerInitMessage } from "../types/messages"
 import { WorkerFunction, WorkerModule } from "../types/worker"
@@ -26,10 +26,10 @@ type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
   : never
 
 type StripAsync<Type> =
-  Type extends Promise<infer SyncType>
-  ? SyncType
-  : Type extends Observable<infer SyncType>
-  ? SyncType
+  Type extends Promise<infer PromiseBaseType>
+  ? PromiseBaseType
+  : Type extends Observable<infer ObservableBaseType>
+  ? ObservableBaseType
   : Type
 
 const isInitMessage = (data: any): data is WorkerInitMessage => data && data.type === ("init" as WorkerInitMessage["type"])

@@ -1,3 +1,5 @@
+// tslint:disable max-classes-per-file
+
 import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"
 import * as path from "path"
@@ -39,10 +41,10 @@ function initTinyWorker(): typeof WorkerImplementation {
       this.onerror = (error: Error) => this.emitter.emit("error", error)
       this.onmessage = (message: MessageEvent) => this.emitter.emit("message", message)
     }
-    addEventListener(eventName: WorkerEventName, listener: EventListener) {
+    public addEventListener(eventName: WorkerEventName, listener: EventListener) {
       this.emitter.addListener(eventName, listener)
     }
-    removeEventListener(eventName: WorkerEventName, listener: EventListener) {
+    public removeEventListener(eventName: WorkerEventName, listener: EventListener) {
       this.emitter.removeListener(eventName, listener)
     }
   }
@@ -53,6 +55,7 @@ function selectWorkerImplementation(): typeof WorkerImplementation {
   try {
     return initWorkerThreadsWorker()
   } catch(error) {
+    // tslint:disable-next-line no-console
     console.debug("Node worker_threads not available. Trying to fall back to tiny-worker polyfill...")
     return initTinyWorker()
   }

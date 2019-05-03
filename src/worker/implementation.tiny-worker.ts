@@ -1,5 +1,6 @@
 /// <reference no-default-lib="true"/>
 /// <reference types="../../types/webworker" />
+// tslint:disable no-shadowed-variable
 
 import { AbstractedWorkerAPI } from "../types/worker"
 
