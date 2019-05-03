@@ -1,16 +1,20 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "declaration": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "es5",
     "module": "commonjs",
-    "lib": ["es2015"],
+    "lib": ["dom", "es2015"],
     "outDir": "dist",
-    "declaration": true,
     "strict": true
   },
   "include": [
-    "./src/index.ts"
+    "./src/index.ts",
+    "./src/master/*",
+    "./src/worker/*",
+    "./types/tiny-worker.d.ts",
+    "./types/is-observable.d.ts"
   ]
 }

@@ -6,7 +6,8 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "build": "tsc",
-    "test": "ava test/**/*.test.ts",
+    "pretest": "babel --plugins @babel/plugin-transform-typescript --plugins @babel/plugin-transform-modules-commonjs ./test/workers -d ./test/workers -x .ts",
+    "test": "TS_NODE_FILES=true ava",
     "posttest": "tslint --project .",
     "prepare": "build"
   },
@@ -29,30 +30,45 @@
     "parallel",
     "observable"
   ],
+  "dependencies": {
+    "@types/zen-observable": "^0.8.0",
+    "callsites": "^3.1.0",
+    "is-observable": "^1.1.0",
+    "zen-observable": "^0.8.14"
+  },
   "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/plugin-transform-modules-commonjs": "^7.4.4",
+    "@babel/plugin-transform-typescript": "^7.4.4",
+    "@types/callsites": "^3.0.0",
     "@types/node": "^11.13.8",
     "ava": "^1.4.1",
     "rimraf": "^2.6.3",
+    "tiny-worker": "^2.2.0",
     "ts-node": "^8.1.0",
     "tslint": "^5.16.0",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.4.5"
   },
-  "dependencies": {
-    "@types/zen-observable": "^0.8.0",
-    "zen-observable": "^0.8.14"
-  },
-  "optionalDependencies": {
-    "tiny-worker": "2.*"
-  },
+  "optionalDependencies": {},
   "ava": {
     "compileEnhancements": false,
     "extensions": [
       "ts"
     ],
+    "files": [
+      "./test/*.test.ts"
+    ],
     "require": [
       "ts-node/register"
     ]
+  },
+  "browser": {
+    "./dist/master/implementation": "./dist/master/implementation.browser.js",
+    "./dist/master/implementation.node.js": false,
+    "./dist/worker/implementation": "./dist/worker/implementation.browser.js",
+    "./dist/worker/implementation.tiny-worker.js": false,
+    "./dist/worker/implementation.worker_threads.js": false
   },
   "files": [
     "dist/**",

@@ -1,6 +1,7 @@
 dist/*
 !dist/*.d.ts
 node_modules/
+test/workers/*.js
 .DS_Store
 Thumbs.db
 *.log

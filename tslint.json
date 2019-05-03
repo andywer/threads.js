@@ -5,10 +5,12 @@
   ],
   "jsRules": {},
   "rules": {
+    "curly": [true, "ignore-same-line"],
     "interface-name": [
       true,
       "never-prefix"
     ],
+    "interface-over-type-literal": false,
     "no-implicit-dependencies": [
       true,
       "dev"
