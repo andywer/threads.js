@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
-import isObservable from "is-observable"
+import isSomeObservable from "is-observable"
+import Observable from "zen-observable"
 import { serializeError } from "../common"
 import {
   MasterJobRunMessage,
@@ -17,6 +18,13 @@ import Implementation from "./implementation"
 let exposedCalled = false
 
 const isMasterJobRunMessage = (thing: any): thing is MasterJobRunMessage => thing && thing.type === MasterMessageType.run
+
+/** There are issues with `is-observable` not recognizing zen-observable's instances */
+const isObservable = (thing: any): thing is Observable<any> => isSomeObservable(thing) || isZenObservable(thing)
+
+function isZenObservable(thing: any): thing is Observable<any> {
+  return thing && typeof thing === "object" && typeof thing.subscribe === "function"
+}
 
 function postFunctionInitMessage() {
   const initMessage: WorkerInitMessage = {
