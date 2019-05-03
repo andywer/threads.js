@@ -20,10 +20,17 @@ import { createProxyFunction, createProxyModule } from "./invocation-proxy"
 
 type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
   Exposed extends WorkerFunction
-  ? FunctionThread<FunctionParams<Exposed>, ReturnType<Exposed>>
+  ? FunctionThread<FunctionParams<Exposed>, StripAsync<ReturnType<Exposed>>>
   : Exposed extends WorkerModule<any>
   ? ModuleThread<Exposed>
   : never
+
+type StripAsync<Type> =
+  Type extends Promise<infer SyncType>
+  ? SyncType
+  : Type extends Observable<infer SyncType>
+  ? SyncType
+  : Type
 
 const isInitMessage = (data: any): data is WorkerInitMessage => data && data.type === ("init" as WorkerInitMessage["type"])
 
