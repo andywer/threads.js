@@ -43,5 +43,14 @@ test("can spawn a module thread", async t => {
   await Thread.terminate(counter)
 })
 
-test.todo("can subscribe to thread errors")
+test("thread job errors are handled", async t => {
+  const fail = await spawn<() => Promise<never>>(new Worker("./workers/faulty-function"))
+  await t.throwsAsync(fail(), "I am supposed to fail.")
+  await Thread.terminate(fail)
+})
+
+test("catches top-level thread errors", async t => {
+  await t.throwsAsync(spawn(new Worker("./workers/top-level-throw")), "Top-level worker error")
+})
+
 test.todo("can subscribe to thread events")

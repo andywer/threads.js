@@ -22,6 +22,16 @@ export enum WorkerMessageType {
   init = "init",
   result = "result",
   running = "running",
+  uncaughtError = "uncaughtError"
+}
+
+export type WorkerUncaughtErrorMessage = {
+  type: WorkerMessageType.uncaughtError,
+  error: {
+    message: string,
+    name: string,
+    stack?: string
+  }
 }
 
 export type WorkerInitMessage = {
@@ -52,4 +62,9 @@ export type WorkerJobStartMessage = {
   resultType: "observable" | "promise"
 }
 
-export type WorkerSentMessage = WorkerInitMessage | WorkerJobErrorMessage | WorkerJobResultMessage | WorkerJobStartMessage
+export type WorkerSentMessage =
+  | WorkerInitMessage
+  | WorkerJobErrorMessage
+  | WorkerJobResultMessage
+  | WorkerJobStartMessage
+  | WorkerUncaughtErrorMessage

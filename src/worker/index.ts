@@ -10,7 +10,8 @@ import {
   WorkerJobErrorMessage,
   WorkerJobResultMessage,
   WorkerJobStartMessage,
-  WorkerMessageType
+  WorkerMessageType,
+  WorkerUncaughtErrorMessage
 } from "../types/messages"
 import { WorkerFunction, WorkerModule } from "../types/worker"
 import Implementation from "./implementation"
@@ -75,6 +76,14 @@ function postJobStartMessage(uid: number, resultType: WorkerJobStartMessage["res
   Implementation.postMessageToMaster(startMessage)
 }
 
+function postUncaughtErrorMessage(error: Error) {
+  const errorMessage: WorkerUncaughtErrorMessage = {
+    type: WorkerMessageType.uncaughtError,
+    error: serializeError(error)
+  }
+  Implementation.postMessageToMaster(errorMessage)
+}
+
 async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
   let syncResult: any
 
@@ -129,3 +138,8 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
     throw Error(`Invalid argument passed to expose(). Expected a function or an object, got: ${exposed}`)
   }
 }
+
+process.on("uncaughtException", (error) => {
+  // Post with some delay, so the master had some time to subscribe to messages
+  setTimeout(() => postUncaughtErrorMessage(error), 250)
+})

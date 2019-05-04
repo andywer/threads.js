@@ -1,5 +1,6 @@
 import DebugLogger from "debug"
 import Observable from "zen-observable"
+import { rehydrateError } from "../common"
 import { createPromiseWithResolver } from "../promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
 import {
@@ -7,7 +8,6 @@ import {
   FunctionThread,
   ModuleThread,
   PrivateThreadProps,
-  Thread as ThreadType,
   Worker as WorkerType,
   WorkerEvent,
   WorkerEventType,
@@ -15,7 +15,7 @@ import {
   WorkerMessageEvent,
   WorkerTerminationEvent
 } from "../types/master"
-import { WorkerInitMessage } from "../types/messages"
+import { WorkerInitMessage, WorkerUncaughtErrorMessage } from "../types/messages"
 import { WorkerFunction, WorkerModule } from "../types/worker"
 import { createProxyFunction, createProxyModule } from "./invocation-proxy"
 
@@ -33,10 +33,12 @@ type StripAsync<Type> =
   ? ObservableBaseType
   : Type
 
+const debugMessages = DebugLogger("threads:master:messages")
 const debugSpawn = DebugLogger("threads:master:spawn")
 const debugThreadUtils = DebugLogger("threads:master:thread-utils")
 
-const isInitMessage = (data: any): data is WorkerInitMessage => data && data.type === ("init" as WorkerInitMessage["type"])
+const isInitMessage = (data: any): data is WorkerInitMessage => data && data.type === ("init" as const)
+const isUncaughtErrorMessage = (data: any): data is WorkerUncaughtErrorMessage => data && data.type === ("uncaughtError" as const)
 
 async function withTimeout<T>(promise: Promise<T>, timeoutInMs: number, errorMessage: string): Promise<T> {
   const timeout = new Promise<never>((resolve, reject) => {
@@ -50,11 +52,15 @@ async function withTimeout<T>(promise: Promise<T>, timeoutInMs: number, errorMes
 }
 
 function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const messageHandler = ((event: MessageEvent) => {
+      debugMessages("Message from worker before finishing initialization:", event.data)
       if (isInitMessage(event.data)) {
         worker.removeEventListener("message", messageHandler)
         resolve(event.data)
+      } else if (isUncaughtErrorMessage(event.data)) {
+        worker.removeEventListener("message", messageHandler)
+        reject(rehydrateError(event.data.error))
       }
     }) as EventListener
     worker.addEventListener("message", messageHandler)
