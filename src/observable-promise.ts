@@ -92,7 +92,7 @@ export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T>
       }
       observer.complete()
     }
-    const reject: OnRejected = (error: Error) => observer.error(error)
+    const reject: OnRejected = observer.error.bind(observer)
 
     try {
       initHasRun = true
@@ -108,31 +108,38 @@ export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T>
   ): Promise<Result1 | Result2> {
     const onFulfilled: OnFulfilled<T, Result1> = onFulfilledRaw || returnInput as any
     const onRejected = onRejectedRaw || fail
+    let onRejectedCalled = false
 
     return new Promise<Result1 | Result2>((resolve, reject) => {
-      if (!initHasRun) {
-        observable.subscribe({ error: reject })
-      }
-      if (state === "fulfilled") {
-        return resolve(onFulfilled(firstValue as T))
-      }
-      if (state === "rejected") {
-        return resolve(onRejected(rejection as Error))
-      }
-      fulfillmentCallbacks.push(value => {
-        try {
-          resolve(onFulfilled(value))
-        } catch (error) {
-          reject(error)
-        }
-      })
-      rejectionCallbacks.push(error => {
+      const rejectionCallback = (error: Error) => {
+        if (onRejectedCalled) return
+        onRejectedCalled = true
+
         try {
           resolve(onRejected(error))
         } catch (anotherError) {
           reject(anotherError)
         }
-      })
+      }
+      const fulfillmentCallback = (value: T) => {
+        try {
+          resolve(onFulfilled(value))
+        } catch (error) {
+          rejectionCallback(error)
+        }
+      }
+      if (!initHasRun) {
+        observable.subscribe({ error: rejectionCallback })
+      }
+      if (state === "fulfilled") {
+        return resolve(onFulfilled(firstValue as T))
+      }
+      if (state === "rejected") {
+        onRejectedCalled = true
+        return resolve(onRejected(rejection as Error))
+      }
+      fulfillmentCallbacks.push(fulfillmentCallback)
+      rejectionCallbacks.push(rejectionCallback)
     })
   }
 
@@ -172,8 +179,6 @@ export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T>
  */
 export function makeHot<T>(async: ObservablePromise<T>): ObservablePromise<T> {
   let observers: Array<ZenObservable.SubscriptionObserver<T>> = []
-  let resolvers: Array<(value?: T) => void> = []
-  let rejectors: Array<(error: Error) => void> = []
 
   async.subscribe({
     complete() {
@@ -186,24 +191,12 @@ export function makeHot<T>(async: ObservablePromise<T>): ObservablePromise<T> {
       observers.forEach(observer => observer.next(value))
     }
   })
-  async.then(
-    result => {
-      resolvers.forEach(resolve => resolve(result))
-    },
-    error => {
-      rejectors.forEach(reject => reject(error))
-    }
-  )
 
   const aggregator = ObservablePromise<T>((resolve, reject, observer) => {
-    resolvers.push(resolve)
-    rejectors.push(reject)
     observers.push(observer)
 
     const unsubscribe = () => {
       observers = observers.filter(someObserver => someObserver !== observer)
-      resolvers = resolvers.filter(someResolver => someResolver !== resolve)
-      rejectors = rejectors.filter(someRejector => someRejector !== reject)
     }
     return unsubscribe
   })

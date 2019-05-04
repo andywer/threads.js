@@ -166,3 +166,15 @@ test("makeHot() causes a single immediate init() call for multiple subscriptions
   t.deepEqual(capturedValues, [1, 1, 2, 2])
   t.is(capturedCompletions, 2)
 })
+
+test("makeHot() proxies errors correctly", async t => {
+  const async = ObservablePromise((resolve, reject, observer) => {
+    setTimeout(() => observer.error(Error("I am supposed to fail")), 10)
+  })
+  const hot = makeHot(async)
+
+  await Promise.all([
+    t.throwsAsync(hot, "I am supposed to fail"),
+    t.throwsAsync(hot, "I am supposed to fail")
+  ])
+})
