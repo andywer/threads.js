@@ -11,13 +11,31 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
   const NativeWorker = require("worker_threads").Worker
 
   class Worker extends NativeWorker {
+    private mappedEventListeners: WeakMap<EventListener, EventListener>
+
     constructor(scriptPath: string) {
       const callerPath = (getCallsites().find(callsite => {
         const filename = callsite.getFileName()
         return Boolean(filename && !filename.match(/\/worker_threads\//) && !filename.match(/\/master\//))
       }) as CallSite).getFileName() as string
 
-      super(path.join(path.dirname(callerPath), scriptPath), [], { esm: true })
+      const workerFilePath = path.join(path.dirname(callerPath), scriptPath)
+      super(require.resolve(workerFilePath), [], { esm: true })
+
+      this.mappedEventListeners = new WeakMap()
+    }
+
+    public addEventListener(eventName: string, rawListener: EventListener) {
+      const listener = (message: any) => {
+        rawListener({ data: message } as any)
+      }
+      this.mappedEventListeners.set(rawListener, listener)
+      this.on(eventName, listener)
+    }
+
+    public removeEventListener(eventName: string, rawListener: EventListener) {
+      const listener = this.mappedEventListeners.get(rawListener) || rawListener
+      this.off(eventName, listener)
     }
   }
   return Worker as any

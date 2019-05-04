@@ -18,8 +18,8 @@ const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"
   if (!parentPort) {
     throw Error("Invariant violation: MessagePort to parent is not available.")
   }
-  const messageHandler = (messageEvent: MessageEvent) => {
-    onMessage(messageEvent.data)
+  const messageHandler = (message: any) => {
+    onMessage(message)
   }
   const unsubscribe = () => {
     assertMessagePort(parentPort).off("message", messageHandler)

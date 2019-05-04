@@ -4,7 +4,7 @@
     "declaration": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "es5",
+    "target": "es2015",
     "module": "commonjs",
     "lib": ["dom", "es2015"],
     "outDir": "dist",
