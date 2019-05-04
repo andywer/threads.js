@@ -49,12 +49,12 @@ function createObservablePromiseForJob<ResultType>(worker: WorkerType, jobUID: n
         }
       } else if (isJobErrorMessage(event.data)) {
         const error = rehydrateError(event.data.error)
-        if (asyncType === "promise") {
+        if (asyncType === "promise" || !asyncType) {
           reject(error)
         } else {
           observer.error(error)
-          worker.removeEventListener("message", messageHandler)
         }
+        worker.removeEventListener("message", messageHandler)
       }
     }) as EventListener
     worker.addEventListener("message", messageHandler)
