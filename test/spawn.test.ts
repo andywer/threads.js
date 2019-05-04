@@ -1,6 +1,7 @@
 import test from "ava"
 import Observable from "zen-observable"
 import { spawn, Thread, Worker } from "../src/index"
+import { Counter } from "./workers/counter"
 
 test("can spawn and terminate a thread", async t => {
   const helloWorld = await spawn<() => string>(new Worker("./workers/hello-world"))
@@ -15,7 +16,6 @@ test("can call a function thread more than once", async t => {
   t.is(await increment(), 2)
   t.is(await increment(), 3)
   await Thread.terminate(increment)
-  t.pass()
 })
 
 test("can subscribe to an observable returned by a thread call", async t => {
@@ -27,8 +27,21 @@ test("can subscribe to an observable returned by a thread call", async t => {
   await observable
 
   t.deepEqual(encounteredValues, [1, 2, 3, 4, 5])
+  await Thread.terminate(countToFive)
 })
 
-test.todo("can spawn a module thread")
+test("can spawn a module thread", async t => {
+  const counter = await spawn<Counter>(new Worker("./workers/counter"))
+  t.is(await counter.getCount(), 0)
+  await Promise.all([
+    counter.increment(),
+    counter.increment()
+  ])
+  t.is(await counter.getCount(), 2)
+  await counter.decrement()
+  t.is(await counter.getCount(), 1)
+  await Thread.terminate(counter)
+})
+
 test.todo("can subscribe to thread errors")
 test.todo("can subscribe to thread events")
