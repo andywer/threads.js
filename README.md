@@ -1,4 +1,4 @@
-# threads
+<h1 align="center">threads</h1>
 
 Version 1.0 - Work in progress 🛠
 
@@ -7,13 +7,6 @@ Here you can find a complete rewrite of the `threads` library.
 Comes with a new robust API, it's all functional, and all statically typed. It's still fully isomorphic - run the same code in the browser, in node.js or an electron app!
 
 Development progress is tracked in 👉 [#100](https://github.com/andywer/threads.js/issues/100). Feel free to leave feedback there!
-
-## New Paradigm
-
-Full focus on worker code in their own files instead of inline functions.
-Running inlined functions in a worker was nice for concise code samples, but offered limited value in real-world applications.
-
-That also means we are focussing on usage with bundlers like Webpack or Parcel, since this is the main use case anyway. We shall have worker code with working `import`/`require()` that works as is in node.js as well as bundled in browsers.
 
 ## Installation
 
@@ -32,6 +25,13 @@ Use native [worker threads](https://nodejs.org/api/worker_threads.html).
 #### Platform: Node.js < 12
 
 Use [`tiny-worker`](https://github.com/avoidwork/tiny-worker) as fallback if native worker threads are not available.
+
+## New Paradigm
+
+Full focus on worker code in their own files instead of inline functions.
+Running inlined functions in a worker was nice for concise code samples, but offered limited value in real-world applications.
+
+That also means we are focussing on usage with bundlers like Webpack or Parcel, since this is the main use case anyway. We shall have worker code with working `import`/`require()` that works as is in node.js as well as bundled in browsers.
 
 ## Usage
 
@@ -57,6 +57,15 @@ expose(function add(a, b) {
   return a + b
 })
 ```
+
+#### spawn()
+
+The return value of `add()` in the master code depends on the `add()` return value in the worker:
+If the function returns a promise or an observable then you can just use the return value as such in the master code. If the function returns a primitive value, expect the master function to return a promise resolving to that value.
+
+#### expose()
+
+You can `expose()` either a function or an object. In case of exposing an object, `spawn()` will asynchronously return an object exposing all the object's functions, following the same rules as functions directly `expose()`-ed.
 
 ### Code Samples
 
@@ -164,9 +173,13 @@ That aligns it with the behavior when bundling the code with webpack or parcel.
 
 ### Usage with Webpack
 
+Use with the [`worker-plugin`](https://github.com/GoogleChromeLabs/worker-plugin), so all `new Worker("./unbundled-path")` expressions are detected and properly transformed transparently, so you don't need to explicitly use the `worker-loader` or define extra entry points.
+
 TODO
 
 ### Usage with Parcel
+
+Should work out of the box without any extra plugins.
 
 TODO
 
