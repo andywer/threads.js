@@ -1,13 +1,19 @@
 # threads
 
-Version 1.0 - Work in progress.
+Version 1.0 - Work in progress 🛠
 
 Here you can find a complete rewrite of the `threads` library.
 
 Comes with a new robust API, it's all functional, and all statically typed. It's still fully isomorphic - run the same code in the browser, in node.js or an electron app!
 
-New paradigm: Full focus on worker code in separate modules instead of inline functions.
+Development progress is tracked in 👉 [#100](https://github.com/andywer/threads.js/issues/100). Feel free to leave feedback there!
+
+## New Paradigm
+
+Full focus on worker code in their own files instead of inline functions.
 Running inlined functions in a worker was nice for concise code samples, but offered limited value in real-world applications.
+
+That also means we are focussing on usage with bundlers like Webpack or Parcel, since this is the main use case anyway. We shall have worker code with working `import`/`require()` that works as is in node.js as well as bundled in browsers.
 
 ## Installation
 
