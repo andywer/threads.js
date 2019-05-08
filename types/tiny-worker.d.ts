@@ -1,3 +1,4 @@
 declare module "tiny-worker" {
-  export = typeof Worker
+  const TinyWorker: typeof Worker
+  export = TinyWorker
 }
