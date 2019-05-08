@@ -5,4 +5,4 @@ node_js:
   - node    # Latest
 
 script:
-  - npm test -- --serial
+  - npm test
