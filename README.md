@@ -16,7 +16,7 @@ when run by node.js. Also supports browsers which do not support web workers.
 
 #### Version 1.0
 
-Check out the [Version 1.0 Proress](https://github.com/andywer/threads.js/issues/100) and feel free to leave feedback!
+Check out the [Version 1.0 Progress](https://github.com/andywer/threads.js/issues/100) and feel free to leave feedback!
 
 New to the library? You might want to wait for v1.0 to set sail, since it fixes a bunch of issues and comes with a completely new API.
 
