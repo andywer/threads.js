@@ -115,7 +115,7 @@ await Thread.terminate(counter)
 
 ```js
 // workers/counter.js
-import { expose } from "../../src/worker"
+import { expose } from "threads/worker"
 
 let currentCount = 0
 
@@ -153,6 +153,38 @@ Fully transparent. The promise in the master code's call will be rejected with t
 
 <details>
 <summary>TODO: Thread pool & Task queue</summary>
+</details>
+
+<details>
+<summary>Transferable objects</summary>
+Use `Transfer()` to mark [`transferable objects`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers#Passing_data_by_transferring_ownership_(transferable_objects)) like ArrayBuffers to be transferred to the receiving thread. It can speed up your code a lot if you are working with big chunks of binary data.
+
+`Transfer()` comes in two flavors:
+* `Transfer(myBuffer: Transferable)`
+* `Transfer(someObjectOrArrayContainingMyBuffers: any, [myBuffer, /* ... */]: Transferable[])`
+
+Use it when calling a thread function or returning from a thread function:
+
+```js
+// master.js
+import { spawn, Transfer, Worker } from "threads"
+
+const xorBuffer = await spawn(new Worker("./workers/arraybuffer-xor"))
+const resultBuffer = await xorBuffer(Transfer(testData), 127)
+```
+
+```js
+// workers/arraybuffer-xor.js
+import { expose, Transfer } from "threads/worker"
+
+expose(function xorBuffer(username) {
+  const view = new Uint8Array(buffer)
+  view.forEach((byte, offset) => view.set([byte ^ value], offset))
+  return Transfer(buffer)
+})
+```
+
+Without `Transfer()` the buffers would be copied on every call and every return. Using `Transfer()` only their ownership is transferred to the other thread instead to make sure it is accessible in a thread-safe way. This is a much faster operation.
 </details>
 
 <details>
