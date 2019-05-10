@@ -3,6 +3,7 @@
 import isSomeObservable from "is-observable"
 import Observable from "zen-observable"
 import { serializeError } from "../common"
+import { isTransferDescriptor, TransferDescriptor } from "../transferable"
 import {
   MasterJobRunMessage,
   MasterMessageType,
@@ -16,6 +17,8 @@ import {
 import { WorkerFunction, WorkerModule } from "../types/worker"
 import Implementation from "./implementation"
 
+export { Transfer } from "../transferable"
+
 let exposedCalled = false
 
 const isMasterJobRunMessage = (thing: any): thing is MasterJobRunMessage => thing && thing.type === MasterMessageType.run
@@ -25,6 +28,12 @@ const isObservable = (thing: any): thing is Observable<any> => isSomeObservable(
 
 function isZenObservable(thing: any): thing is Observable<any> {
   return thing && typeof thing === "object" && typeof thing.subscribe === "function"
+}
+
+function deconstructTransfer(thing: any) {
+  return isTransferDescriptor(thing)
+    ? { payload: thing.send, transferables: thing.transferables }
+    : { payload: thing, transferables: undefined }
 }
 
 function postFunctionInitMessage() {
@@ -48,23 +57,25 @@ function postModuleInitMessage(methodNames: string[]) {
   Implementation.postMessageToMaster(initMessage)
 }
 
-function postJobErrorMessage(uid: number, error: Error) {
+function postJobErrorMessage(uid: number, rawError: Error | TransferDescriptor<Error>) {
+  const { payload: error, transferables } = deconstructTransfer(rawError)
   const errorMessage: WorkerJobErrorMessage = {
     type: WorkerMessageType.error,
     uid,
     error: serializeError(error)
   }
-  Implementation.postMessageToMaster(errorMessage)
+  Implementation.postMessageToMaster(errorMessage, transferables)
 }
 
-function postJobResultMessage(uid: number, completed: boolean, payload?: any) {
+function postJobResultMessage(uid: number, completed: boolean, resultValue?: any) {
+  const { payload, transferables } = deconstructTransfer(resultValue)
   const startMessage: WorkerJobResultMessage = {
     type: WorkerMessageType.result,
     uid,
     complete: completed ? true : undefined,
     payload
   }
-  Implementation.postMessageToMaster(startMessage)
+  Implementation.postMessageToMaster(startMessage, transferables)
 }
 
 function postJobStartMessage(uid: number, resultType: WorkerJobStartMessage["resultType"]) {

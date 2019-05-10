@@ -9,9 +9,8 @@ function assertMessagePort(port: MessagePort | null | undefined): MessagePort {
   return port
 }
 
-const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data) {
-  // TODO: Transferables
-  assertMessagePort(parentPort).postMessage(data)
+const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList) {
+  assertMessagePort(parentPort).postMessage(data, transferList as any)
 }
 
 const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {

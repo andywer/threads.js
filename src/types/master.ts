@@ -40,7 +40,7 @@ export type ModuleThread<Methods extends ModuleMethods = any> = ModuleProxy<Meth
 
 export type Thread = FunctionThread<any, any> | ModuleThread<any>
 
-export type TransferList = Array<ArrayBuffer | MessagePort>
+export type TransferList = Transferable[]
 
 export interface Worker extends EventTarget {
   postMessage(value: any, transferList?: TransferList): void

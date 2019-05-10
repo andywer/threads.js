@@ -1,6 +1,7 @@
 import DebugLogger from "debug"
 import { rehydrateError } from "../common"
 import { makeHot, ObservablePromise } from "../observable-promise"
+import { isTransferDescriptor } from "../transferable"
 import {
   ModuleMethods,
   ModuleProxy,
@@ -19,6 +20,8 @@ import {
 const debugMessages = DebugLogger("threads:master:messages")
 
 let nextJobUID = 1
+
+const dedupe = <T>(array: T[]): T[] => Array.from(new Set(array))
 
 const isJobErrorMessage = (data: any): data is WorkerJobErrorMessage => data && data.type === WorkerMessageType.error
 const isJobResultMessage = (data: any): data is WorkerJobResultMessage => data && data.type === WorkerMessageType.result
@@ -62,9 +65,29 @@ function createObservablePromiseForJob<ResultType>(worker: WorkerType, jobUID: n
   })
 }
 
+function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transferable[] } {
+  const args: any[] = []
+  const transferables: Transferable[] = []
+
+  for (const arg of rawArgs) {
+    if (isTransferDescriptor(arg)) {
+      args.push(arg.send)
+      transferables.push(...arg.transferables)
+    } else {
+      args.push(arg)
+    }
+  }
+
+  return {
+    args,
+    transferables: dedupe(transferables)
+  }
+}
+
 export function createProxyFunction<Args extends any[], ReturnType>(worker: WorkerType, method?: string) {
-  return ((...args: Args) => {
+  return ((...rawArgs: Args) => {
     const uid = nextJobUID++
+    const { args, transferables } = prepareArguments(rawArgs)
     const runMessage: MasterJobRunMessage = {
       type: MasterMessageType.run,
       uid,
@@ -72,7 +95,7 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
       args
     }
     debugMessages("Sending command to run function to worker:", runMessage)
-    worker.postMessage(runMessage)
+    worker.postMessage(runMessage, transferables)
     return makeHot(createObservablePromiseForJob<ReturnType>(worker, uid))
   }) as ProxyableFunction<Args, ReturnType>
 }
