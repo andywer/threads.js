@@ -47,12 +47,16 @@ These changes also mean that we shall have worker code with `import`/`require()`
 // master.js
 import { spawn, Thread, Worker } from "threads"
 
-const add = await spawn(new Worker("./workers/add"))
-const sum = await add(2, 3)
+async function main() {
+  const add = await spawn(new Worker("./workers/add"))
+  const sum = await add(2, 3)
 
-console.log(`2 + 3 = ${sum}`)
+  console.log(`2 + 3 = ${sum}`)
 
-await Thread.terminate(sum)
+  await Thread.terminate(sum)
+}
+
+main().catch(console.error)
 ```
 
 ```js
