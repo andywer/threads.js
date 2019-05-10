@@ -2,9 +2,7 @@
 
 Version 1.0 - Work in progress 🛠
 
-Here you can find a complete rewrite of the `threads` library.
-
-Comes with a new robust API, it's all functional, and all statically typed. It's still fully isomorphic - run the same code in the browser, in node.js or an electron app!
+Complete rewrite of the library with a new robust API, all functional, and all statically typed. It's still fully isomorphic – run the same code in the browser, in node.js or an electron app!
 
 Development progress is tracked in 👉 [#100](https://github.com/andywer/threads.js/issues/100). Feel free to leave feedback there!
 
@@ -16,22 +14,24 @@ Not yet published to npm.
 
 #### Platform: Web (browsers)
 
-Use [web workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
+Uses [web workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
 
 #### Platform: Node.js 12+
 
-Use native [worker threads](https://nodejs.org/api/worker_threads.html).
+Uses native [worker threads](https://nodejs.org/api/worker_threads.html).
 
 #### Platform: Node.js < 12
 
-Use [`tiny-worker`](https://github.com/avoidwork/tiny-worker) as fallback if native worker threads are not available.
+Uses [`tiny-worker`](https://github.com/avoidwork/tiny-worker) as fallback if native worker threads are not available.
 
 ## New Paradigm
 
-Full focus on worker code in their own files instead of inline functions.
-Running inlined functions in a worker was nice for concise code samples, but offered limited value in real-world applications.
+We dropped inline functions support and instead focus on worker code residing in their own files.
+Running inlined functions in a worker was nice for concise code samples, but offered limited value in real-world applications. Those inlined functions also had some built-in limitations that could not be overcome and that frequently got users confused.
 
-That also means we are focussing on usage with bundlers like Webpack or Parcel, since this is the main use case anyway. We shall have worker code with working `import`/`require()` that works as is in node.js as well as bundled in browsers.
+Focussing on worker code in distinct source modules also means we are focussing on using `threads` with bundlers like Webpack or Parcel in the front-end. In a node.js context you should be able to use a bundler as well, but you probably won't need to.
+
+These changes also mean that we shall have worker code with `import`/`require()` that works in node.js just as well as bundled in browsers.
 
 ## Usage
 
