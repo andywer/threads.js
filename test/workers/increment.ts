@@ -1,8 +1,9 @@
 import "ts-node/register"
 import { expose } from "../../src/worker"
 
-let counter = 1
+let counter = 0
 
-expose(function increment() {
-  return counter++
+expose(function increment(by: number = 1) {
+  counter += by
+  return counter
 })
