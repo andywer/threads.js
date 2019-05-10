@@ -1,7 +1,7 @@
 type UnsubscribeFn = () => void
 
 export interface AbstractedWorkerAPI {
-  postMessageToMaster(message: any): void
+  postMessageToMaster(message: any, transferList?: Transferable[]): void
   subscribeToMasterMessages(onMessage: (data: any) => void): UnsubscribeFn
 }
 
