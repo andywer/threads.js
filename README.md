@@ -1,4 +1,8 @@
 <h1 align="center">threads</h1>
+<p align="center">
+  <a href="https://travis-ci.org/andywer/threads.js" target="_blank"><img alt="Build status" src="https://img.shields.io/travis/andywer/threads.js/v1.svg?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/threads/v/next" target="_blank"><img alt="npm (tag)" src="https://img.shields.io/npm/v/threads/next.svg?style=flat-square"></a>
+</p>
 
 Version 1.0 - Work in progress 🛠
 
@@ -8,7 +12,9 @@ Development progress is tracked in 👉 [#100](https://github.com/andywer/thread
 
 ## Installation
 
-Not yet published to npm.
+```
+npm install threads@next
+```
 
 ## Compatibility
 
