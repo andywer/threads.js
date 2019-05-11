@@ -223,6 +223,10 @@ TODO
 
 Should work out of the box without any extra plugins.
 
+The only adjustment you need to do is to import `threads/register` once in the beginning (in the master code, not in the thread) to register the library's `Worker` for your platform as the global `Worker`.
+
+This is necessary, since you cannot `import { Worker } from "threads"` or Parcel won't recognize `new Worker()` as a web worker anymore.
+
 TODO
 
 ## API

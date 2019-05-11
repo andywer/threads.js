@@ -7,7 +7,9 @@
     "prebuild": "rimraf dist/",
     "build": "tsc",
     "pretest": "babel --plugins @babel/plugin-transform-typescript --plugins @babel/plugin-transform-modules-commonjs ./test/workers -d ./test/workers -x .ts",
-    "test": "TS_NODE_FILES=true ava",
+    "test": "run-s test:ava test:puppeteer",
+    "test:ava": "TS_NODE_FILES=true ava",
+    "test:puppeteer": "puppet-run plugin:mocha ./test/*.chromium*.ts",
     "posttest": "tslint --project .",
     "prepare": "run-s build"
   },
@@ -42,10 +44,16 @@
     "@babel/plugin-transform-modules-commonjs": "^7.4.4",
     "@babel/plugin-transform-typescript": "^7.4.4",
     "@types/callsites": "^3.0.0",
+    "@types/chai": "^4.1.7",
     "@types/debug": "^4.1.4",
+    "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.8",
     "ava": "^1.4.1",
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
     "npm-run-all": "^4.1.5",
+    "puppet-run": "^0.5.0",
+    "puppet-run-plugin-mocha": "^0.1.1",
     "rimraf": "^2.6.3",
     "tiny-worker": "^2.2.0",
     "ts-node": "^8.1.0",
@@ -64,9 +72,14 @@
     ],
     "require": [
       "ts-node/register"
-    ]
+    ],
+    "serial": true
   },
   "browser": {
+    "tiny-worker": false,
+    "ts-node": false,
+    "ts-node/register": false,
+    "worker_threads": false,
     "./dist/master/implementation": "./dist/master/implementation.browser.js",
     "./dist/master/implementation.node.js": false,
     "./dist/worker/implementation": "./dist/worker/implementation.browser.js",
