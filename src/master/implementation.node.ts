@@ -2,10 +2,13 @@
 
 import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"
+import { cpus } from 'os'
 import * as path from "path"
 import { WorkerImplementation } from "../types/master"
 
 type WorkerEventName = "error" | "message"
+
+const defaultPoolSize = cpus().length
 
 function initWorkerThreadsWorker(): typeof WorkerImplementation {
   const NativeWorker = require("worker_threads").Worker
@@ -80,5 +83,6 @@ function selectWorkerImplementation(): typeof WorkerImplementation {
 }
 
 export = {
+  defaultPoolSize,
   selectWorkerImplementation
 }

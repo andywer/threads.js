@@ -158,11 +158,34 @@ Fully transparent. The promise in the master code's call will be rejected with t
 </details>
 
 <details>
-<summary>TODO: Cancelling a thread job</summary>
-</details>
+<summary>Thread pool</summary>
 
-<details>
-<summary>TODO: Thread pool & Task queue</summary>
+A `Pool` allows you to create a set of worker threads and queue thread calls. The queued tasks are pulled from the queue and executed as previous tasks have finished.
+
+Use it if you have a lot of work to offload to other threads and don't want to drown them in a huge pile of work at once, but run it in a controlled way with limited concurrency.
+
+```js
+import { spawn, Pool } from "threads"
+
+const pool = Pool(() => spawn(new Worker("./workers/multiplier")), 8 /* optional size */)
+
+pool.events.subscribe(console.log)
+
+await pool.queue(async multiplier => {
+  const multiplied = await multiplier(2, 3)
+  console.log(`2 * 3 = ${multiplied}`)
+
+  // When this async call completes, the worker thread (`multiplier`) will
+  // be marked as available for new work scheduled via `pool.queue()`
+})
+
+await pool.terminate()
+```
+
+Note that `pool.queue()` will schedule a task to be run in a deferred way. It might execute straight away or it might take a while until a new worker thread becomes available.
+
+The promise returned by `pool.queue()` will resolve once the scheduled callback has been executed and completed. A failing scheduled callback will also make the promise returned by `pool.queue()` reject.
+
 </details>
 
 <details>
@@ -195,6 +218,10 @@ expose(function xorBuffer(username) {
 ```
 
 Without `Transfer()` the buffers would be copied on every call and every return. Using `Transfer()` only their ownership is transferred to the other thread instead to make sure it is accessible in a thread-safe way. This is a much faster operation.
+</details>
+
+<details>
+<summary>TODO: Cancelling a thread job</summary>
 </details>
 
 <details>
