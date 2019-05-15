@@ -177,7 +177,7 @@ export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T>
  *
  * That one subscription on the input observable promise is setup immediately.
  */
-export function makeHot<T>(async: ObservablePromise<T>): ObservablePromise<T> {
+export function makeHot<T>(async: ObservablePromise<T> | Observable<T>): ObservablePromise<T> {
   let observers: Array<ZenObservable.SubscriptionObserver<T>> = []
 
   async.subscribe({
