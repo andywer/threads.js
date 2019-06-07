@@ -1,4 +1,4 @@
-// tslint:disable max-classes-per-file
+// tslint:disable no-eval max-classes-per-file
 
 import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"

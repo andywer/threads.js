@@ -1,4 +1,5 @@
 // Webpack hack
+// tslint:disable no-eval
 
 declare function __non_webpack_require__(module: string): any
 
