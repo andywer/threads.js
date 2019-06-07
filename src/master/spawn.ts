@@ -127,7 +127,7 @@ function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Obse
 export async function spawn<Exposed extends WorkerFunction | WorkerModule<any>>(worker: WorkerType): Promise<ExposedToThreadType<Exposed>> {
   debugSpawn("Initializing new thread")
 
-  const initMessage = await withTimeout(receiveInitMessage(worker), 5000, "Timeout: Did not receive an init message from worker. Make sure the worker calls expose().")
+  const initMessage = await withTimeout(receiveInitMessage(worker), 10000, "Timeout: Did not receive an init message from worker. Make sure the worker calls expose().")
   const exposed = initMessage.exposed
 
   const { termination, terminate } = createTerminator(worker)

@@ -2,10 +2,13 @@
 
 import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"
+import { cpus } from 'os'
 import * as path from "path"
 import { WorkerImplementation } from "../types/master"
 
 type WorkerEventName = "error" | "message"
+
+const defaultPoolSize = cpus().length
 
 function initWorkerThreadsWorker(): typeof WorkerImplementation {
   const NativeWorker = require("worker_threads").Worker
@@ -44,6 +47,8 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
 function initTinyWorker(): typeof WorkerImplementation {
   const TinyWorker = require("tiny-worker")
 
+  let allWorkers: Array<typeof TinyWorker> = []
+
   class Worker extends TinyWorker {
     private emitter: EventEmitter
 
@@ -54,6 +59,7 @@ function initTinyWorker(): typeof WorkerImplementation {
       }) as CallSite).getFileName() as string
 
       super(path.join(path.dirname(callerPath), scriptPath), [], { esm: true })
+      allWorkers.push(this)
 
       this.emitter = new EventEmitter()
       this.onerror = (error: Error) => this.emitter.emit("error", error)
@@ -65,7 +71,22 @@ function initTinyWorker(): typeof WorkerImplementation {
     public removeEventListener(eventName: WorkerEventName, listener: EventListener) {
       this.emitter.removeListener(eventName, listener)
     }
+    public terminate() {
+      allWorkers = allWorkers.filter(worker => worker !== this)
+      return super.terminate()
+    }
   }
+
+  const terminateAll = () => {
+    allWorkers.forEach(worker => worker.terminate())
+    allWorkers = []
+  }
+
+  // Take care to not leave orphaned processes behind
+  // See <https://github.com/avoidwork/tiny-worker#faq>
+  process.on("SIGINT", () => terminateAll())
+  process.on("SIGTERM", () => terminateAll())
+
   return Worker as any
 }
 
@@ -80,5 +101,6 @@ function selectWorkerImplementation(): typeof WorkerImplementation {
 }
 
 export = {
+  defaultPoolSize,
   selectWorkerImplementation
 }

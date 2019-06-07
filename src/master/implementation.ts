@@ -6,6 +6,7 @@
 import { WorkerImplementation } from "../types/master"
 
 interface ImplementationExports {
+  defaultPoolSize: number
   selectWorkerImplementation(): typeof WorkerImplementation
 }
 
