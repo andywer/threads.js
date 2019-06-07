@@ -6,25 +6,44 @@ import { cpus } from 'os'
 import * as path from "path"
 import { WorkerImplementation } from "../types/master"
 
+declare const __non_webpack_require__: typeof require
+
 type WorkerEventName = "error" | "message"
 
 const defaultPoolSize = cpus().length
 
+function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
+  const parentCallSite = getCallsites().find((callsite: CallSite) => {
+    const filename = callsite.getFileName()
+    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/\/master\/implementation/))
+  })
+
+  const callerPath = parentCallSite ? parentCallSite.getFileName() : null
+  const rebasedScriptPath = callerPath ? path.join(path.dirname(callerPath), scriptPath) : scriptPath
+
+  return rebasedScriptPath.replace(/\.ts$/, ".js")
+}
+
+function resolveScriptPath(scriptPath: string) {
+  // eval() hack is also webpack-related
+  const workerFilePath = typeof __non_webpack_require__ === "function"
+    ? __non_webpack_require__.resolve(path.join(eval("__dirname"), scriptPath))
+    : require.resolve(rebaseScriptPath(scriptPath, /\/worker_threads\//))
+
+  return workerFilePath
+}
+
 function initWorkerThreadsWorker(): typeof WorkerImplementation {
-  const NativeWorker = require("worker_threads").Worker
+  // Webpack hack
+  const NativeWorker = typeof __non_webpack_require__ === "function"
+    ? __non_webpack_require__("worker_threads").Worker
+    : eval("require")("worker_threads").Worker
 
   class Worker extends NativeWorker {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
     constructor(scriptPath: string) {
-      const callerPath = (getCallsites().find(callsite => {
-        const filename = callsite.getFileName()
-        return Boolean(filename && !filename.match(/\/worker_threads\//) && !filename.match(/\/master\//))
-      }) as CallSite).getFileName() as string
-
-      const workerFilePath = path.join(path.dirname(callerPath), scriptPath)
-      super(require.resolve(workerFilePath), [], { esm: true })
-
+      super(resolveScriptPath(scriptPath), [], { esm: true })
       this.mappedEventListeners = new WeakMap()
     }
 
@@ -53,12 +72,7 @@ function initTinyWorker(): typeof WorkerImplementation {
     private emitter: EventEmitter
 
     constructor(scriptPath: string) {
-      const callerPath = (getCallsites().find(callsite => {
-        const filename = callsite.getFileName()
-        return Boolean(filename && !filename.match(/\/node_modules\/tiny-worker\//) && !filename.match(/\/master\//))
-      }) as CallSite).getFileName() as string
-
-      super(path.join(path.dirname(callerPath), scriptPath), [], { esm: true })
+      super(resolveScriptPath(scriptPath), [], { esm: true })
       allWorkers.push(this)
 
       this.emitter = new EventEmitter()
@@ -100,7 +114,7 @@ function selectWorkerImplementation(): typeof WorkerImplementation {
   }
 }
 
-export = {
+export default {
   defaultPoolSize,
   selectWorkerImplementation
 }

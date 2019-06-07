@@ -6,7 +6,7 @@ function selectWorkerImplementation(): typeof WorkerImplementation {
   return Worker
 }
 
-export = {
+export default {
   defaultPoolSize,
   selectWorkerImplementation
 }

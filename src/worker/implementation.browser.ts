@@ -24,7 +24,7 @@ const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"
   return unsubscribe
 }
 
-export = {
+export default {
   isWorkerRuntime,
   postMessageToMaster,
   subscribeToMasterMessages

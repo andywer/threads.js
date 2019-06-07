@@ -4,6 +4,10 @@
 
 import { AbstractedWorkerAPI } from "../types/worker"
 
+if (typeof self === "undefined") {
+  (global as any).self = global
+}
+
 const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorkerRuntime() {
   return typeof self !== "undefined" && self.postMessage ? true : false
 }
@@ -24,7 +28,7 @@ const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"
   return unsubscribe
 }
 
-export = {
+export default {
   isWorkerRuntime,
   postMessageToMaster,
   subscribeToMasterMessages

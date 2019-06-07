@@ -1,5 +1,6 @@
 // tslint:disable no-shadowed-variable
-import { isMainThread, parentPort, MessagePort } from "worker_threads"
+import { MessagePort } from "worker_threads"
+import * as WorkerThreads from "../worker_threads"
 import { AbstractedWorkerAPI } from "../types/worker"
 
 function assertMessagePort(port: MessagePort | null | undefined): MessagePort {
@@ -10,28 +11,28 @@ function assertMessagePort(port: MessagePort | null | undefined): MessagePort {
 }
 
 const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorkerRuntime() {
-  return !isMainThread
+  return !WorkerThreads.isMainThread
 }
 
 const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList) {
-  assertMessagePort(parentPort).postMessage(data, transferList as any)
+  assertMessagePort(WorkerThreads.parentPort).postMessage(data, transferList as any)
 }
 
 const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {
-  if (!parentPort) {
+  if (!WorkerThreads.parentPort) {
     throw Error("Invariant violation: MessagePort to parent is not available.")
   }
   const messageHandler = (message: any) => {
     onMessage(message)
   }
   const unsubscribe = () => {
-    assertMessagePort(parentPort).off("message", messageHandler)
+    assertMessagePort(WorkerThreads.parentPort).off("message", messageHandler)
   }
-  assertMessagePort(parentPort).on("message", messageHandler)
+  assertMessagePort(WorkerThreads.parentPort).on("message", messageHandler)
   return unsubscribe
 }
 
-export = {
+export default {
   isWorkerRuntime,
   postMessageToMaster,
   subscribeToMasterMessages

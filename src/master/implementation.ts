@@ -10,6 +10,6 @@ interface ImplementationExports {
   selectWorkerImplementation(): typeof WorkerImplementation
 }
 
-export = typeof process !== 'undefined' && process.arch !== 'browser' && 'pid' in process
-  ? require('./implementation.node') as ImplementationExports
-  : require('./implementation.browser') as ImplementationExports
+export default typeof process !== 'undefined' && process.arch !== 'browser' && 'pid' in process
+  ? require('./implementation.node').default as ImplementationExports
+  : require('./implementation.browser').default as ImplementationExports

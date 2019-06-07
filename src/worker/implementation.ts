@@ -7,12 +7,12 @@ import { AbstractedWorkerAPI } from "../types/worker"
 
 function selectNodeImplementation(): AbstractedWorkerAPI {
   try {
-    return require("./implementation.worker_threads")
+    return require("./implementation.worker_threads").default
   } catch (error) {
-    return require("./implementation.tiny-worker")
+    return require("./implementation.tiny-worker").default
   }
 }
 
-export = typeof process !== 'undefined' && process.arch !== 'browser' && 'pid' in process
+export default typeof process !== 'undefined' && process.arch !== 'browser' && 'pid' in process
   ? selectNodeImplementation()
-  : require('./implementation.browser') as AbstractedWorkerAPI
+  : require('./implementation.browser').default as AbstractedWorkerAPI
