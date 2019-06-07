@@ -1,5 +1,3 @@
-/// <reference lib="webworker" />
-
 import isSomeObservable from "is-observable"
 import Observable from "zen-observable"
 import { serializeError } from "../common"
