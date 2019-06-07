@@ -61,7 +61,9 @@
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.4.5"
   },
-  "optionalDependencies": {},
+  "optionalDependencies": {
+    "tiny-worker": ">= 2"
+  },
   "ava": {
     "compileEnhancements": false,
     "extensions": [

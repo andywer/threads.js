@@ -13,8 +13,10 @@ Development progress is tracked in 👉 [#100](https://github.com/andywer/thread
 ## Installation
 
 ```
-npm install threads@next
+npm install threads@next tiny-worker
 ```
+
+If you don't need to support node < 12 or you only want to build for the browser then you can also not install the `tiny-worker` package. It's an optional dependency and used as a fallback if `worker_threads` are not available.
 
 ## Compatibility
 
