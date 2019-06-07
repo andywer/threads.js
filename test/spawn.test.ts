@@ -4,7 +4,8 @@ import { spawn, Thread, Worker } from "../src/index"
 import { Counter } from "./workers/counter"
 
 test("can spawn and terminate a thread", async t => {
-  const helloWorld = await spawn<() => string>(new Worker("./workers/hello-world"))
+  // We also test here that running spawn() without type parameters works
+  const helloWorld = await spawn(new Worker("./workers/hello-world"))
   t.is(await helloWorld(), "Hello World")
   await Thread.terminate(helloWorld)
   t.pass()

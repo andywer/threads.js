@@ -19,8 +19,13 @@ import { WorkerInitMessage, WorkerUncaughtErrorMessage } from "../types/messages
 import { WorkerFunction, WorkerModule } from "../types/worker"
 import { createProxyFunction, createProxyModule } from "./invocation-proxy"
 
+type ArbitraryWorkerInterface = WorkerFunction & WorkerModule<string> & { somekeythatisneverusedinproductioncode123: "magicmarker123" }
+type ArbitraryFunctionOrModuleThread = FunctionThread<any, any> & ModuleThread<any>
+
 type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
-  Exposed extends WorkerFunction
+  Exposed extends ArbitraryWorkerInterface
+  ? ArbitraryFunctionOrModuleThread
+  : Exposed extends WorkerFunction
   ? FunctionThread<FunctionParams<Exposed>, StripAsync<ReturnType<Exposed>>>
   : Exposed extends WorkerModule<any>
   ? ModuleThread<Exposed>
@@ -124,7 +129,9 @@ function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Obse
   })
 }
 
-export async function spawn<Exposed extends WorkerFunction | WorkerModule<any>>(worker: WorkerType): Promise<ExposedToThreadType<Exposed>> {
+export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> = ArbitraryWorkerInterface>(
+  worker: WorkerType
+): Promise<ExposedToThreadType<Exposed>> {
   debugSpawn("Initializing new thread")
 
   const initMessage = await withTimeout(receiveInitMessage(worker), 10000, "Timeout: Did not receive an init message from worker. Make sure the worker calls expose().")
