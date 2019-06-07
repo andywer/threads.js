@@ -1,6 +1,6 @@
 {
   "name": "threads",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0-alpha.2",
   "description": "Easy to use, yet powerful multi-threading library for node.js and the browser!",
   "main": "dist/index.js",
   "scripts": {
