@@ -4,6 +4,10 @@
 
 import { AbstractedWorkerAPI } from "../types/worker"
 
+const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorkerRuntime() {
+  return typeof self !== "undefined" && self.postMessage ? true : false
+}
+
 const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data) {
   // TODO: Warn that Transferables are not supported on first attempt to use feature
   self.postMessage(data)
@@ -21,6 +25,7 @@ const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"
 }
 
 export = {
+  isWorkerRuntime,
   postMessageToMaster,
   subscribeToMasterMessages
 }

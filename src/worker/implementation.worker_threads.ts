@@ -1,5 +1,5 @@
 // tslint:disable no-shadowed-variable
-import { MessagePort, parentPort } from "worker_threads"
+import { MessagePort, isMainThread, parentPort } from "worker_threads"
 import { AbstractedWorkerAPI } from "../types/worker"
 
 function assertMessagePort(port: MessagePort | null | undefined): MessagePort {
@@ -7,6 +7,10 @@ function assertMessagePort(port: MessagePort | null | undefined): MessagePort {
     throw Error("Invariant violation: MessagePort to parent is not available.")
   }
   return port
+}
+
+const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorkerRuntime() {
+  return !isMainThread
 }
 
 const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList) {
@@ -28,6 +32,7 @@ const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"
 }
 
 export = {
+  isWorkerRuntime,
   postMessageToMaster,
   subscribeToMasterMessages
 }
