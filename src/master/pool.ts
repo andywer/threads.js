@@ -11,6 +11,17 @@ let nextPoolID = 1
 const hasSymbols = () => typeof Symbol === 'function'
 const hasSymbol = (name: keyof typeof Symbol) => hasSymbols() && Boolean(Symbol[name])
 
+function flatMap<In, Out>(array: In[], mapper: ((element: In) => Out[])): Out[] {
+  return array.reduce<Out[]>(
+    (flattened, element) => [...flattened, ...mapper(element)],
+    []
+  )
+}
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 function slugify(text: string) {
   return text.replace(/\W/g, " ").trim().replace(/\s+/g, "-")
 }
@@ -64,7 +75,7 @@ export type PoolEvent<ThreadType extends Thread> = {
 
 interface WorkerDescriptor<ThreadType extends Thread> {
   init: Promise<ThreadType>
-  runningTasks: Array<Task<ThreadType, any>>
+  runningJobs: Array<Promise<any>>
 }
 
 function createArray(size: number): number[] {
@@ -79,7 +90,7 @@ function findIdlingWorker<ThreadType extends Thread>(
   workers: Array<WorkerDescriptor<ThreadType>>,
   maxConcurrency: number
 ): WorkerDescriptor<ThreadType> | undefined {
-  return workers.find(worker => worker.runningTasks.length < maxConcurrency)
+  return workers.find(worker => worker.runningJobs.length < maxConcurrency)
 }
 
 function spawnWorkers<ThreadType extends Thread>(
@@ -88,19 +99,52 @@ function spawnWorkers<ThreadType extends Thread>(
 ): Array<WorkerDescriptor<ThreadType>> {
   return createArray(count).map((): WorkerDescriptor<ThreadType> => ({
     init: spawnWorker(),
-    runningTasks: []
+    runningJobs: []
   }))
 }
 
+/**
+ * Thread pool implementation managing a set of worker threads.
+ * Use it to queue jobs that are run on those threads with limited
+ * concurrency.
+ */
 export interface Pool<ThreadType extends Thread> {
+  /**
+   * Returns a promise that resolves once the job queue is emptied.
+   *
+   * @param allowResolvingImmediately Set to `true` to resolve immediately if job queue is currently empty.
+   */
+  completed(allowResolvingImmediately?: boolean): Promise<any>
+
+  /**
+   * Returns an observable that yields pool events.
+   */
   events(): Observable<PoolEvent<ThreadType>>
-  queue<Return>(task: TaskRunFunction<ThreadType, Return>): Promise<Return>
+
+  /**
+   * Queue a job and return a promise that resolves once the job has been dequeued,
+   * started and finished.
+   *
+   * @param job An async function that takes a thread instance and invokes it.
+   */
+  queue<Return>(job: TaskRunFunction<ThreadType, Return>): Promise<Return>
+
+  /**
+   * Terminate all pool threads.
+   *
+   * @param force Set to `true` to kill the thread even if it cannot be stopped gracefully.
+   */
   terminate(force?: boolean): Promise<void>
 }
 
 export interface PoolOptions {
+  /** Maximum no. of jobs to run on one worker thread at a time. Defaults to one. */
   concurrency?: number
+
+  /** Gives that pool a name to be used for debug logging, letting you distinguish between log output of different pools. */
   name?: string
+
+  /** No. of worker threads to spawn and to be managed by the pool. */
   size?: number
 }
 
@@ -117,7 +161,6 @@ function PoolConstructor<ThreadType extends Thread>(
 
   let isClosing = false
   let nextTaskID = 1
-  let runningTaskJobs: Array<Promise<any>> = []
 
   const taskQueue: Array<Task<ThreadType, any>> = []
   const workers = spawnWorkers(spawnWorker, size)
@@ -154,11 +197,17 @@ function PoolConstructor<ThreadType extends Thread>(
       workerID
     })
 
-    const run = async () => {
+    const run = async (worker: WorkerDescriptor<ThreadType>, task: Task<ThreadType, any>) => {
+      const removeJobFromWorkersRunningJobs = () => {
+        worker.runningJobs = worker.runningJobs.filter(someRunPromise => someRunPromise !== runPromise)
+      }
+
       try {
-        const returnValue = await nextTask.run(await availableWorker.init)
+        const returnValue = await task.run(await availableWorker.init)
 
         debug(`Task #${nextTask.id} completed successfully`)
+        removeJobFromWorkersRunningJobs()
+
         eventSubject.next({
           type: PoolEventType.taskCompleted,
           returnValue,
@@ -167,6 +216,8 @@ function PoolConstructor<ThreadType extends Thread>(
         })
       } catch(error) {
         debug(`Task #${nextTask.id} failed`)
+        removeJobFromWorkersRunningJobs()
+
         eventSubject.next({
           type: PoolEventType.taskFailed,
           taskID: nextTask.id,
@@ -175,17 +226,31 @@ function PoolConstructor<ThreadType extends Thread>(
         })
         throw error
       } finally {
-        runningTaskJobs = runningTaskJobs.filter(someRunPromise => someRunPromise !== runPromise)
         if (!isClosing) {
           scheduleWork()
         }
       }
     }
-    const runPromise = run()
-    runningTaskJobs.push(runPromise)
+    const runPromise = run(availableWorker, nextTask)
+    availableWorker.runningJobs.push(runPromise)
   }
 
   const pool: Pool<ThreadType> = {
+    async completed(allowResolvingImmediately: boolean = false) {
+      const getCurrentlyRunningJobs = () => {
+        return flatMap(workers, worker => worker.runningJobs)
+      }
+
+      if (allowResolvingImmediately && taskQueue.length === 0) {
+        return Promise.all(getCurrentlyRunningJobs())
+      }
+
+      do {
+        await Promise.all(getCurrentlyRunningJobs())
+        await sleep(1)
+      } while (taskQueue.length > 0 || getCurrentlyRunningJobs().length > 0)
+    },
+
     events() {
       return eventObservable
     },
@@ -232,7 +297,7 @@ function PoolConstructor<ThreadType extends Thread>(
     async terminate(force?: boolean) {
       isClosing = true
       if (!force) {
-        await Promise.all(runningTaskJobs)
+        await pool.completed(true)
       }
       eventSubject.next({
         type: PoolEventType.terminated,
