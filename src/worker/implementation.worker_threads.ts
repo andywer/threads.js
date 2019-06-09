@@ -1,5 +1,5 @@
 // tslint:disable no-shadowed-variable
-import { MessagePort, isMainThread, parentPort } from "worker_threads"
+import { isMainThread, parentPort, MessagePort } from "worker_threads"
 import { AbstractedWorkerAPI } from "../types/worker"
 
 function assertMessagePort(port: MessagePort | null | undefined): MessagePort {

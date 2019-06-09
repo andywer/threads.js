@@ -18,6 +18,12 @@
     "no-submodule-imports": false,
     "object-literal-sort-keys": false,
     "only-arrow-functions": false,
+    "ordered-imports": [
+      true,
+      {
+        "named-imports-order": "lowercase-first"
+      }
+    ],
     "semicolon": false
   },
   "rulesDirectory": []
