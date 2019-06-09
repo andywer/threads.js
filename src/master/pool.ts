@@ -37,6 +37,7 @@ export enum PoolEventType {
   taskCompleted = "taskCompleted",
   taskFailed = "taskFailed",
   taskQueued = "taskQueued",
+  taskQueueDrained = "taskQueueDrained",
   taskStart = "taskStart",
   terminated = "terminated"
 }
@@ -54,6 +55,8 @@ export type PoolEvent<ThreadType extends Thread> = {
 } | {
   type: PoolEventType.taskQueued,
   taskID: number
+} | {
+  type: PoolEventType.taskQueueDrained
 } | {
   type: PoolEventType.taskStart,
   taskID: number,
@@ -180,13 +183,18 @@ function PoolConstructor<ThreadType extends Thread>(
   )
 
   const scheduleWork = () => {
-    debug(`Attempt de-queueing a task to run it...`)
+    debug(`Attempt de-queueing a task in order to run it...`)
 
     const availableWorker = findIdlingWorker(workers, concurrency)
     if (!availableWorker) return
 
     const nextTask = taskQueue.shift()
-    if (!nextTask) return
+    if (!nextTask) {
+      debug(`Task queue is empty`)
+      eventSubject.next({ type: PoolEventType.taskQueueDrained })
+      return
+    }
+
 
     const workerID = workers.indexOf(availableWorker) + 1
     debug(`Running task #${nextTask.id} on worker #${workerID}...`)
@@ -201,6 +209,9 @@ function PoolConstructor<ThreadType extends Thread>(
       const removeJobFromWorkersRunningJobs = () => {
         worker.runningJobs = worker.runningJobs.filter(someRunPromise => someRunPromise !== runPromise)
       }
+
+      // Defer job execution by one tick to give handlers time to subscribe
+      await sleep(0)
 
       try {
         const returnValue = await task.run(await availableWorker.init)
@@ -224,7 +235,6 @@ function PoolConstructor<ThreadType extends Thread>(
           error,
           workerID
         })
-        throw error
       } finally {
         if (!isClosing) {
           scheduleWork()
@@ -237,25 +247,36 @@ function PoolConstructor<ThreadType extends Thread>(
 
   const pool: Pool<ThreadType> = {
     async completed(allowResolvingImmediately: boolean = false) {
-      const getCurrentlyRunningJobs = () => {
-        return flatMap(workers, worker => worker.runningJobs)
-      }
+      const getCurrentlyRunningJobs = () => flatMap(workers, worker => worker.runningJobs)
 
       if (allowResolvingImmediately && taskQueue.length === 0) {
         return Promise.all(getCurrentlyRunningJobs())
       }
 
-      do {
-        await Promise.all(getCurrentlyRunningJobs())
-        await sleep(1)
-      } while (taskQueue.length > 0 || getCurrentlyRunningJobs().length > 0)
+      const poolEventPromise = new Promise((resolve, reject) => {
+        const subscription = eventObservable.subscribe(event => {
+          if (event.type === PoolEventType.taskQueueDrained) {
+            subscription.unsubscribe()
+            resolve()
+          } else if (event.type === PoolEventType.taskFailed) {
+            subscription.unsubscribe()
+            reject(event.error)
+          }
+        })
+      })
+
+      await Promise.race([
+        poolEventPromise,
+        eventObservable   // make a pool-wide error reject the completed() result promise
+      ])
+      await Promise.all(getCurrentlyRunningJobs())
     },
 
     events() {
       return eventObservable
     },
 
-    async queue(taskFunction) {
+    queue(taskFunction) {
       if (isClosing) {
         throw Error(`Cannot schedule pool tasks after terminate() has been called.`)
       }
@@ -272,7 +293,7 @@ function PoolConstructor<ThreadType extends Thread>(
         taskID: task.id
       })
 
-      return new Promise((resolve, reject) => {
+      const resultPromise = new Promise<any>((resolve, reject) => {
         const eventSubscription = pool.events().subscribe(event => {
           if (event.type === PoolEventType.taskCompleted && event.taskID === task.id) {
             eventSubscription.unsubscribe()
@@ -292,6 +313,13 @@ function PoolConstructor<ThreadType extends Thread>(
           reject(error)
         }
       })
+
+      // Don't raise an UnhandledPromiseRejection error if not handled
+      // Reason: Because we just return this promise for convenience, but usually only
+      //         pool.completed() will be used, leaving this quasi-duplicate promise unhandled.
+      resultPromise.catch(() => undefined)
+
+      return resultPromise
     },
 
     async terminate(force?: boolean) {

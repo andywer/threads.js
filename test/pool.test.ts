@@ -52,6 +52,9 @@ test.serial("thread pool basics work and events are emitted", async t => {
       workerID: 1
     },
     {
+      type: Pool.EventType.taskQueueDrained
+    },
+    {
       type: Pool.EventType.terminated,
       remainingQueue: []
     }
@@ -77,6 +80,18 @@ test.serial("pool.completed() works", async t => {
     "Hello World",
     "Hello World"
   ])
+})
+
+test.serial("pool.completed() proxies errors", async t => {
+  const spawnHelloWorld = () => spawn(new Worker("./workers/hello-world"))
+  const pool = Pool(spawnHelloWorld, 2)
+
+  pool.queue(async () => {
+    throw Error("Ooopsie")
+  })
+
+  const error = await t.throwsAsync(() => pool.completed())
+  t.is(error.message, "Ooopsie")
 })
 
 test.serial("pool.completed(true) works", async t => {
