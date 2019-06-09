@@ -17,7 +17,7 @@ import Implementation from "./implementation"
 
 export { Transfer } from "../transferable"
 
-let exposedCalled = false
+let exposeCalled = false
 
 const isMasterJobRunMessage = (thing: any): thing is MasterJobRunMessage => thing && thing.type === MasterMessageType.run
 
@@ -122,10 +122,13 @@ async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
 }
 
 export function expose(exposed: WorkerFunction | WorkerModule<any>) {
-  if (exposedCalled) {
+  if (!Implementation.isWorkerRuntime()) {
+    throw Error("expose() called in the master thread.")
+  }
+  if (exposeCalled) {
     throw Error("expose() called more than once. This is not possible. Pass an object to expose() if you want to expose multiple functions.")
   }
-  exposedCalled = true
+  exposeCalled = true
 
   if (typeof exposed === "function") {
     Implementation.subscribeToMasterMessages(messageData => {
