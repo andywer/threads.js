@@ -57,3 +57,32 @@ test.serial("thread pool basics work and events are emitted", async t => {
     }
   ])
 })
+
+test.serial("pool.completed() works", async t => {
+  const returned: any[] = []
+
+  const spawnHelloWorld = () => spawn(new Worker("./workers/hello-world"))
+  const pool = Pool(spawnHelloWorld, 2)
+
+  for (let i = 0; i < 3; i++) {
+    pool.queue(async helloWorld => {
+      returned.push(await helloWorld())
+    })
+  }
+
+  await pool.completed()
+
+  t.deepEqual(returned, [
+    "Hello World",
+    "Hello World",
+    "Hello World"
+  ])
+})
+
+test.serial("pool.completed(true) works", async t => {
+  const spawnHelloWorld = () => spawn(new Worker("./workers/hello-world"))
+  const pool = Pool(spawnHelloWorld, 2)
+
+  await pool.completed(true)
+  t.pass()
+})
