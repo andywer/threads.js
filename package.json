@@ -7,9 +7,10 @@
     "prebuild": "rimraf dist/",
     "build": "tsc",
     "pretest": "babel --plugins @babel/plugin-transform-typescript --plugins @babel/plugin-transform-modules-commonjs ./test/workers -d ./test/workers -x .ts",
-    "test": "run-s test:ava test:puppeteer",
+    "test": "run-s test:ava test:puppeteer:basic test:puppeteer:webpack",
     "test:ava": "TS_NODE_FILES=true ava",
-    "test:puppeteer": "puppet-run plugin:mocha ./test/*.chromium*.ts",
+    "test:puppeteer:basic": "puppet-run plugin:mocha ./test/*.chromium*.ts",
+    "test:puppeteer:webpack": "puppet-run --serve ./test/webpack/dist.web/0.worker.js plugin:mocha ./test/webpack/webpack.chromium.mocha.ts",
     "posttest": "tslint --project .",
     "prepare": "run-s build"
   },
@@ -74,7 +75,7 @@
       "ts"
     ],
     "files": [
-      "./test/*.test.ts"
+      "./test/**/*.test.ts"
     ],
     "require": [
       "ts-node/register"

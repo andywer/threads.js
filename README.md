@@ -223,13 +223,11 @@ expose(function xorBuffer(username) {
 Without `Transfer()` the buffers would be copied on every call and every return. Using `Transfer()` only their ownership is transferred to the other thread instead to make sure it is accessible in a thread-safe way. This is a much faster operation.
 </details>
 
-<details>
-<summary>TODO: Cancelling a thread job</summary>
-</details>
-
+<!--
 <details>
 <summary>TODO: Subscribe to thread debugging events</summary>
 </details>
+-->
 
 <details>
 <summary>Tests</summary>
@@ -245,9 +243,65 @@ That aligns it with the behavior when bundling the code with webpack or parcel.
 
 ### Usage with Webpack
 
-Use with the [`worker-plugin`](https://github.com/GoogleChromeLabs/worker-plugin), so all `new Worker("./unbundled-path")` expressions are detected and properly transformed transparently, so you don't need to explicitly use the `worker-loader` or define extra entry points.
+Use with the [`threads-plugin`](https://github.com/andywer/threads-plugin). It will transparently detect all `new Worker("./unbundled-path")` expressions, bundles the worker code and replaces the `new Worker(...)` path with the worker bundle path, so you don't need to explicitly use the `worker-loader` or define extra entry points.
 
-TODO
+```sh
+npm install -D threads-plugin
+```
+
+Then drop it into your `webpack.config.js`:
+
+```diff
++ const ThreadsPlugin = require('threads-plugin');
+
+module.exports = {
+  // ...
+  plugins: [
++    new ThreadsPlugin()
+  ]
+  // ...
+}
+```
+
+For node-target webpack bundles:
+
+If you are using webpack to create a bundle that will be run in node (`target: "node"`), you also need to specify that the `tiny-worker` fallback used for node < 12 shall not be bundled:
+
+```diff
+module.exports = {
+  // ...
+  externals: {
+    "tiny-worker": "tiny-worker"
+  }
+  // ...
+}
+```
+
+Don't forget to add `tiny-worker` to your `package.json` `dependencies` in that case.
+
+When using TypeScript:
+
+Make sure to keep the imports / exports intact, so webpack resolves them. Otherwise the `threads-plugin` won't be able to do its job.
+
+```diff
+module.exports = {
+  // ...
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        loader: "ts-loader",
+        options: {
+          compilerOptions: {
+            module: "esnext"
+          }
+        }
+      }
+    ]
+  },
+  // ...
+}
+```
 
 ### Usage with Parcel
 

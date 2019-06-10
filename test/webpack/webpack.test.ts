@@ -19,7 +19,6 @@ test("can create a browser bundle with webpack", async t => {
 
 test("can create a working server bundle with webpack", async t => {
   const stats = await runWebpack(serverConfig)
-console.log(stats.compilation.errors)
   t.deepEqual(stats.compilation.errors, [])
 
   const bundle = require("./dist.node/main")

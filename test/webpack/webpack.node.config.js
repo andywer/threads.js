@@ -4,7 +4,11 @@ const ThreadsPlugin = require("threads-plugin")
 module.exports = {
   context: __dirname,
   mode: "development",
+  devtool: false,
   entry: require.resolve("./app.ts"),
+  externals: {
+    "tiny-worker": "tiny-worker"
+  },
   output: {
     library: "test",
     libraryExport: "default",
@@ -18,8 +22,7 @@ module.exports = {
         loader: "ts-loader",
         options: {
           compilerOptions: {
-            module: "esnext",
-            target: "es2017"
+            module: "esnext"
           }
         }
       }
