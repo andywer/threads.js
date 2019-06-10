@@ -223,13 +223,11 @@ expose(function xorBuffer(username) {
 Without `Transfer()` the buffers would be copied on every call and every return. Using `Transfer()` only their ownership is transferred to the other thread instead to make sure it is accessible in a thread-safe way. This is a much faster operation.
 </details>
 
-<details>
-<summary>TODO: Cancelling a thread job</summary>
-</details>
-
+<!--
 <details>
 <summary>TODO: Subscribe to thread debugging events</summary>
 </details>
+-->
 
 <details>
 <summary>Tests</summary>
@@ -237,27 +235,108 @@ Without `Transfer()` the buffers would be copied on every call and every return.
 Check out the [integration tests](./test) and [their workers](./test/workers) to see it in action.
 </details>
 
-### Usage with node.js
+### Recipes
+
+<details>
+<summary>Node.js</summary>
+
+<p></p>
 
 Works out of the box. Note that we wrap the native `Worker`, so `new Worker("./foo/bar")` will resolve the path relative to the module that calls it, not relative to the current working directory.
 
 That aligns it with the behavior when bundling the code with webpack or parcel.
+</details>
 
-### Usage with Webpack
+<details>
+<summary>Webpack</summary>
 
-Use with the [`worker-plugin`](https://github.com/GoogleChromeLabs/worker-plugin), so all `new Worker("./unbundled-path")` expressions are detected and properly transformed transparently, so you don't need to explicitly use the `worker-loader` or define extra entry points.
+#### Threads plugin
 
-TODO
+Use with the [`threads-plugin`](https://github.com/andywer/threads-plugin). It will transparently detect all `new Worker("./unbundled-path")` expressions, bundles the worker code and replaces the `new Worker(...)` path with the worker bundle path, so you don't need to explicitly use the `worker-loader` or define extra entry points.
 
-### Usage with Parcel
+```sh
+  npm install -D threads-plugin
+```
 
-Should work out of the box without any extra plugins.
+Then drop it into your `webpack.config.js`:
 
-The only adjustment you need to do is to import `threads/register` once in the beginning (in the master code, not in the thread) to register the library's `Worker` for your platform as the global `Worker`.
+```diff
++ const ThreadsPlugin = require('threads-plugin');
+
+  module.exports = {
+    // ...
+    plugins: [
++     new ThreadsPlugin()
+    ]
+    // ...
+  }
+```
+
+#### Webpack bundles targetting node
+
+If you are using webpack to create a bundle that will be run in node (webpack config `target: "node"`), you also need to specify that the `tiny-worker` fallback used for node < 12 should not be bundled:
+
+```diff
+  module.exports = {
+    // ...
++   externals: {
++     "tiny-worker": "tiny-worker"
++   }
+    // ...
+}
+```
+
+Don't forget to add `tiny-worker` to your `package.json` `dependencies` in that case.
+
+#### When using TypeScript
+
+Make sure to keep the imports / exports intact, so webpack resolves them. Otherwise the `threads-plugin` won't be able to do its job.
+
+```diff
+  module.exports = {
+    // ...
+    module: {
+      rules: [
+        {
+          test: /\.ts$/,
+          loader: "ts-loader",
++         options: {
++           compilerOptions: {
++             module: "esnext"
++           }
++         }
+        }
+      ]
+    },
+    // ...
+  }
+```
+
+</details>
+
+<details>
+<summary>Parcel bundler</summary>
+  
+<p></p>
+
+Add this import to the start of your application:
+
+```diff
+  import { spawn } from "threads"
++ import "threads/register"
+
+  // ...
+
+  const work = await spawn(new Worker("./worker"))
+```
+
+You need to import `threads/register` once in the beginning (in the master code, not in the thread) to register the library's `Worker` for your platform as the global `Worker`.
 
 This is necessary, since you cannot `import { Worker } from "threads"` or Parcel won't recognize `new Worker()` as a web worker anymore.
 
-TODO
+Anything else should work out of the box.
+
+</details>
 
 ## API
 

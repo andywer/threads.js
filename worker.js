@@ -1,1 +1,1 @@
-module.exports = require("./dist/worker/index")
+module.exports = require("./dist/worker/index").default

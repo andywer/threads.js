@@ -7,9 +7,10 @@
     "prebuild": "rimraf dist/",
     "build": "tsc",
     "pretest": "babel --plugins @babel/plugin-transform-typescript --plugins @babel/plugin-transform-modules-commonjs ./test/workers -d ./test/workers -x .ts",
-    "test": "run-s test:ava test:puppeteer",
+    "test": "run-s test:ava test:puppeteer:basic test:puppeteer:webpack",
     "test:ava": "TS_NODE_FILES=true ava",
-    "test:puppeteer": "puppet-run plugin:mocha ./test/*.chromium*.ts",
+    "test:puppeteer:basic": "puppet-run plugin:mocha ./test/*.chromium*.ts",
+    "test:puppeteer:webpack": "puppet-run --serve ./test/webpack/dist.web/0.worker.js plugin:mocha ./test/webpack/webpack.chromium.mocha.ts",
     "posttest": "tslint --project .",
     "prepare": "run-s build"
   },
@@ -48,6 +49,7 @@
     "@types/debug": "^4.1.4",
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.8",
+    "@types/webpack": "^4.4.32",
     "ava": "^1.4.1",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
@@ -55,11 +57,15 @@
     "puppet-run": "^0.5.0",
     "puppet-run-plugin-mocha": "^0.1.1",
     "rimraf": "^2.6.3",
+    "threads-plugin": "^1.0.0",
     "tiny-worker": "^2.2.0",
+    "ts-loader": "^6.0.1",
     "ts-node": "^8.1.0",
     "tslint": "^5.16.0",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.4.5"
+    "typescript": "^3.4.5",
+    "webpack": "^4.32.2",
+    "worker-plugin": "^3.1.0"
   },
   "optionalDependencies": {
     "tiny-worker": ">= 2"
@@ -70,7 +76,7 @@
       "ts"
     ],
     "files": [
-      "./test/*.test.ts"
+      "./test/**/*.test.ts"
     ],
     "require": [
       "ts-node/register"
