@@ -14,12 +14,11 @@ when run by node.js. Also supports browsers which do not support web workers.
 - Well tested
 - ES6 and backwards-compatible
 
-#### Version 1.0
+### Version 1.0
 
-Check out the [Version 1.0 Progress](https://github.com/andywer/threads.js/issues/100) and feel free to leave feedback!
+Even though it's not finished yet, you might already want to [**use the new version 1.0**](https://github.com/andywer/threads.js/tree/v1) instead of the old implementation, since v1.0 fixes a bunch of issues and comes with a completely new API. v0.x is about to be deprecated.
 
-New to the library? You might want to wait for v1.0 to set sail, since it fixes a bunch of issues and comes with a completely new API.
-
+Check out the v1.0 progress [**here**](https://github.com/andywer/threads.js/issues/100) and leave some feedback!
 
 ## Basic usage
 
