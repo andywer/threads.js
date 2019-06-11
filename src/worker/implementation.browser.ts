@@ -8,9 +8,8 @@ const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorke
   return typeof self !== "undefined" && self.postMessage ? true : false
 }
 
-const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data) {
-  // TODO: Transferables
-  self.postMessage(data)
+const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList?) {
+  self.postMessage(data, transferList)
 }
 
 const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {
