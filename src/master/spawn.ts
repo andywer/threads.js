@@ -45,6 +45,10 @@ const debugThreadUtils = DebugLogger("threads:master:thread-utils")
 const isInitMessage = (data: any): data is WorkerInitMessage => data && data.type === ("init" as const)
 const isUncaughtErrorMessage = (data: any): data is WorkerUncaughtErrorMessage => data && data.type === ("uncaughtError" as const)
 
+const initMessageTimeout = typeof process !== "undefined" && process.env.THREADS_WORKER_INIT_TIMEOUT
+  ? Number.parseInt(process.env.THREADS_WORKER_INIT_TIMEOUT, 10)
+  : 10000
+
 async function withTimeout<T>(promise: Promise<T>, timeoutInMs: number, errorMessage: string): Promise<T> {
   const timeout = new Promise<never>((resolve, reject) => {
     setTimeout(() => reject(Error(errorMessage)), timeoutInMs)
@@ -134,7 +138,7 @@ export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> =
 ): Promise<ExposedToThreadType<Exposed>> {
   debugSpawn("Initializing new thread")
 
-  const initMessage = await withTimeout(receiveInitMessage(worker), 10000, "Timeout: Did not receive an init message from worker. Make sure the worker calls expose().")
+  const initMessage = await withTimeout(receiveInitMessage(worker), initMessageTimeout, `Timeout: Did not receive an init message from worker after ${initMessageTimeout}ms. Make sure the worker calls expose().`)
   const exposed = initMessage.exposed
 
   const { termination, terminate } = createTerminator(worker)

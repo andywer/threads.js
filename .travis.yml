@@ -20,5 +20,8 @@ matrix:
       node_js: latest
       script: npx run-s pretest test:ava
 
+env:
+  - THREADS_WORKER_INIT_TIMEOUT=15000
+
 script:
   - npm test
