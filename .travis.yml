@@ -14,11 +14,11 @@ matrix:
     - os: windows
       filter_secrets: false  # Secrets will otherwise break Windows builds
       node_js: 8.6
-      script: npm run test:ava
+      script: npx run-s pretest test:ava
     - os: windows
       filter_secrets: false  # Secrets will otherwise break Windows builds
       node_js: latest
-      script: npm run test:ava
+      script: npx run-s pretest test:ava
 
 script:
   - npm test
