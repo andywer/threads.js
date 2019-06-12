@@ -1,11 +1,18 @@
-addons:
-  chrome: stable
-
 language: node_js
 
-node_js:
-  - 8.6
-  - node    # Latest
+matrix:
+  include:
+    - os: linux
+      addons:
+        chrome: stable
+      node_js: 8.6
+    - os: linux
+      addons:
+        chrome: stable
+      node_js: node  # Latest
+    - os: windows
+      filter_secrets: false  # Secrets will otherwise break Windows builds
+      node_js: latest
 
 script:
   - npm test
