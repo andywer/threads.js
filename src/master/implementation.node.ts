@@ -15,7 +15,7 @@ const defaultPoolSize = cpus().length
 function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const parentCallSite = getCallsites().find((callsite: CallSite) => {
     const filename = callsite.getFileName()
-    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/\/master\/implementation/))
+    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/[\/\\]master[\/\\]implementation/))
   })
 
   const callerPath = parentCallSite ? parentCallSite.getFileName() : null
@@ -28,7 +28,7 @@ function resolveScriptPath(scriptPath: string) {
   // eval() hack is also webpack-related
   const workerFilePath = typeof __non_webpack_require__ === "function"
     ? __non_webpack_require__.resolve(path.join(eval("__dirname"), scriptPath))
-    : require.resolve(rebaseScriptPath(scriptPath, /\/worker_threads\//))
+    : require.resolve(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/))
 
   return workerFilePath
 }
