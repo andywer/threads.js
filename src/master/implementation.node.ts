@@ -15,7 +15,7 @@ const defaultPoolSize = cpus().length
 function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const parentCallSite = getCallsites().find((callsite: CallSite) => {
     const filename = callsite.getFileName()
-    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/\/master\/implementation/))
+    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/[\/\\]master[\/\\]implementation/))
   })
 
   const callerPath = parentCallSite ? parentCallSite.getFileName() : null
@@ -28,7 +28,7 @@ function resolveScriptPath(scriptPath: string) {
   // eval() hack is also webpack-related
   const workerFilePath = typeof __non_webpack_require__ === "function"
     ? __non_webpack_require__.resolve(path.join(eval("__dirname"), scriptPath))
-    : require.resolve(rebaseScriptPath(scriptPath, /\/worker_threads\//))
+    : require.resolve(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/))
 
   return workerFilePath
 }
@@ -72,7 +72,13 @@ function initTinyWorker(): typeof WorkerImplementation {
     private emitter: EventEmitter
 
     constructor(scriptPath: string) {
-      super(resolveScriptPath(scriptPath), [], { esm: true })
+      // Need to apply a work-around for Windows or it will choke upon the absolute path
+      // (`Error [ERR_INVALID_PROTOCOL]: Protocol 'c:' not supported`)
+      const resolvedScriptPath = process.platform === "win32"
+        ? `file:///${resolveScriptPath(scriptPath).replace(/\\/g, "/")}`
+        : resolveScriptPath(scriptPath)
+
+      super(resolvedScriptPath, [], { esm: true })
       allWorkers.push(this)
 
       this.emitter = new EventEmitter()
