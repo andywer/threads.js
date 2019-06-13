@@ -72,7 +72,13 @@ function initTinyWorker(): typeof WorkerImplementation {
     private emitter: EventEmitter
 
     constructor(scriptPath: string) {
-      super(resolveScriptPath(scriptPath), [], { esm: true })
+      // Need to apply a work-around for Windows or it will choke upon the absolute path
+      // (`Error [ERR_INVALID_PROTOCOL]: Protocol 'c:' not supported`)
+      const resolvedScriptPath = process.platform === "win32"
+        ? `file:///${resolveScriptPath(scriptPath).replace(/\\/g, "/")}`
+        : resolveScriptPath(scriptPath)
+
+      super(resolvedScriptPath, [], { esm: true })
       allWorkers.push(this)
 
       this.emitter = new EventEmitter()
