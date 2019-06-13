@@ -1,6 +1,6 @@
 import test from "ava"
 import { spawn, Pool, Worker } from "../src/index"
-import { PoolEventType } from "../src/master/pool";
+import { PoolEventType } from "../src/master/pool"
 
 test.serial("thread pool basics work and events are emitted", async t => {
   const events: Pool.Event[] = []
@@ -11,7 +11,7 @@ test.serial("thread pool basics work and events are emitted", async t => {
     spawnCalled++
     return spawn<() => string>(new Worker("./workers/hello-world"))
   }
-  const pool = Pool(spawnHelloWorld, 4)
+  const pool = Pool(spawnHelloWorld, 3)
   pool.events().subscribe(event => events.push(event))
 
   // Just to make sure all worker threads are initialized before starting to queue
@@ -29,12 +29,12 @@ test.serial("thread pool basics work and events are emitted", async t => {
     return result
   })
   await pool.terminate()
-  t.is(spawnCalled, 4)
+  t.is(spawnCalled, 3)
   t.is(taskFnCalled, 1)
   t.deepEqual(events, [
     {
       type: Pool.EventType.initialized,
-      size: 4
+      size: 3
     },
     {
       type: Pool.EventType.taskQueued,
