@@ -1,6 +1,6 @@
 import test from "ava"
 import { spawn, Pool, Worker } from "../src/index"
-import { PoolEventType } from "../src/master/pool"
+import { PoolEventType, QueuedTask } from "../src/master/pool"
 
 test.serial("thread pool basics work and events are emitted", async t => {
   const events: Pool.Event[] = []
@@ -28,9 +28,11 @@ test.serial("thread pool basics work and events are emitted", async t => {
     t.is(result, "Hello World")
     return result
   })
+
   await pool.terminate()
   t.is(spawnCalled, 3)
   t.is(taskFnCalled, 1)
+
   t.deepEqual(events, [
     {
       type: Pool.EventType.initialized,
@@ -50,9 +52,6 @@ test.serial("thread pool basics work and events are emitted", async t => {
       returnValue: "Hello World",
       taskID: 1,
       workerID: 1
-    },
-    {
-      type: Pool.EventType.taskQueueDrained
     },
     {
       type: Pool.EventType.terminated,
@@ -100,4 +99,26 @@ test.serial("pool.completed(true) works", async t => {
 
   await pool.completed(true)
   t.pass()
+})
+
+test.serial("task.cancel() works", async t => {
+  const spawnHelloWorld = () => spawn(new Worker("./workers/hello-world"))
+  const pool = Pool(spawnHelloWorld, 1)
+
+  let executionCount = 0
+  const tasks: QueuedTask<any, any>[] = []
+
+  for (let i = 0; i < 4; i++) {
+    const task = pool.queue(helloWorld => {
+      executionCount++
+      return helloWorld()
+    })
+    tasks.push(task)
+  }
+
+  tasks[2].cancel()
+  tasks[3].cancel()
+
+  await pool.completed()
+  t.is(executionCount, 2)
 })
