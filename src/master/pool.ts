@@ -91,6 +91,41 @@ function findIdlingWorker<ThreadType extends Thread>(
   return workers.find(worker => worker.runningTasks.length < maxConcurrency)
 }
 
+async function runPoolTask<ThreadType extends Thread>(
+  task: QueuedTask<ThreadType, any>,
+  availableWorker: WorkerDescriptor<ThreadType>,
+  workerID: number,
+  eventSubject: ZenObservable.SubscriptionObserver<PoolEvent<ThreadType>>,
+  debug: DebugLogger.Debugger
+) {
+  debug(`Running task #${task.id} on worker #${workerID}...`)
+  eventSubject.next({
+    type: PoolEventType.taskStart,
+    taskID: task.id,
+    workerID
+  })
+
+  try {
+    const returnValue = await task.run(await availableWorker.init)
+
+    debug(`Task #${task.id} completed successfully`)
+    eventSubject.next({
+      type: PoolEventType.taskCompleted,
+      returnValue,
+      taskID: task.id,
+      workerID
+    })
+  } catch (error) {
+    debug(`Task #${task.id} failed`)
+    eventSubject.next({
+      type: PoolEventType.taskFailed,
+      taskID: task.id,
+      error,
+      workerID
+    })
+  }
+}
+
 function spawnWorkers<ThreadType extends Thread>(
   spawnWorker: () => Promise<ThreadType>,
   count: number
@@ -196,15 +231,7 @@ function PoolConstructor<ThreadType extends Thread>(
       return
     }
 
-
     const workerID = workers.indexOf(availableWorker) + 1
-    debug(`Running task #${nextTask.id} on worker #${workerID}...`)
-
-    eventSubject.next({
-      type: PoolEventType.taskStart,
-      taskID: nextTask.id,
-      workerID
-    })
 
     const run = async (worker: WorkerDescriptor<ThreadType>, task: QueuedTask<ThreadType, any>) => {
       const removeTaskFromWorkersRunningTasks = () => {
@@ -215,33 +242,16 @@ function PoolConstructor<ThreadType extends Thread>(
       await sleep(0)
 
       try {
-        const returnValue = await task.run(await availableWorker.init)
-
-        debug(`Task #${nextTask.id} completed successfully`)
-        removeTaskFromWorkersRunningTasks()
-
-        eventSubject.next({
-          type: PoolEventType.taskCompleted,
-          returnValue,
-          taskID: nextTask.id,
-          workerID
-        })
-      } catch(error) {
-        debug(`Task #${nextTask.id} failed`)
-        removeTaskFromWorkersRunningTasks()
-
-        eventSubject.next({
-          type: PoolEventType.taskFailed,
-          taskID: nextTask.id,
-          error,
-          workerID
-        })
+        await runPoolTask(task, availableWorker, workerID, eventSubject, debug)
       } finally {
+        removeTaskFromWorkersRunningTasks()
+
         if (!isClosing) {
           scheduleWork()
         }
       }
     }
+
     const runPromise = run(availableWorker, nextTask)
     availableWorker.runningTasks.push(runPromise)
   }
