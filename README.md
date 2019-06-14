@@ -189,6 +189,13 @@ Note that `pool.queue()` will schedule a task to be run in a deferred way. It mi
 
 The promise returned by `pool.completed()` will resolve once the scheduled callbacks have been executed and completed. A failing job will also make the promise reject.
 
+You can cancel queued tasks, too. If the pool has already started to execute the task, you cannot cancel it anymore, though.
+
+```js
+const task = pool.queue(multiplier => multiplier(2, 3))
+task.cancel()
+```
+
 </details>
 
 <details>
@@ -316,7 +323,7 @@ Make sure to keep the imports / exports intact, so webpack resolves them. Otherw
 
 <details>
 <summary>Parcel bundler</summary>
-  
+
 <p></p>
 
 Add this import to the start of your application:

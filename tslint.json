@@ -11,6 +11,7 @@
       "never-prefix"
     ],
     "interface-over-type-literal": false,
+    "member-ordering": false,
     "no-implicit-dependencies": [
       true,
       ["tiny-worker", "worker_threads"]

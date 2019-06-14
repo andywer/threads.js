@@ -136,9 +136,25 @@ function spawnWorkers<ThreadType extends Thread>(
   }))
 }
 
+/**
+ * Task that has been `pool.queued()`-ed.
+ */
 export interface QueuedTask<ThreadType extends Thread, Return> {
+  /** @private */
   id: number
+
+  /** @private */
   run: TaskRunFunction<ThreadType, Return>
+
+  /**
+   * Queued tasks can be cancelled until the pool starts running them on a worker thread.
+   */
+  cancel(): void
+
+  /**
+   * `QueuedTask` is thenable, so you can `await` it.
+   * Resolves when the task has successfully been executed. Rejects if the task fails.
+   */
   then: Promise<Return>["then"]
 }
 
@@ -201,7 +217,7 @@ function PoolConstructor<ThreadType extends Thread>(
   let isClosing = false
   let nextTaskID = 1
 
-  const taskQueue: Array<QueuedTask<ThreadType, any>> = []
+  let taskQueue: Array<QueuedTask<ThreadType, any>> = []
   const workers = spawnWorkers(spawnWorker, size)
 
   let eventSubject: ZenObservable.SubscriptionObserver<PoolEvent<ThreadType>>
@@ -292,7 +308,7 @@ function PoolConstructor<ThreadType extends Thread>(
         throw Error(`Cannot schedule pool tasks after terminate() has been called.`)
       }
 
-      let resultPromiseThen: Promise<any>["then"] | undefined = undefined
+      let resultPromiseThen: Promise<any>["then"] | undefined
 
       const createResultPromise = () => new Promise<any>((resolve, reject) => {
         const eventSubscription = pool.events().subscribe(event => {
@@ -312,6 +328,10 @@ function PoolConstructor<ThreadType extends Thread>(
       const task: QueuedTask<ThreadType, any> = {
         id: nextTaskID++,
         run: taskFunction,
+        cancel() {
+          if (taskQueue.indexOf(task) === -1) return
+          taskQueue = taskQueue.filter(someTask => someTask !== task)
+        },
         get then() {
           if (!resultPromiseThen) {
             const resultPromise = createResultPromise()
