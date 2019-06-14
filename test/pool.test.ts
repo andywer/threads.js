@@ -54,9 +54,6 @@ test.serial("thread pool basics work and events are emitted", async t => {
       workerID: 1
     },
     {
-      type: Pool.EventType.taskQueueDrained
-    },
-    {
       type: Pool.EventType.terminated,
       remainingQueue: []
     }
