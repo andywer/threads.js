@@ -171,7 +171,7 @@ import { spawn, Pool } from "threads"
 
 const pool = Pool(() => spawn(new Worker("./workers/multiplier")), 8 /* optional size */)
 
-pool.events.subscribe(console.log)
+pool.events().subscribe(console.log)
 
 pool.queue(async multiplier => {
   const multiplied = await multiplier(2, 3)
