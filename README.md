@@ -153,6 +153,59 @@ expose(counter)
 </details>
 
 <details>
+<summary>Basics - TypeScript</summary>
+
+<p></p>
+
+When using TypeScript you can declare the type of a `spawn()`-ed thread:
+
+```ts
+// master.ts
+import { spawn, Thread, Worker } from "threads"
+
+type HashFunction = (input: string) => Promise<string>
+
+const sha512 = await spawn<HashFunction>(new Worker("./workers/sha512"))
+const hashed = await sha512("abcdef")
+```
+
+It's also easy to export the type from the worker module and use it when `spawn()`-ing:
+
+```ts
+// master.ts
+import { spawn, Thread, Worker } from "threads"
+import { Counter } from "./workers/counter"
+
+const counter = await spawn<Counter>(new Worker("./workers/counter"))
+await counter.increment()
+```
+
+```ts
+// counter.ts
+import { expose } from "threads/worker"
+
+let currentCount = 0
+
+const counter = {
+  getCount() {
+    return currentCount
+  },
+  increment() {
+    return ++currentCount
+  },
+  decrement() {
+    return --currentCount
+  }
+}
+
+export type Counter = typeof counter
+
+expose(counter)
+```
+
+</details>
+
+<details>
 <summary>Basics - Error handling</summary>
 
 <p></p>
@@ -216,12 +269,6 @@ expose(startCounting)
 ```
 
 </details>
-
-<!--
-<details>
-<summary>Typed threads using TypeScript</summary>
-</details>
--->
 
 <details>
 <summary>Thread pool</summary>
