@@ -482,9 +482,11 @@ Everything else should work out of the box.
 
 </details>
 
+<!--
 ## API
 
 TODO
+-->
 
 ## Debug
 
