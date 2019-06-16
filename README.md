@@ -79,10 +79,12 @@ If the function returns a promise or an observable then you can just use the ret
 
 You can `expose()` either a function or an object. In case of exposing an object, `spawn()` will asynchronously return an object exposing all the object's functions, following the same rules as functions directly `expose()`-ed.
 
-### Code Samples
+## Code Samples
 
 <details>
 <summary>Basics - Function thread</summary>
+
+<p></p>
 
 ```js
 // master.js
@@ -110,6 +112,8 @@ expose(async function fetchGithubProfile(username) {
 
 <details>
 <summary>Basics - Module thread</summary>
+
+<p></p>
 
 ```js
 // master.js
@@ -145,22 +149,84 @@ const counter = {
 
 expose(counter)
 ```
+
 </details>
 
 <details>
-<summary>TODO: Basics - Returning observables</summary>
+<summary>Basics - Error handling</summary>
 
-Just return an observable in your worker, subscribe to it in the master code. Fully transparent.
+<p></p>
+
+Works fully transparent - the promise in the master code's call will be rejected with the error thrown in the worker, also yielding the worker error's stack trace.
+
+```js
+// master.js
+import { spawn, Thread, Worker } from "threads"
+
+const counter = await spawn(new Worker("./workers/counter"))
+
+try {
+  await counter.increment()
+  await counter.increment()
+  await counter.decrement()
+
+  console.log(`Counter is now at ${await counter.getCount()}`)
+} catch (error) {
+  console.error("Counter thread errored:", error)
+} finally {
+  await Thread.terminate(counter)
+}
+```
+
 </details>
 
 <details>
-<summary>TODO: Basics - Error handling</summary>
+<summary>Basics - Returning observables</summary>
 
-Fully transparent. The promise in the master code's call will be rejected with the error thrown in the worker, also yielding the worker error's stack trace.
+<p></p>
+
+You can return observables in your worker. It works fully transparent - just subscribe to the returned observable in the master code. The returned observable is based on the [`zen-observable`](https://github.com/zenparsing/zen-observable) implementation.
+
+Note that in contrast to the usual `zen-observable` behavior, the observable returned here is "hot". That means that if you subscribe to it twice, it will yield the same values, but won't run the thread twice. It also means, however, that if you subscribe to it late, you might miss data.
+
+```js
+// master.js
+import { spawn, Thread, Worker } from "threads"
+
+const counter = await spawn(new Worker("./workers/counter"))
+
+counter.subscribe(newCount => console.log(`Counter incremented to:`, newCount))
+```
+
+```js
+// workers/counter.js
+import { expose } from "threads/worker"
+import Observable from "zen-observable"
+
+function startCounting() {
+  return new Observable(observer => {
+    for (let currentCount = 1; currentCount <= 10; currentCount++) {
+      observer.next(currentCount)
+    }
+    observer.complete()
+  })
+}
+
+expose(startCounting)
+```
+
 </details>
+
+<!--
+<details>
+<summary>Typed threads using TypeScript</summary>
+</details>
+-->
 
 <details>
 <summary>Thread pool</summary>
+
+<p></p>
 
 A `Pool` allows you to create a set of worker threads and queue thread calls. The queued tasks are pulled from the queue and executed as previous tasks have finished.
 
@@ -200,6 +266,9 @@ task.cancel()
 
 <details>
 <summary>Transferable objects</summary>
+
+<p></p>
+
 Use `Transfer()` to mark [`transferable objects`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers#Passing_data_by_transferring_ownership_(transferable_objects)) like ArrayBuffers to be transferred to the receiving thread. It can speed up your code a lot if you are working with big chunks of binary data.
 
 `Transfer()` comes in two flavors:
@@ -228,28 +297,49 @@ expose(function xorBuffer(username) {
 ```
 
 Without `Transfer()` the buffers would be copied on every call and every return. Using `Transfer()` only their ownership is transferred to the other thread instead to make sure it is accessible in a thread-safe way. This is a much faster operation.
+
 </details>
 
-<!--
 <details>
-<summary>TODO: Subscribe to thread debugging events</summary>
+<summary>Subscribe to thread events</summary>
+
+<p></p>
+
+Every spawned thread emits events during its lifetime that you can subscribe to. This can be useful for debugging.
+
+```js
+import { spawn, Thread, Worker } from "threads"
+
+const myThread = await spawn(new Worker("./mythread"))
+
+Thread.events(myThread).subscribe(event => console.log("Thread event:", event))
+```
+
+There is a specialized function to subscribe only to thread error events:
+
+```js
+Thread.errors(myThread).subscribe(error => console.log("Thread error:", error))
+```
+
 </details>
--->
 
 <details>
 <summary>Tests</summary>
 
+<p></p>
+
 Check out the [integration tests](./test) and [their workers](./test/workers) to see it in action.
+
 </details>
 
-### Recipes
+## Recipes
 
 <details>
 <summary>Node.js</summary>
 
 <p></p>
 
-Works out of the box. Note that we wrap the native `Worker`, so `new Worker("./foo/bar")` will resolve the path relative to the module that calls it, not relative to the current working directory.
+Running code using threads.js in node works out of the box. Note that we wrap the native `Worker`, so `new Worker("./foo/bar")` will resolve the path relative to the module that calls it, not relative to the current working directory.
 
 That aligns it with the behavior when bundling the code with webpack or parcel.
 </details>
@@ -257,7 +347,7 @@ That aligns it with the behavior when bundling the code with webpack or parcel.
 <details>
 <summary>Webpack</summary>
 
-#### Threads plugin
+#### Webpack config
 
 Use with the [`threads-plugin`](https://github.com/andywer/threads-plugin). It will transparently detect all `new Worker("./unbundled-path")` expressions, bundles the worker code and replaces the `new Worker(...)` path with the worker bundle path, so you don't need to explicitly use the `worker-loader` or define extra entry points.
 
@@ -265,7 +355,7 @@ Use with the [`threads-plugin`](https://github.com/andywer/threads-plugin). It w
   npm install -D threads-plugin
 ```
 
-Then drop it into your `webpack.config.js`:
+Then add it to your `webpack.config.js`:
 
 ```diff
 + const ThreadsPlugin = require('threads-plugin');
@@ -279,9 +369,9 @@ Then drop it into your `webpack.config.js`:
   }
 ```
 
-#### Webpack bundles targetting node
+#### Node.js bundles
 
-If you are using webpack to create a bundle that will be run in node (webpack config `target: "node"`), you also need to specify that the `tiny-worker` fallback used for node < 12 should not be bundled:
+If you are using webpack to create a bundle that will be run in node (webpack config `target: "node"`), you also need to specify that the `tiny-worker` package used for node < 12 should not be bundled:
 
 ```diff
   module.exports = {
@@ -293,11 +383,11 @@ If you are using webpack to create a bundle that will be run in node (webpack co
 }
 ```
 
-Don't forget to add `tiny-worker` to your `package.json` `dependencies` in that case.
+Make sure that `tiny-worker` is listed in your `package.json` `dependencies` in that case.
 
 #### When using TypeScript
 
-Make sure to keep the imports / exports intact, so webpack resolves them. Otherwise the `threads-plugin` won't be able to do its job.
+Make sure the TypeScript compiler keeps the `import` / `export` statements intact, so webpack resolves them. Otherwise the `threads-plugin` won't be able to do its job.
 
 ```diff
   module.exports = {
@@ -326,7 +416,7 @@ Make sure to keep the imports / exports intact, so webpack resolves them. Otherw
 
 <p></p>
 
-Add this import to the start of your application:
+You need to import `threads/register` once at the beginning of your application code (in the master code, not in the workers):
 
 ```diff
   import { spawn } from "threads"
@@ -337,11 +427,11 @@ Add this import to the start of your application:
   const work = await spawn(new Worker("./worker"))
 ```
 
-You need to import `threads/register` once in the beginning (in the master code, not in the thread) to register the library's `Worker` for your platform as the global `Worker`.
+This registers the library's `Worker` implementation for your platform as the global `Worker`. This is necessary, since you cannot `import { Worker } from "threads"` or Parcel won't recognize `new Worker()` as a web worker anymore.
 
-This is necessary, since you cannot `import { Worker } from "threads"` or Parcel won't recognize `new Worker()` as a web worker anymore.
+Be aware that this might affect any code that tries to instantiate a normal web worker `Worker` and now instead instantiates a threads.js `Worker`. The threads.js `Worker` is just a web worker with some sugar on top, but that sugar might have unexpected side effects on third-party libraries.
 
-Anything else should work out of the box.
+Everything else should work out of the box.
 
 </details>
 
@@ -351,7 +441,12 @@ TODO
 
 ## Debug
 
-We are using the [`debug`](https://github.com/visionmedia/debug) package to provide opt-in debug logging. All the package's debug messages have a scope starting with `threads:`, with different sub-scopes.
+We are using the [`debug`](https://github.com/visionmedia/debug) package to provide opt-in debug logging. All the package's debug messages have a scope starting with `threads:`, with different sub-scopes:
+
+- `threads:master:messages`
+- `threads:master:spawn`
+- `threads:master:thread-utils`
+- `threads:pool:${poolName || poolID}`
 
 Set it to `DEBUG=threads:*` to enable all the library's debug logging. To run its tests with full debug logging, for instance:
 
