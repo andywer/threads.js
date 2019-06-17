@@ -16,6 +16,10 @@ Uses web workers in the browser, `worker_threads` in node 12+ and [`tiny-worker`
 * Manage bulk task executions with **thread pools**
 * Works great with **webpack**
 
+### Version 0.x
+
+You can find the old version 0.12 on the [`v0` branch](https://github.com/andywer/threads.js/tree/v1). All the content on this page refers to version 1.0 which is a rewrite of the library with a whole new API.
+
 ## Installation
 
 ```
