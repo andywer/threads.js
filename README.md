@@ -1,49 +1,136 @@
 <h1 align="center">threads</h1>
 <p align="center">
   <a href="https://travis-ci.org/andywer/threads.js" target="_blank"><img alt="Build status" src="https://img.shields.io/travis/andywer/threads.js/v1.svg?style=flat-square"></a>
-  <a href="https://www.npmjs.com/package/threads/v/next" target="_blank"><img alt="npm (tag)" src="https://img.shields.io/npm/v/threads/next.svg?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/threads" target="_blank"><img alt="npm (tag)" src="https://img.shields.io/npm/v/threads.svg?style=flat-square"></a>
 </p>
 
-Version 1.0 - Work in progress 🛠
+Offload CPU-intensive tasks to worker threads in node.js, web browsers and electron using one uniform API.
 
-Complete rewrite of the library with a new robust API, all functional, and all statically typed. It's still fully isomorphic – run the same code in the browser, in node.js or an electron app!
+Uses web workers in the browser, `worker_threads` in node 12+ and [`tiny-worker`](https://github.com/avoidwork/tiny-worker) in node 8 to 11.
 
-Development progress is tracked in 👉 [#100](https://github.com/andywer/threads.js/issues/100). Feel free to leave feedback there!
+### Features
+
+* **Speed up** code by parallel processing
+* **Keep UI responsive** by offloading work from rendering thread
+* First-class support for **async functions** & **observables**
+* Manage bulk task executions with **thread pools**
+* Works great with **webpack**
 
 ## Installation
 
 ```
-npm install threads@next tiny-worker
+npm install threads tiny-worker
 ```
 
-If you don't need to support node < 12 or you only want to build for the browser then you can also not install the `tiny-worker` package. It's an optional dependency and used as a fallback if `worker_threads` are not available.
+*You only need to install the `tiny-worker` package to support node.js < 12. It's an optional dependency and used as a fallback if `worker_threads` are not available.*
 
-## Compatibility
+<details>
+<summary>Run on node.js</summary>
 
-#### Platform: Web (browsers)
+<p></p>
 
-Uses [web workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
+Running code using threads.js in node works out of the box.
 
-#### Platform: Node.js 12+
+Note that we wrap the native `Worker`, so `new Worker("./foo/bar")` will resolve the path relative to the module that calls it, not relative to the current working directory.
 
-Uses native [worker threads](https://nodejs.org/api/worker_threads.html).
+That aligns it with the behavior when bundling the code with webpack or parcel.
 
-#### Platform: Node.js < 12
+</details>
 
-Uses [`tiny-worker`](https://github.com/avoidwork/tiny-worker) as fallback if native worker threads are not available.
+<details>
+<summary>Webpack build setup</summary>
 
-## New Paradigm
+#### Webpack config
 
-We dropped inline functions support and instead focus on worker code residing in their own files.
-Running inlined functions in a worker was nice for concise code samples, but offered limited value in real-world applications. Those inlined functions also had some built-in limitations that could not be overcome and that frequently got users confused.
+Use with the [`threads-plugin`](https://github.com/andywer/threads-plugin). It will transparently detect all `new Worker("./unbundled-path")` expressions, bundles the worker code and replaces the `new Worker(...)` path with the worker bundle path, so you don't need to explicitly use the `worker-loader` or define extra entry points.
 
-Focussing on worker code in distinct source modules also means we are focussing on using `threads` with bundlers like Webpack or Parcel in the front-end. In a node.js context you should be able to use a bundler as well, but you probably won't need to.
+```sh
+  npm install -D threads-plugin
+```
 
-These changes also mean that we shall have worker code with `import`/`require()` that works in node.js just as well as bundled in browsers.
+Then add it to your `webpack.config.js`:
 
-## Usage
+```diff
++ const ThreadsPlugin = require('threads-plugin');
 
-### Concept
+  module.exports = {
+    // ...
+    plugins: [
++     new ThreadsPlugin()
+    ]
+    // ...
+  }
+```
+
+#### Node.js bundles
+
+If you are using webpack to create a bundle that will be run in node (webpack config `target: "node"`), you also need to specify that the `tiny-worker` package used for node < 12 should not be bundled:
+
+```diff
+  module.exports = {
+    // ...
++   externals: {
++     "tiny-worker": "tiny-worker"
++   }
+    // ...
+}
+```
+
+Make sure that `tiny-worker` is listed in your `package.json` `dependencies` in that case.
+
+#### When using TypeScript
+
+Make sure the TypeScript compiler keeps the `import` / `export` statements intact, so webpack resolves them. Otherwise the `threads-plugin` won't be able to do its job.
+
+```diff
+  module.exports = {
+    // ...
+    module: {
+      rules: [
+        {
+          test: /\.ts$/,
+          loader: "ts-loader",
++         options: {
++           compilerOptions: {
++             module: "esnext"
++           }
++         }
+        }
+      ]
+    },
+    // ...
+  }
+```
+
+</details>
+
+<details>
+<summary>Parcel bundler setup</summary>
+
+<p></p>
+
+You need to import `threads/register` once at the beginning of your application code (in the master code, not in the workers):
+
+```diff
+  import { spawn } from "threads"
++ import "threads/register"
+
+  // ...
+
+  const work = await spawn(new Worker("./worker"))
+```
+
+This registers the library's `Worker` implementation for your platform as the global `Worker`. This is necessary, since you cannot `import { Worker } from "threads"` or Parcel won't recognize `new Worker()` as a web worker anymore.
+
+Be aware that this might affect any code that tries to instantiate a normal web worker `Worker` and now instead instantiates a threads.js `Worker`. The threads.js `Worker` is just a web worker with some sugar on top, but that sugar might have unexpected side effects on third-party libraries.
+
+Everything else should work out of the box.
+
+</details>
+
+## Getting Started
+
+### Basics
 
 ```js
 // master.js
@@ -70,16 +157,19 @@ expose(function add(a, b) {
 })
 ```
 
-#### spawn()
+### spawn()
 
 The return value of `add()` in the master code depends on the `add()` return value in the worker:
+
 If the function returns a promise or an observable then you can just use the return value as such in the master code. If the function returns a primitive value, expect the master function to return a promise resolving to that value.
 
-#### expose()
+### expose()
 
-You can `expose()` either a function or an object. In case of exposing an object, `spawn()` will asynchronously return an object exposing all the object's functions, following the same rules as functions directly `expose()`-ed.
+Use `expose()` to make either a function or an object callable from the master thread.
 
-## Code Samples
+In case of exposing an object, `spawn()` will asynchronously return an object exposing all the object's functions, following the same rules as functions directly `expose()`-ed.
+
+## Usage
 
 <details>
 <summary>Basics - Function thread</summary>
@@ -478,113 +568,6 @@ Thread.errors(myThread).subscribe(error => console.log("Thread error:", error))
 <p></p>
 
 Check out the [integration tests](./test) and [their workers](./test/workers) to see it in action.
-
-</details>
-
-### Limitations
-
-You cannot return functions, objects containing methods or instances of classes from worker threads or pass them to worker threads.
-
-## Recipes
-
-<details>
-<summary>Node.js</summary>
-
-<p></p>
-
-Running code using threads.js in node works out of the box. Note that we wrap the native `Worker`, so `new Worker("./foo/bar")` will resolve the path relative to the module that calls it, not relative to the current working directory.
-
-That aligns it with the behavior when bundling the code with webpack or parcel.
-</details>
-
-<details>
-<summary>Webpack</summary>
-
-#### Webpack config
-
-Use with the [`threads-plugin`](https://github.com/andywer/threads-plugin). It will transparently detect all `new Worker("./unbundled-path")` expressions, bundles the worker code and replaces the `new Worker(...)` path with the worker bundle path, so you don't need to explicitly use the `worker-loader` or define extra entry points.
-
-```sh
-  npm install -D threads-plugin
-```
-
-Then add it to your `webpack.config.js`:
-
-```diff
-+ const ThreadsPlugin = require('threads-plugin');
-
-  module.exports = {
-    // ...
-    plugins: [
-+     new ThreadsPlugin()
-    ]
-    // ...
-  }
-```
-
-#### Node.js bundles
-
-If you are using webpack to create a bundle that will be run in node (webpack config `target: "node"`), you also need to specify that the `tiny-worker` package used for node < 12 should not be bundled:
-
-```diff
-  module.exports = {
-    // ...
-+   externals: {
-+     "tiny-worker": "tiny-worker"
-+   }
-    // ...
-}
-```
-
-Make sure that `tiny-worker` is listed in your `package.json` `dependencies` in that case.
-
-#### When using TypeScript
-
-Make sure the TypeScript compiler keeps the `import` / `export` statements intact, so webpack resolves them. Otherwise the `threads-plugin` won't be able to do its job.
-
-```diff
-  module.exports = {
-    // ...
-    module: {
-      rules: [
-        {
-          test: /\.ts$/,
-          loader: "ts-loader",
-+         options: {
-+           compilerOptions: {
-+             module: "esnext"
-+           }
-+         }
-        }
-      ]
-    },
-    // ...
-  }
-```
-
-</details>
-
-<details>
-<summary>Parcel bundler</summary>
-
-<p></p>
-
-You need to import `threads/register` once at the beginning of your application code (in the master code, not in the workers):
-
-```diff
-  import { spawn } from "threads"
-+ import "threads/register"
-
-  // ...
-
-  const work = await spawn(new Worker("./worker"))
-```
-
-This registers the library's `Worker` implementation for your platform as the global `Worker`. This is necessary, since you cannot `import { Worker } from "threads"` or Parcel won't recognize `new Worker()` as a web worker anymore.
-
-Be aware that this might affect any code that tries to instantiate a normal web worker `Worker` and now instead instantiates a threads.js `Worker`. The threads.js `Worker` is just a web worker with some sugar on top, but that sugar might have unexpected side effects on third-party libraries.
-
-Everything else should work out of the box.
 
 </details>
 
