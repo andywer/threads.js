@@ -34,6 +34,7 @@ export declare namespace Pool {
 
 export enum PoolEventType {
   initialized = "initialized",
+  taskCanceled = "taskCanceled",
   taskCompleted = "taskCompleted",
   taskFailed = "taskFailed",
   taskQueued = "taskQueued",
@@ -66,6 +67,9 @@ export type PoolEvent<ThreadType extends Thread> = {
   error: Error,
   taskID: number,
   workerID: number
+} | {
+  type: PoolEventType.taskCanceled,
+  taskID: number
 } | {
   type: PoolEventType.terminated,
   remainingQueue: Array<QueuedTask<ThreadType, any>>
@@ -331,6 +335,10 @@ function PoolConstructor<ThreadType extends Thread>(
         cancel() {
           if (taskQueue.indexOf(task) === -1) return
           taskQueue = taskQueue.filter(someTask => someTask !== task)
+          eventSubject.next({
+            type: PoolEventType.taskCanceled,
+            taskID: task.id
+          })
         },
         get then() {
           if (!resultPromiseThen) {

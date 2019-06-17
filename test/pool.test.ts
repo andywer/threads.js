@@ -102,8 +102,11 @@ test.serial("pool.completed(true) works", async t => {
 })
 
 test.serial("task.cancel() works", async t => {
+  const events: Pool.Event[] = []
   const spawnHelloWorld = () => spawn(new Worker("./workers/hello-world"))
   const pool = Pool(spawnHelloWorld, 1)
+
+  pool.events().subscribe(event => events.push(event))
 
   let executionCount = 0
   const tasks: QueuedTask<any, any>[] = []
@@ -121,4 +124,16 @@ test.serial("task.cancel() works", async t => {
 
   await pool.completed()
   t.is(executionCount, 2)
+
+  const cancellationEvents = events.filter(event => event.type === "taskCanceled")
+  t.deepEqual(cancellationEvents, [
+    {
+      type: PoolEventType.taskCanceled,
+      taskID: 3
+    },
+    {
+      type: PoolEventType.taskCanceled,
+      taskID: 4
+    }
+  ])
 })
