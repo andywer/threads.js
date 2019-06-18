@@ -85,6 +85,7 @@
     "serial": true
   },
   "browser": {
+    "callsites": false,
     "tiny-worker": false,
     "ts-node": false,
     "ts-node/register": false,
