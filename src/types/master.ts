@@ -2,21 +2,6 @@ import Observable from "zen-observable"
 import { ObservablePromise } from "../observable-promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
 
-export type FunctionParams<Fn extends (...args: any[]) => any> =
-  Fn extends () => any
-  ? []
-  : Fn extends (p1: infer P1) => any
-  ? [P1]
-  : Fn extends (p1: infer P1, p2: infer P2) => any
-  ? [P1, P2]
-  : Fn extends (p1: infer P1, p2: infer P2, p3: infer P3) => any
-  ? [P1, P2, P3]
-  : Fn extends (p1: infer P1, p2: infer P2, p3: infer P3, p4: infer P4) => any
-  ? [P1, P2, P3, P4]
-  : Fn extends (p1: infer P1, p2: infer P2, p3: infer P3, p4: infer P4, p5: infer P5) => any
-  ? [P1, P2, P3, P4, P5]
-  : any[]
-
 export type ModuleMethods = { [methodName: string]: (...args: any) => any }
 
 export type ProxyableFunction<Args extends any[], ReturnType> =
@@ -25,7 +10,7 @@ export type ProxyableFunction<Args extends any[], ReturnType> =
     : (...args: Args) => ObservablePromise<ReturnType>
 
 export type ModuleProxy<Methods extends ModuleMethods> = {
-  [method in keyof Methods]: ProxyableFunction<FunctionParams<Methods[method]>, ReturnType<Methods[method]>>
+  [method in keyof Methods]: ProxyableFunction<Parameters<Methods[method]>, ReturnType<Methods[method]>>
 }
 
 export interface PrivateThreadProps {

@@ -4,7 +4,6 @@ import { rehydrateError } from "../common"
 import { createPromiseWithResolver } from "../promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
 import {
-  FunctionParams,
   FunctionThread,
   ModuleThread,
   PrivateThreadProps,
@@ -26,7 +25,7 @@ type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
   Exposed extends ArbitraryWorkerInterface
   ? ArbitraryFunctionOrModuleThread
   : Exposed extends WorkerFunction
-  ? FunctionThread<FunctionParams<Exposed>, StripAsync<ReturnType<Exposed>>>
+  ? FunctionThread<Parameters<Exposed>, StripAsync<ReturnType<Exposed>>>
   : Exposed extends WorkerModule<any>
   ? ModuleThread<Exposed>
   : never

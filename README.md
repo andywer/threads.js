@@ -247,8 +247,12 @@ Note that in contrast to the usual `zen-observable` behavior, the observable ret
 import { spawn, Thread, Worker } from "threads"
 
 const counter = await spawn(new Worker("./workers/counter"))
+const counting = counter()
 
-counter.subscribe(newCount => console.log(`Counter incremented to:`, newCount))
+counting.subscribe(newCount => console.log(`Counter incremented to:`, newCount))
+await counting
+
+await Thread.terminate(counter)
 ```
 
 ```js
@@ -348,6 +352,104 @@ Without `Transfer()` the buffers would be copied on every call and every return.
 </details>
 
 <details>
+<summary>Observable subjects</summary>
+
+<p></p>
+
+As described earlier, we can always return observables from our threads. While observables usually isolate the code that create observable events from the surrounding code, we do provide a way to trigger updates to the observable "from the outside".
+
+Using `Subject` we can create objects that implement the `Observable` interface, allowing other code to `.subscribe()` to it, while also exposing `.next(value)`, `.complete()` and `.error(error)`, so we can trigger those observable updates "from outside".
+
+In a nutshell:
+
+```js
+const observable = new Observable(observer => {
+  // We can call `.next()`, `.error()`, `.complete()` only here
+  // as they are only exposed on the `observer`
+  observer.complete()
+})
+
+const subject = new Subject()
+subject.complete()
+// We are free to call `.next()`, `.error()`, `.complete()` from anywhere now
+// Beware: With great power comes great responsibility! Don't write spaghetti code.
+```
+
+Subscribing still works the same:
+
+```js
+const subscriptionOne = observable.subscribe(/* ... */)
+subscriptionOne.unsubscribe()
+
+const subscriptionTwo = subject.subscribe(/* ... */)
+subscriptionTwo.unsubscribe()
+```
+
+To get a plain observable that proxies all values, errors, completion of the
+subject, but does not expose the `.next()`, ... methods, use `Observable.from()`:
+
+```js
+// The returned observable will be read-only
+return Observable.from(subject)
+```
+
+</details>
+
+<details>
+<summary>Basics - Streaming</summary>
+
+<p></p>
+
+We can easily use observable subjects to stream results as they are computed.
+
+```js
+// master.js
+import { spawn, Thread, Worker } from "threads"
+
+const minmax = await spawn(new Worker("./workers/minmax"))
+minmax.values().subscribe(values => console.log(`Min: ${values.min}  Max: ${values.max}`))
+
+await minmax.push(2)
+await minmax.push(3)
+await minmax.push(4)
+await minmax.push(1)
+await minmax.push(5)
+await minmax.finish()
+
+await Thread.terminate(minmax)
+```
+
+```js
+// minmax.js
+import { Subject } from "threads/observable"
+import { expose } from "threads/worker"
+
+let max = -Infinity
+let min = Infinity
+
+let subject = new Subject()
+
+const minmax = {
+  finish() {
+    subject.complete()
+    subject = new Subject()
+  },
+  push(value) {
+    max = Math.max(max, value)
+    min = Math.min(min, value)
+    subject.next({ max, min })
+  },
+  values() {
+    return Observable.from(subject)
+  }
+}
+
+expose(minmax)
+```
+
+</details>
+
+<details>
 <summary>Subscribe to thread events</summary>
 
 <p></p>
@@ -378,6 +480,10 @@ Thread.errors(myThread).subscribe(error => console.log("Thread error:", error))
 Check out the [integration tests](./test) and [their workers](./test/workers) to see it in action.
 
 </details>
+
+### Limitations
+
+You cannot return functions, objects containing methods or instances of classes from worker threads or pass them to worker threads.
 
 ## Recipes
 

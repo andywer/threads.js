@@ -12,6 +12,7 @@
   },
   "include": [
     "./src/index.ts",
+    "./src/observable.ts",
     "./src/master/*",
     "./src/worker/*",
     "./types/tiny-worker.d.ts",
