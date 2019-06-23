@@ -1,7 +1,7 @@
 {
   "name": "threads",
   "version": "1.0.0-alpha.4",
-  "description": "Easy to use, yet powerful multi-threading library for node.js and the browser!",
+  "description": "Easy to use, yet powerful multi-threading library for node.js, web browsers and Electron",
   "main": "dist/index.js",
   "scripts": {
     "prebuild": "rimraf dist/",
@@ -26,12 +26,13 @@
   "homepage": "https://github.com/andywer/threads#readme",
   "keywords": [
     "thread",
-    "web worker",
+    "worker",
     "pool",
     "spawn",
     "isomorphic",
     "parallel",
-    "observable"
+    "observable",
+    "worker_threads"
   ],
   "dependencies": {
     "@types/zen-observable": "^0.8.0",
