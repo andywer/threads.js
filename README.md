@@ -1,8 +1,8 @@
 # threads.js
-[![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=master)](https://travis-ci.org/andywer/threads.js)
-[![Coverage Status](https://coveralls.io/repos/github/andywer/threads.js/badge.svg?branch=master)](https://coveralls.io/github/andywer/threads.js?branch=master)
-[![Code Climate](https://codeclimate.com/github/andywer/threads.js/badges/gpa.svg)](https://codeclimate.com/github/andywer/threads.js)
-[![NPM Version](https://img.shields.io/npm/v/threads.svg)](https://www.npmjs.com/package/threads)
+[![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=v0)](https://travis-ci.org/andywer/threads.js)
+[![Coverage Status](https://coveralls.io/repos/github/andywer/threads.js/badge.svg?branch=v0)](https://coveralls.io/github/andywer/threads.js?branch=v0)
+
+**Old version 0.x of the library. Only use it as a reference if you are still using threads.js v0 and haven't migrated to v1.0 yet. The v1.0 API is vastly different.**
 
 Javascript thread library. Uses web workers when run in browsers and child processes
 when run by node.js. Also supports browsers which do not support web workers.
@@ -13,12 +13,6 @@ when run by node.js. Also supports browsers which do not support web workers.
 - Built-in error handling
 - Well tested
 - ES6 and backwards-compatible
-
-### Version 1.0
-
-Even though it's not finished yet, you might already want to [**use the new version 1.0**](https://github.com/andywer/threads.js/tree/v1) instead of the old implementation, since v1.0 fixes a bunch of issues and comes with a completely new API. v0.x is about to be deprecated.
-
-Check out the v1.0 progress [**here**](https://github.com/andywer/threads.js/issues/100) and leave some feedback!
 
 ## Basic usage
 
@@ -200,9 +194,9 @@ const pool = new Pool();
 const job = pool
   .run('/path/to/worker')
   .send({ do : 'something' });
-  
+
 job.on('abort', () => { console.log('Job Aborted'); });
-  
+
 // somewhere else
 job.abort();
 ```
