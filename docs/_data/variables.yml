@@ -53,7 +53,7 @@ sources:
     mermaid: 'https://cdn.bootcss.com/mermaid/8.0.0-rc.8/mermaid.min.js'
   unpkg:
     font_awesome: 'https://use.fontawesome.com/releases/v5.0.13/css/all.css'
-    jquery: 'https://unpkg.com/jquery@3.3.1/dist/jquery.min.js'
+    jquery: 'https://unpkg.com/jquery@3.4.1/dist/jquery.min.js'
     leancloud_js_sdk: '//cdn1.lncld.net/static/js/3.4.1/av-min.js'
     chart: 'https://unpkg.com/chart.js@2.7.2/dist/Chart.min.js'
     gitalk:

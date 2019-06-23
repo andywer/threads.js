@@ -5,6 +5,6 @@ header:
     url: /getting-started
   - title: Usage
     url: /usage
-  - title: GitHub
+  - title: '<i aria-label="GitHub" class="fab fa-github" style="font-size: 1.33em; line-height: 1.33em"></i>'
     url: https://github.com/andywer/threads.js
 

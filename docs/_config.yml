@@ -16,12 +16,12 @@ theme: jekyll-text-theme # Gem-based Jekyll Themes
 #    `--'   `----''--'   '--' `--'
 ## => Site Settings
 ##############################
-text_skin: orange # "default" (default), "dark", "forest", "ocean", "chocolate", "orange"
-highlight_theme: default # "default" (default), "tomorrow", "tomorrow-night", "tomorrow-night-eighties", "tomorrow-night-blue", "tomorrow-night-bright"
-url     : # the base hostname & protocol for your site e.g. https://www.someone.com
-baseurl : # does not include hostname
+text_skin: orange         # "default" (default), "dark", "forest", "ocean", "chocolate", "orange"
+highlight_theme: default  # "default" (default), "tomorrow", "tomorrow-night", "tomorrow-night-eighties", "tomorrow-night-blue", "tomorrow-night-bright"
+url     : https://andywer.github.io/threads.js # the base hostname & protocol for your site e.g. https://www.someone.com
+baseurl : /               # does not include hostname
 title   : threads.js
-description: > # this means to ignore newlines until "Language & timezone"
+description: >            # this means to ignore newlines until "Language & timezone"
   Powerful, yet easy to use multi-threading library for node.js, web browsers and Electron.
 
 

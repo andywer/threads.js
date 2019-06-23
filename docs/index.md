@@ -84,7 +84,7 @@ permalink: /
         Get started
       </a>
       <a class="button button--secondary button--rounded button--xxl" href="/usage">
-        Learn more
+        How to use
       </a>
     </p>
   </div>
@@ -128,7 +128,7 @@ expose(function hashPassword(password, salt) {
   <h2 class="text-center">Modern Features</h2>
 
   <p class="mt-3 text-center" markdown="1">
-    Designed for modern day JavaScript and TypeScript.
+    Designed for modern day JavaScript and TypeScript code.
   </p>
 
   <ul class="mt-3">
@@ -142,7 +142,7 @@ expose(function hashPassword(password, salt) {
     </li>
     <li>
       <span class="index-feature-icon"><i class="fas fa-box"></i></span>
-      Works great with <a href="https://webpack.js.org/" rel="nofollow" target="_blank">webpack</a>
+      Works great with <a href="https://webpack.js.org/" rel="nofollow noopener" target="_blank">webpack</a>
     </li>
   </ul>
 </section>
@@ -178,7 +178,7 @@ expose(function hashPassword(password, salt) {
   <h2 class="text-center">Supported environments</h2>
 
   <p class="mt-3 text-center" markdown="1">
-    Use it as an abstraction layer for different worker implementations.
+    Serves as an abstraction layer for different worker implementations.
   </p>
 
   <div class="mt-1">
@@ -190,7 +190,7 @@ expose(function hashPassword(password, salt) {
           </div>
           <p>
             <h5>Node.js 12+</h5>
-            Using native <a href="https://nodejs.org/api/worker_threads.html" rel="nofollow" target="_blank">worker threads</a>
+            Using native <a href="https://nodejs.org/api/worker_threads.html" rel="nofollow noopener" target="_blank">worker threads</a>
           </p>
         </div>
       </div>
@@ -201,7 +201,7 @@ expose(function hashPassword(password, salt) {
           </div>
           <p>
             <h5>Node.js 8 to 11</h5>
-            Using <a href="https://github.com/avoidwork/tiny-worker" rel="nofollow" target="_blank">tiny-worker</a>
+            Using <a href="https://github.com/avoidwork/tiny-worker" rel="nofollow noopener" target="_blank">tiny-worker</a>
           </p>
         </div>
       </div>
@@ -217,7 +217,7 @@ expose(function hashPassword(password, salt) {
           </div>
           <p>
             <h5>Web browsers</h5>
-            Using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API" rel="nofollow" target="_blank">web workers</a>
+            Using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API" rel="nofollow noopener" target="_blank">web workers</a>
           </p>
         </div>
       </div>
