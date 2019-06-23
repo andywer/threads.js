@@ -188,6 +188,8 @@ try {
 }
 ```
 
+## Observables
+
 ### Returning observables
 
 You can return observables in your worker. It works fully transparent - just subscribe to the returned observable in the master code. The returned observable is based on the [`zen-observable`](https://github.com/zenparsing/zen-observable) implementation.
@@ -220,7 +222,97 @@ function startCounting() {
 expose(startCounting)
 ```
 
+### Observable subjects
+
+As described earlier, we can always return observables from our threads. While observables usually isolate the code that create observable events from the surrounding code, we do provide a way to trigger updates to the observable "from the outside".
+
+Using `Subject` we can create objects that implement the `Observable` interface, allowing other code to `.subscribe()` to it, while also exposing `.next(value)`, `.complete()` and `.error(error)`, so we can trigger those observable updates "from outside".
+
+In a nutshell:
+
+```js
+const observable = new Observable(observer => {
+  // We can call `.next()`, `.error()`, `.complete()` only here
+  // as they are only exposed on the `observer`
+  observer.complete()
+})
+
+const subject = new Subject()
+subject.complete()
+// We are free to call `.next()`, `.error()`, `.complete()` from anywhere now
+// Beware: With great power comes great responsibility! Don't write spaghetti code.
+```
+
+Subscribing still works the same:
+
+```js
+const subscriptionOne = observable.subscribe(/* ... */)
+subscriptionOne.unsubscribe()
+
+const subscriptionTwo = subject.subscribe(/* ... */)
+subscriptionTwo.unsubscribe()
+```
+
+To get a plain observable that proxies all values, errors, completion of the
+subject, but does not expose the `.next()`, ... methods, use `Observable.from()`:
+
+```js
+// The returned observable will be read-only
+return Observable.from(subject)
+```
+
+### Streaming results
+
+We can easily use observable subjects to stream results as they are computed.
+
+```js
+// master.js
+import { spawn, Thread, Worker } from "threads"
+
+const minmax = await spawn(new Worker("./workers/minmax"))
+minmax.values().subscribe(values => console.log(`Min: ${values.min}  Max: ${values.max}`))
+
+await minmax.push(2)
+await minmax.push(3)
+await minmax.push(4)
+await minmax.push(1)
+await minmax.push(5)
+await minmax.finish()
+
+await Thread.terminate(minmax)
+```
+
+```js
+// minmax.js
+import { Subject } from "threads/observable"
+import { expose } from "threads/worker"
+
+let max = -Infinity
+let min = Infinity
+
+let subject = new Subject()
+
+const minmax = {
+  finish() {
+    subject.complete()
+    subject = new Subject()
+  },
+  push(value) {
+    max = Math.max(max, value)
+    min = Math.min(min, value)
+    subject.next({ max, min })
+  },
+  values() {
+    return Observable.from(subject)
+  }
+}
+
+expose(minmax)
+```
+
 ## Thread pool
+
+### Basics
 
 A `Pool` allows you to create a set of worker threads and queue thread calls. The queued tasks are pulled from the queue and executed as previous tasks have finished.
 
@@ -248,6 +340,8 @@ await pool.terminate()
 Note that `pool.queue()` will schedule a task to be run in a deferred way. It might execute straight away or it might take a while until a new worker thread becomes available.
 
 The promise returned by `pool.completed()` will resolve once the scheduled callbacks have been executed and completed. A failing job will also make the promise reject.
+
+### Cancel a queued task
 
 You can cancel queued tasks, too. If the pool has already started to execute the task, you cannot cancel it anymore, though.
 
