@@ -1,4 +1,6 @@
 .cache/
+docs/_site
+docs/vendor
 dist/*
 node_modules/
 test/workers/*.js
