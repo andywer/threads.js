@@ -1,8 +1,6 @@
-# threads.js
-[![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=v0)](https://travis-ci.org/andywer/threads.js)
-[![Coverage Status](https://coveralls.io/repos/github/andywer/threads.js/badge.svg?branch=v0)](https://coveralls.io/github/andywer/threads.js?branch=v0)
+# threads.js [![Build Status](https://travis-ci.org/andywer/threads.js.svg?branch=v0)](https://travis-ci.org/andywer/threads.js)
 
-**Old version 0.x of the library. Only use it as a reference if you are still using threads.js v0 and haven't migrated to v1.0 yet. The v1.0 API is vastly different.**
+**Look up the old v0.12 API here if you are still using threads.js v0.x and haven't migrated to v1.0 yet.**
 
 Javascript thread library. Uses web workers when run in browsers and child processes
 when run by node.js. Also supports browsers which do not support web workers.
