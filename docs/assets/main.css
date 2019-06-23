@@ -57,12 +57,20 @@ article .js-article-content > h2:first-child {
   line-height: 150%;
 }
 
-.button--secondary, .button--secondary:link, .button--secondary:visited {
-  background-color: #248ff9;
+.button--primary, .button--primary:link, .button--primary:visited {
+  background: linear-gradient(8deg, hsl(348, 95%, 30%), hsl(348, 95%, 42%));
+  filter: brightness(115%);
+}
+.root[data-is-touch="false"] .button--primary:hover {
+  filter: brightness(100%);
 }
 
+.button--secondary, .button--secondary:link, .button--secondary:visited {
+  background: linear-gradient(8deg, hsl(210, 95%, 30%), hsl(210, 95%, 42%));
+  filter: brightness(115%);
+}
 .root[data-is-touch="false"] .button--secondary:hover {
-  background-color: #056bd1;
+  filter: brightness(100%);
 }
 
 code.highlighter-rouge {
@@ -97,7 +105,7 @@ pre.highlight code {
 }
 
 .header {
-  background: #262626;
+  background: linear-gradient(8deg, #262626 0%, #033d77 100%);
   color: #ffffff;
 }
 
