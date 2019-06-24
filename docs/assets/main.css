@@ -93,6 +93,7 @@ article hr {
 pre.highlight {
   line-height: 150%;
   margin: 1rem 0;
+  overflow: auto;
   padding: 0.7rem 1.1rem;
 }
 
@@ -152,7 +153,13 @@ pre.highlight code {
 
 .button--xxl {
   padding: 1rem 1.6rem;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
+}
+
+@media (max-width: 500px) {
+  .button--xxl {
+    font-size: 1.1rem;
+  }
 }
 
 .command-prompt:before {
@@ -169,6 +176,7 @@ pre.highlight code {
 
 .flex-column {
   flex-direction: column;
+  max-width: 100%;
 }
 
 .flex-grow-1 {

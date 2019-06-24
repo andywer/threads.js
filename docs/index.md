@@ -79,11 +79,11 @@ permalink: /
       <pre class="command-prompt highlight px-4 py-3">npm install threads</pre>
     </div>
 
-    <p class="text-center mt-5">
-      <a class="button button--primary button--rounded button--xxl mr-3" href="/getting-started">
+    <p class="text-center mt-4">
+      <a class="button button--primary button--rounded button--xxl mt-4 mx-2" href="/getting-started">
         Get started
       </a>
-      <a class="button button--secondary button--rounded button--xxl" href="/usage">
+      <a class="button button--secondary button--rounded button--xxl mt-4 mx-2" href="/usage">
         How to use
       </a>
     </p>
