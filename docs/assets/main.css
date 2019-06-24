@@ -73,6 +73,20 @@ article .js-article-content > h2:first-child {
   filter: brightness(100%);
 }
 
+.button--outline-secondary, .button--outline-secondary:link, .button--outline-secondary:visited {
+  border-color: hsl(210, 95%, 42%);
+  color: hsl(210, 95%, 42%);
+}
+.root[data-is-touch="false"] .button--outline-secondary:hover {
+  background-color: hsl(210, 95%, 42%);
+  color: white;
+}
+
+.button--xxl {
+  padding: 1rem 1.6rem;
+  font-size: 1.3rem;
+}
+
 code.highlighter-rouge {
   background-color: rgba(27, 31, 35, 0.05);
   border-radius: 3px;
@@ -149,11 +163,6 @@ pre.highlight code {
 .header__brand a {
   font-size: 1.4rem;
   line-height: 100%;
-}
-
-.button--xxl {
-  padding: 1rem 1.6rem;
-  font-size: 1.3rem;
 }
 
 @media (max-width: 500px) {
