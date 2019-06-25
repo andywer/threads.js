@@ -58,7 +58,7 @@ article .js-article-content > h2:first-child {
 }
 
 .button--primary, .button--primary:link, .button--primary:visited {
-  background: linear-gradient(8deg, hsl(348, 95%, 30%), hsl(348, 95%, 42%));
+  background: linear-gradient(8deg, hsl(359, 97%, 34%), hsl(359, 97%, 44%));
   filter: brightness(115%);
 }
 .root[data-is-touch="false"] .button--primary:hover {
@@ -66,7 +66,7 @@ article .js-article-content > h2:first-child {
 }
 
 .button--secondary, .button--secondary:link, .button--secondary:visited {
-  background: linear-gradient(8deg, hsl(210, 95%, 30%), hsl(210, 95%, 42%));
+  background: linear-gradient(8deg, hsl(210, 95%, 18%), hsl(210, 95%, 28%));
   filter: brightness(115%);
 }
 .root[data-is-touch="false"] .button--secondary:hover {
