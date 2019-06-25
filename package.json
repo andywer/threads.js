@@ -16,14 +16,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/andywer/threads.git"
+    "url": "git+https://github.com/andywer/threads.js.git"
   },
   "author": "Andy Wermke (https://github.com/andywer)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/andywer/threads/issues"
+    "url": "https://github.com/andywer/threads.js/issues"
   },
-  "homepage": "https://github.com/andywer/threads#readme",
+  "homepage": "https://github.com/andywer/threads.js#readme",
   "keywords": [
     "thread",
     "worker",
