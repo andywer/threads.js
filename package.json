@@ -3,9 +3,13 @@
   "version": "1.0.0-beta.9",
   "description": "Easy to use, yet powerful multi-threading library for node.js, web browsers and Electron",
   "main": "dist/index.js",
+  "module": "dist-esm/index.js",
   "scripts": {
-    "prebuild": "rimraf dist/",
-    "build": "tsc",
+    "prebuild": "rimraf dist/ dist-esm/",
+    "build": "run-p build:cjs build:es",
+    "build:cjs": "tsc -p tsconfig.json",
+    "build:es": "tsc -p tsconfig-esm.json",
+    "pretest": "babel --plugins @babel/plugin-transform-typescript --plugins @babel/plugin-transform-modules-commonjs ./test/workers -d ./test/workers -x .ts",
     "test": "run-s test:ava test:puppeteer:basic test:puppeteer:webpack",
     "test:ava": "cross-env TS_NODE_FILES=true ava",
     "test:puppeteer:basic": "puppet-run --plugin=mocha --bundle=./test/workers/:/workers/ ./test/*.chromium*.ts",
@@ -95,10 +99,16 @@
     "./dist/master/implementation.node.js": false,
     "./dist/worker/implementation": "./dist/worker/implementation.browser.js",
     "./dist/worker/implementation.tiny-worker.js": false,
-    "./dist/worker/implementation.worker_threads.js": false
+    "./dist/worker/implementation.worker_threads.js": false,
+    "./dist-esm/master/implementation": "./dist-esm/master/implementation.browser.js",
+    "./dist-esm/master/implementation.node.js": false,
+    "./dist-esm/worker/implementation": "./dist-esm/worker/implementation.browser.js",
+    "./dist-esm/worker/implementation.tiny-worker.js": false,
+    "./dist-esm/worker/implementation.worker_threads.js": false
   },
   "files": [
     "dist/**",
+    "dist-esm/**",
     "*.js",
     "*.ts"
   ]
