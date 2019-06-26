@@ -61,6 +61,19 @@ permalink: /
       flex-basis: 28% !important;
     }
   }
+
+  .highlight pre {
+    border-radius: 0.4rem;
+  }
+
+  .highlight pre.command-prompt {
+    color: #f8f8f8;
+  }
+
+  .command-prompt:before {
+    content: "> ";
+    opacity: 0.8;
+  }
 </style>
 
 <!-- Potential backgrounds: -->
@@ -75,8 +88,10 @@ permalink: /
       Manage worker threads in node.js, web browsers and electron.
     </p>
 
-    <div class="highlight my-4">
-      <pre class="command-prompt highlight px-4 py-3">npm install threads</pre>
+    <div class="highlighter-rouge my-4">
+      <div class="highlight">
+        <pre class="command-prompt highlight px-4 py-3">npm install threads</pre>
+      </div>
     </div>
 
     <p class="text-center mt-4">

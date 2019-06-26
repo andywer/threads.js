@@ -105,6 +105,7 @@ article hr {
 }
 
 pre.highlight {
+  background: rgba(0, 0, 0, 0.9) !important;
   line-height: 150%;
   margin: 1rem 0;
   overflow: auto;
@@ -169,10 +170,6 @@ pre.highlight code {
   .button--xxl {
     font-size: 1.1rem;
   }
-}
-
-.command-prompt:before {
-  content: "> ";
 }
 
 .align-self-stretch {
