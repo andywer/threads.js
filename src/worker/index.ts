@@ -151,9 +151,29 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
   }
 }
 
+if (typeof self !== "undefined" && typeof self.addEventListener === "function") {
+  self.addEventListener("error", event => {
+    // Post with some delay, so the master had some time to subscribe to messages
+    setTimeout(() => postUncaughtErrorMessage(event.error), 250)
+  })
+  self.addEventListener("unhandledrejection", event => {
+    const error = (event as any).reason
+    if (error && typeof (error as any).message === "string") {
+      // Post with some delay, so the master had some time to subscribe to messages
+      setTimeout(() => postUncaughtErrorMessage(error), 250)
+    }
+  })
+}
+
 if (typeof process !== "undefined") {
   process.on("uncaughtException", (error) => {
     // Post with some delay, so the master had some time to subscribe to messages
     setTimeout(() => postUncaughtErrorMessage(error), 250)
+  })
+  process.on("unhandledRejection", (error) => {
+    if (error && typeof (error as any).message === "string") {
+      // Post with some delay, so the master had some time to subscribe to messages
+      setTimeout(() => postUncaughtErrorMessage(error as any), 250)
+    }
   })
 }
