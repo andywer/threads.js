@@ -11,7 +11,8 @@ declare const __non_webpack_require__: typeof require
 type WorkerEventName = "error" | "message"
 
 let tsNodeAvailable: boolean | undefined
-const defaultPoolSize = cpus().length
+
+export const defaultPoolSize = cpus().length
 
 function detectTsNode() {
   if (typeof __non_webpack_require__ === "function") {
@@ -167,7 +168,7 @@ function initTinyWorker(): typeof WorkerImplementation {
   return Worker as any
 }
 
-function selectWorkerImplementation(): typeof WorkerImplementation {
+export function selectWorkerImplementation(): typeof WorkerImplementation {
   try {
     return initWorkerThreadsWorker()
   } catch(error) {
@@ -175,9 +176,4 @@ function selectWorkerImplementation(): typeof WorkerImplementation {
     console.debug("Node worker_threads not available. Trying to fall back to tiny-worker polyfill...")
     return initTinyWorker()
   }
-}
-
-export default {
-  defaultPoolSize,
-  selectWorkerImplementation
 }

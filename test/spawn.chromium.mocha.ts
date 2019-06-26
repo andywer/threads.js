@@ -1,5 +1,5 @@
 import { expect } from "chai"
-import { spawn, Thread } from "../src/index"
+import { spawn, Thread } from "../"
 
 // We need this as a work-around to make our threads Worker global, since
 // the Parcel bundler would otherwise not recognize `new Worker()` as a web worker

@@ -1,6 +1,6 @@
 import DebugLogger from "debug"
 import { multicast, Observable, Subject } from "observable-fns"
-import Implementation from "./implementation"
+import { defaultPoolSize } from "./implementation"
 import {
   PoolEvent,
   PoolEventType,
@@ -120,7 +120,7 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
       ? { size: optionsOrSize }
       : optionsOrSize || {}
 
-    const { size = Implementation.defaultPoolSize } = options
+    const { size = defaultPoolSize } = options
 
     this.debug = DebugLogger(`threads:pool:${slugify(options.name || String(nextPoolID++))}`)
     this.options = options
