@@ -20,11 +20,11 @@ import { WorkerFunction, WorkerModule } from "../types/worker"
 import { createProxyFunction, createProxyModule } from "./invocation-proxy"
 
 type ArbitraryWorkerInterface = WorkerFunction & WorkerModule<string> & { somekeythatisneverusedinproductioncode123: "magicmarker123" }
-type ArbitraryFunctionOrModuleThread = FunctionThread<any, any> & ModuleThread<any>
+type ArbitraryThreadType = FunctionThread<any, any> & ModuleThread<any>
 
 type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
   Exposed extends ArbitraryWorkerInterface
-  ? ArbitraryFunctionOrModuleThread
+  ? ArbitraryThreadType
   : Exposed extends WorkerFunction
   ? FunctionThread<Parameters<Exposed>, StripAsync<ReturnType<Exposed>>>
   : Exposed extends WorkerModule<any>
