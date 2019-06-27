@@ -4,8 +4,9 @@ docs/vendor
 dist/*
 dist-*/*
 node_modules/
-test/workers/*.js
+test/rollup/dist/
 test/webpack/dist*
+test/workers/*.js
 .DS_Store
 Thumbs.db
 *.log

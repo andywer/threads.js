@@ -1,5 +1,4 @@
-// `~` links to this local `threads` directory (using the `wavy` package)
-import { expose } from "~/worker"
+import { expose } from "../../dist-esm/worker"
 
 expose(async function add(a, b) {
   return a + b

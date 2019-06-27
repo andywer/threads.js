@@ -1,5 +1,4 @@
-// `~` links to this local `threads` directory (using the `wavy` package)
-import { spawn, Thread, Worker } from "~"
+import { spawn, Thread, Worker } from "../../"
 
 async function run() {
   const add = await spawn(new Worker("./worker.js"))
@@ -8,4 +7,10 @@ async function run() {
   return result
 }
 
-run().then(result => console.log(`Result: ${result}`)).catch(console.error)
+run().then(result => {
+  console.log(`Result: ${result}`)
+  puppet.exit(0)
+}).catch(error => {
+  console.error(error)
+  puppet.exit(1)
+})
