@@ -1,6 +1,7 @@
 ---
 layout: home
 permalink: /
+title: Worker threads and thread pools for node.js and the web
 # articles:
 #   excerpt_type: html
 ---
@@ -75,10 +76,6 @@ permalink: /
     opacity: 0.8;
   }
 </style>
-
-<!-- Potential backgrounds: -->
-<!-- https://unsplash.com/photos/nIEHqGSymRU -->
-<!-- https://unsplash.com/photos/EUsVwEOsblE -->
 
 <section class="hero" style="position: relative">
   <div class="my-5">

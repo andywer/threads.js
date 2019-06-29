@@ -58,7 +58,9 @@ article .js-article-content > h2:first-child {
 }
 
 .button--primary, .button--primary:link, .button--primary:visited {
-  background: linear-gradient(8deg, hsl(359, 97%, 34%), hsl(359, 97%, 44%));
+  background: linear-gradient(8deg, hsl(210, 95%, 18%), hsl(210, 95%, 32%));
+  border: 1px solid hsl(210, 95%, 28%);
+  color: white;
   filter: brightness(115%);
 }
 .root[data-is-touch="false"] .button--primary:hover {
@@ -66,11 +68,15 @@ article .js-article-content > h2:first-child {
 }
 
 .button--secondary, .button--secondary:link, .button--secondary:visited {
-  background: linear-gradient(8deg, hsl(210, 95%, 18%), hsl(210, 95%, 28%));
-  filter: brightness(115%);
+  background: white;
+  border: 1px solid hsl(210, 95%, 36%);
+  color: hsl(210, 95%, 36%);
 }
 .root[data-is-touch="false"] .button--secondary:hover {
-  filter: brightness(100%);
+  background: white;
+  border-color: hsl(210, 95%, 36%);
+  box-shadow: inset 0 0 8px 0px hsla(210, 100%, 90%, 1);
+  color: hsl(210, 95%, 36%);
 }
 
 .button--outline-secondary, .button--outline-secondary:link, .button--outline-secondary:visited {
