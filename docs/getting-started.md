@@ -115,8 +115,8 @@ Learn how to use the library. Let's write some code!
 
 <div class="mt-5">
   <p class="text-center">
-    <a class="button button--rounded button--outline-secondary button--xl" href="/usage">
-      <i class="fas fa-arrow-right mr-3"></i>
+    <a class="button button--rounded button--secondary button--xl" href="/usage">
+      <i class="fas fa-arrow-right mr-2" style="font-size: 90%"></i>
       Usage
     </a>
   </p>
