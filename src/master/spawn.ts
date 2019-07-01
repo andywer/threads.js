@@ -111,8 +111,8 @@ function createTerminator(worker: WorkerType): { termination: Promise<void>, ter
   const [termination, resolver] = createPromiseWithResolver<void>()
   const terminate = async () => {
     debugThreadUtils("Terminating worker")
-    // FIXME: Use worker.terminate() callback if it's a node worker thread
-    worker.terminate()
+    // Newer versions of worker_threads workers return a promise
+    await worker.terminate()
     resolver()
   }
   return { terminate, termination }

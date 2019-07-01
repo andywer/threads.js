@@ -151,7 +151,7 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
   }
 }
 
-if (typeof self !== "undefined" && typeof self.addEventListener === "function") {
+if (typeof self !== "undefined" && typeof self.addEventListener === "function" && Implementation.isWorkerRuntime()) {
   self.addEventListener("error", event => {
     // Post with some delay, so the master had some time to subscribe to messages
     setTimeout(() => postUncaughtErrorMessage(event.error), 250)
@@ -165,7 +165,7 @@ if (typeof self !== "undefined" && typeof self.addEventListener === "function") 
   })
 }
 
-if (typeof process !== "undefined") {
+if (typeof process !== "undefined" && Implementation.isWorkerRuntime()) {
   process.on("uncaughtException", (error) => {
     // Post with some delay, so the master had some time to subscribe to messages
     setTimeout(() => postUncaughtErrorMessage(error), 250)
