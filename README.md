@@ -176,8 +176,15 @@ In case of exposing an object, `spawn()` will asynchronously return an object ex
 ## Usage
 
 <p>
-  Find the full documentation on the <a href="https://threads.js.org/"><b>website</b></a>.
+  Find the full documentation on the <a href="https://threads.js.org/" rel="nofollow">website</a>:
 </p>
+
+- [**Introduction**](https://threads.js.org/usage#introduction)
+- [**Basics**](https://threads.js.org/usage#basics)
+- [**Observables**](https://threads.js.org/usage#observables)
+- [**Thread pool**](https://threads.js.org/usage#thread-pool)
+- [**Transferable objects**](https://threads.js.org/usage#transferable-objects)
+- [**Thread events**](https://threads.js.org/usage#thread-events)
 
 <!--
 ## API
