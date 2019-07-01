@@ -23,21 +23,25 @@ export interface PrivateThreadProps {
 export type FunctionThread<Args extends any[] = any[], ReturnType = any> = ProxyableFunction<Args, ReturnType> & PrivateThreadProps
 export type ModuleThread<Methods extends ModuleMethods = any> = ModuleProxy<Methods> & PrivateThreadProps
 
+/** Worker thread. Either a `FunctionThread` or a `ModuleThread`. */
 export type Thread = FunctionThread<any, any> | ModuleThread<any>
 
 export type TransferList = Transferable[]
 
+/** Worker instance. Either a web worker or a node.js Worker provided by `worker_threads` or `tiny-worker`. */
 export interface Worker extends EventTarget {
   postMessage(value: any, transferList?: TransferList): void
   terminate(callback?: (error?: Error, exitCode?: number) => void): void
 }
 
+/** Worker implementation. Either the web worker or a node.js Worker class. */
 export declare class WorkerImplementation extends EventTarget implements Worker {
   constructor(path: string)
   public postMessage(value: any, transferList?: TransferList): void
   public terminate(): void
 }
 
+/** Event as emitted by worker thread. Subscribe to using `Thread.events(thread)`. */
 export enum WorkerEventType {
   internalError = "internalError",
   message = "message",

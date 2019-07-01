@@ -384,4 +384,7 @@ function PoolConstructor<ThreadType extends Thread>(
 
 (PoolConstructor as any).EventType = PoolEventType
 
+/**
+ * Thread pool constructor. Creates a new pool and spawns its worker threads.
+ */
 export const Pool = PoolConstructor as typeof PoolConstructor & { EventType: typeof PoolEventType }

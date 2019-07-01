@@ -121,6 +121,13 @@ async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
   }
 }
 
+/**
+ * Expose a function or a module (an object whose values are functions)
+ * to the main thread. Must be called exactly once in every worker thread
+ * to signal its API to the main thread.
+ *
+ * @param exposed Function or object whose values are functions
+ */
 export function expose(exposed: WorkerFunction | WorkerModule<any>) {
   if (!Implementation.isWorkerRuntime()) {
     throw Error("expose() called in the master thread.")

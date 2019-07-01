@@ -132,6 +132,13 @@ function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Obse
   })
 }
 
+/**
+ * Spawn a new thread. Takes a fresh worker instance, wraps it in a thin
+ * abstraction layer to provide the transparent API and verifies that
+ * the worker has initialized successfully.
+ *
+ * @param worker Instance of `Worker`. Either a web worker, `worker_threads` worker or `tiny-worker` worker.
+ */
 export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> = ArbitraryWorkerInterface>(
   worker: WorkerType
 ): Promise<ExposedToThreadType<Exposed>> {
