@@ -6,7 +6,7 @@ export type ModuleMethods = { [methodName: string]: (...args: any) => any }
 
 export type ProxyableFunction<Args extends any[], ReturnType> =
   Args extends []
-    ? () => ObservablePromise <ReturnType>
+    ? () => ObservablePromise<ReturnType>
     : (...args: Args) => ObservablePromise<ReturnType>
 
 export type ModuleProxy<Methods extends ModuleMethods> = {
@@ -23,8 +23,19 @@ export interface PrivateThreadProps {
 export type FunctionThread<Args extends any[] = any[], ReturnType = any> = ProxyableFunction<Args, ReturnType> & PrivateThreadProps
 export type ModuleThread<Methods extends ModuleMethods = any> = ModuleProxy<Methods> & PrivateThreadProps
 
+// We have those extra interfaces to keep the general non-specific `Thread` type
+// as an interface, so it's displayed concisely in any TypeScript compiler output.
+interface AnyFunctionThread extends PrivateThreadProps {
+  (...args: any[]): ObservablePromise<any>
+}
+
+// tslint:disable-next-line no-empty-interface
+interface AnyModuleThread extends PrivateThreadProps {
+  // Not specifying an index signature here as that would make `ModuleThread` incompatible
+}
+
 /** Worker thread. Either a `FunctionThread` or a `ModuleThread`. */
-export type Thread = FunctionThread<any, any> | ModuleThread<any>
+export type Thread = AnyFunctionThread | AnyModuleThread
 
 export type TransferList = Transferable[]
 
@@ -34,7 +45,7 @@ export interface Worker extends EventTarget {
   terminate(callback?: (error?: Error, exitCode?: number) => void): void
 }
 
-/** Worker implementation. Either the web worker or a node.js Worker class. */
+/** Worker implementation. Either web worker or a node.js Worker class. */
 export declare class WorkerImplementation extends EventTarget implements Worker {
   constructor(path: string)
   public postMessage(value: any, transferList?: TransferList): void
