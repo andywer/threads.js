@@ -218,6 +218,7 @@ function PoolConstructor<ThreadType extends Thread>(
   const debug = DebugLogger(`threads:pool:${slugify(options.name || String(nextPoolID++))}`)
   const { concurrency = 1, size = Implementation.defaultPoolSize } = options
 
+  let initErrors: Error[] = []
   let isClosing = false
   let nextTaskID = 1
 
@@ -235,7 +236,11 @@ function PoolConstructor<ThreadType extends Thread>(
       type: PoolEventType.initialized,
       size: workers.length
     }),
-    error => eventSubject.error(error)
+    error => {
+      debug("Error while initializing pool worker:", error)
+      eventSubject.error(error)
+      initErrors.push(error)
+    }
   )
 
   const scheduleWork = () => {
@@ -280,6 +285,9 @@ function PoolConstructor<ThreadType extends Thread>(
     async completed(allowResolvingImmediately: boolean = false) {
       const getCurrentlyRunningTasks = () => flatMap(workers, worker => worker.runningTasks)
 
+      if (initErrors.length > 0) {
+        return Promise.reject(initErrors[0])
+      }
       if (allowResolvingImmediately && taskQueue.length === 0) {
         return Promise.all(getCurrentlyRunningTasks())
       }
@@ -310,6 +318,9 @@ function PoolConstructor<ThreadType extends Thread>(
     queue(taskFunction) {
       if (isClosing) {
         throw Error(`Cannot schedule pool tasks after terminate() has been called.`)
+      }
+      if (initErrors.length > 0) {
+        throw initErrors[0]
       }
 
       let resultPromiseThen: Promise<any>["then"] | undefined
