@@ -43,7 +43,7 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
     constructor(scriptPath: string) {
-      super(resolveScriptPath(scriptPath), [], { esm: true })
+      super(resolveScriptPath(scriptPath))
       this.mappedEventListeners = new WeakMap()
     }
 
