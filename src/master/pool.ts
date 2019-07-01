@@ -218,11 +218,11 @@ function PoolConstructor<ThreadType extends Thread>(
   const debug = DebugLogger(`threads:pool:${slugify(options.name || String(nextPoolID++))}`)
   const { concurrency = 1, size = Implementation.defaultPoolSize } = options
 
-  let initErrors: Error[] = []
   let isClosing = false
   let nextTaskID = 1
-
   let taskQueue: Array<QueuedTask<ThreadType, any>> = []
+
+  const initErrors: Error[] = []
   const workers = spawnWorkers(spawnWorker, size)
 
   let eventSubject: ZenObservable.SubscriptionObserver<PoolEvent<ThreadType>>
