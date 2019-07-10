@@ -146,7 +146,7 @@ async function main() {
 
   console.log(`2 + 3 = ${sum}`)
 
-  await Thread.terminate(sum)
+  await Thread.terminate(add)
 }
 
 main().catch(console.error)
