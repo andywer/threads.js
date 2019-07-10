@@ -1,6 +1,7 @@
 ---
 layout: home
 permalink: /
+article_header: false
 title: Worker threads and thread pools for node.js and the web
 # articles:
 #   excerpt_type: html
@@ -42,10 +43,14 @@ title: Worker threads and thread pools for node.js and the web
     cursor: default !important;
     text-decoration: none !important;
   }
-  .card__header > h4 {
-    color: inherit;
+  .card__content h4 {
+    font-size: 1.1rem;
   }
-  .card__header > h4 > i {
+  .card__header > .logos {
+    color: inherit;
+    font-size: 1.2rem;
+  }
+  .card__header > .logos > i {
     margin: 0 0.1rem;
   }
 
@@ -193,15 +198,15 @@ expose(function hashPassword(password, salt) {
     Serves as an abstraction layer for different worker implementations.
   </p>
 
-  <div class="mt-1">
+  <div class="mt-3">
     <div class="grid" style="justify-content: center">
       <div class="card cell m-3 card-flex">
         <div class="card__content text-center">
           <div class="card__header">
-            <h4><i class="fab fa-node-js"></i></h4>
+            <div class="logos"><i class="fab fa-node-js"></i></div>
           </div>
+          <h4>Node.js 12+</h4>
           <p>
-            <h5>Node.js 12+</h5>
             Using native <a href="https://nodejs.org/api/worker_threads.html" rel="nofollow noopener" target="_blank">worker threads</a>
           </p>
         </div>
@@ -209,10 +214,10 @@ expose(function hashPassword(password, salt) {
       <div class="card cell m-3 card-flex">
         <div class="card__content text-center">
           <div class="card__header">
-            <h4><i class="fab fa-node-js"></i></h4>
+            <div class="logos"><i class="fab fa-node-js"></i></div>
           </div>
+          <h4>Node.js 8 to 11</h4>
           <p>
-            <h5>Node.js 8 to 11</h5>
             Using <a href="https://github.com/avoidwork/tiny-worker" rel="nofollow noopener" target="_blank">tiny-worker</a>
           </p>
         </div>
@@ -220,15 +225,15 @@ expose(function hashPassword(password, salt) {
       <div class="card cell m-3 card-flex">
         <div class="card__content text-center">
           <div class="card__header">
-            <h4>
+            <div class="logos">
               <i class="fab fa-chrome"></i>
               <i class="fab fa-firefox"></i>
               <i class="fab fa-safari"></i>
               <i class="fab fa-edge"></i>
-            </h4>
+            </div>
           </div>
+          <h4>Web browsers</h4>
           <p>
-            <h5>Web browsers</h5>
             Using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API" rel="nofollow noopener" target="_blank">web workers</a>
           </p>
         </div>
@@ -236,11 +241,11 @@ expose(function hashPassword(password, salt) {
       <div class="card cell cell--sm-11 cell--lg-4 m-3">
         <div class="card__content text-center">
           <div class="card__header">
-            <h4>
+            <div class="logos">
               <i class="fab fa-windows"></i>
               <i class="fab fa-apple"></i>
               <i class="fab fa-linux"></i>
-            </h4>
+            </div>
           </div>
           <p>
             Tested on all major desktop operating systems

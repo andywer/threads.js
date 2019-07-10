@@ -24,7 +24,6 @@ title   : threads.js
 description: >            # this means to ignore newlines until "Language & timezone"
   Powerful, yet easy to use multi-threading for node.js, web browsers and electron. Isomorphic library, written in TypeScript. Supports thread pools.
 
-
 ## => Language and Timezone
 ##############################
 lang: en  # the language of your site, default as "en"
