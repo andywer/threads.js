@@ -2,6 +2,7 @@
 layout: article
 title: Usage
 permalink: /usage
+excerpt: How to use the threads.js API, observables, thread pools and more.
 aside:
   toc: true
 ---

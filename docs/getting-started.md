@@ -2,6 +2,7 @@
 layout: article
 title: Getting started
 permalink: /getting-started
+excerpt: Get started using threads.js – Install the package, optionally set up Webpack and TypeScript.
 aside:
   toc: true
 ---
