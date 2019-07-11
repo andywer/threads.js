@@ -98,10 +98,10 @@ title: Worker threads and thread pools for node.js and the web
 
     <p class="text-center mt-4">
       <a class="button button--primary button--rounded button--xxl mt-4 mx-2" href="/getting-started">
-        Get started
+        Getting started
       </a>
       <a class="button button--secondary button--rounded button--xxl mt-4 mx-2" href="/usage">
-        How to use
+        Documentation
       </a>
     </p>
   </div>
