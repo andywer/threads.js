@@ -1,5 +1,9 @@
 const doNothing = () => undefined
 
+/**
+ * Creates a new promise and exposes its resolver function.
+ * Use with care!
+ */
 export function createPromiseWithResolver<T>(): [Promise<T>, (result: T) => void] {
   let alreadyResolved = false
   let resolvedTo: T

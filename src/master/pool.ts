@@ -32,6 +32,7 @@ export declare namespace Pool {
   type EventType = PoolEventType
 }
 
+/** Pool event type. Specifies the type of each `PoolEvent`. */
 export enum PoolEventType {
   initialized = "initialized",
   taskCanceled = "taskCanceled",
@@ -45,6 +46,7 @@ export enum PoolEventType {
 
 type TaskRunFunction<ThreadType extends Thread, Return> = (worker: ThreadType) => Promise<Return>
 
+/** Pool event. Subscribe to those events using `pool.events()`. Useful for debugging. */
 export type PoolEvent<ThreadType extends Thread> = {
   type: PoolEventType.initialized,
   size: number
@@ -163,7 +165,7 @@ export interface QueuedTask<ThreadType extends Thread, Return> {
 }
 
 /**
- * Thread pool implementation managing a set of worker threads.
+ * Thread pool managing a set of worker threads.
  * Use it to queue tasks that are run on those threads with limited
  * concurrency.
  */
@@ -395,4 +397,7 @@ function PoolConstructor<ThreadType extends Thread>(
 
 (PoolConstructor as any).EventType = PoolEventType
 
+/**
+ * Thread pool constructor. Creates a new pool and spawns its worker threads.
+ */
 export const Pool = PoolConstructor as typeof PoolConstructor & { EventType: typeof PoolEventType }

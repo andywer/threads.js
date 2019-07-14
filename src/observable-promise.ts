@@ -25,8 +25,8 @@ function fail(error: Error): never {
  * Creates a hybrid, combining the APIs of an Observable and a Promise.
  *
  * It is used to proxy async process states when we are initially not sure
- * if that async process will yield values/errors once (-> Promise) or
- * multiple times (-> Observable).
+ * if that async process will yield values once (-> Promise) or multiple
+ * times (-> Observable).
  *
  * Note that the observable promise inherits some of zen-observable's characteristics:
  * The `init` function will be called *once for every time anyone subscribes to it*.
