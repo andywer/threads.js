@@ -6,7 +6,6 @@
   "scripts": {
     "prebuild": "rimraf dist/",
     "build": "tsc",
-    "pretest": "babel --plugins @babel/plugin-transform-typescript --plugins @babel/plugin-transform-modules-commonjs ./test/workers -d ./test/workers -x .ts",
     "test": "run-s test:ava test:puppeteer:basic test:puppeteer:webpack",
     "test:ava": "cross-env TS_NODE_FILES=true ava",
     "test:puppeteer:basic": "puppet-run --plugin=mocha --bundle=./test/workers/:/workers/ ./test/*.chromium*.ts",

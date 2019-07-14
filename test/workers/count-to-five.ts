@@ -1,4 +1,3 @@
-import "ts-node/register"
 import Observable from "zen-observable"
 import { expose } from "../../src/worker"
 

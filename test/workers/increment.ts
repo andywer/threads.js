@@ -1,4 +1,3 @@
-import "ts-node/register"
 import { expose } from "../../src/worker"
 
 let counter = 0

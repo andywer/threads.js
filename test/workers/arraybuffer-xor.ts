@@ -1,4 +1,3 @@
-import "ts-node/register"
 import { expose, Transfer } from "../../src/worker"
 
 expose(function xor(buffer: ArrayBuffer, value: number) {

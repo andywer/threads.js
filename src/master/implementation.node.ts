@@ -12,6 +12,14 @@ type WorkerEventName = "error" | "message"
 
 const defaultPoolSize = cpus().length
 
+function createTsNodeModule(scriptPath: string) {
+  const content = `
+    require("ts-node/register/transpile-only");
+    require(${JSON.stringify(scriptPath)});
+  `
+  return content
+}
+
 function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const parentCallSite = getCallsites().find((callsite: CallSite) => {
     const filename = callsite.getFileName()
@@ -21,7 +29,7 @@ function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const callerPath = parentCallSite ? parentCallSite.getFileName() : null
   const rebasedScriptPath = callerPath ? path.join(path.dirname(callerPath), scriptPath) : scriptPath
 
-  return rebasedScriptPath.replace(/\.ts$/, ".js")
+  return rebasedScriptPath
 }
 
 function resolveScriptPath(scriptPath: string) {
@@ -43,7 +51,14 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
     constructor(scriptPath: string) {
-      super(resolveScriptPath(scriptPath))
+      const resolvedScriptPath = resolveScriptPath(scriptPath)
+
+      if (resolvedScriptPath.match(/\.tsx?$/)) {
+        super(createTsNodeModule(resolvedScriptPath), { eval: true })
+      } else {
+        super(resolvedScriptPath)
+      }
+
       this.mappedEventListeners = new WeakMap()
     }
 
@@ -78,7 +93,12 @@ function initTinyWorker(): typeof WorkerImplementation {
         ? `file:///${resolveScriptPath(scriptPath).replace(/\\/g, "/")}`
         : resolveScriptPath(scriptPath)
 
-      super(resolvedScriptPath, [], { esm: true })
+      if (resolvedScriptPath.match(/\.tsx?$/)) {
+        super(new Function(createTsNodeModule(resolvedScriptPath)), [], { esm: true })
+      } else {
+        super(resolvedScriptPath, [], { esm: true })
+      }
+
       allWorkers.push(this)
 
       this.emitter = new EventEmitter()
