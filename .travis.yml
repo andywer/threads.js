@@ -16,7 +16,7 @@ matrix:
         grep: stable
       filter_secrets: false  # Secrets will otherwise break Windows builds
       node_js: 8.6
-      script: npx run-s pretest test:ava
+      script: npm run test:ava
       env:
         - THREADS_WORKER_INIT_TIMEOUT=30000
     - os: windows
@@ -24,7 +24,7 @@ matrix:
         grep: stable
       filter_secrets: false  # Secrets will otherwise break Windows builds
       node_js: latest
-      script: npx run-s pretest test:ava
+      script: npm run test:ava
 
 env:
   - THREADS_WORKER_INIT_TIMEOUT=15000
