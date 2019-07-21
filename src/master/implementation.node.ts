@@ -118,7 +118,7 @@ function initTinyWorker(): typeof WorkerImplementation {
         : resolveScriptPath(scriptPath)
 
       if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
-        super(new Function(createTsNodeModule(resolvedScriptPath)), [], { esm: true })
+        super(new Function(createTsNodeModule(resolveScriptPath(scriptPath))), [], { esm: true })
       } else {
         super(resolvedScriptPath, [], { esm: true })
       }
