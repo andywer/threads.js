@@ -1,4 +1,6 @@
-import Observable from "zen-observable"
+// Cannot use `compilerOptions.esModuleInterop` and default import syntax
+// See <https://github.com/microsoft/TypeScript/issues/28009>
+import Observable = require("zen-observable")
 
 const $observers = Symbol("observers")
 

@@ -1,6 +1,6 @@
 import DebugLogger from "debug"
-import Observable from "zen-observable"
 import { rehydrateError } from "../common"
+import { Observable } from "../observable"
 import { createPromiseWithResolver } from "../promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
 import {

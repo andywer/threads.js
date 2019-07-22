@@ -1,4 +1,4 @@
-import Observable from "zen-observable"
+import { Observable } from "../observable"
 import { $errors, $events, $terminate } from "../symbols"
 import { Thread as ThreadType, WorkerEvent } from "../types/master"
 

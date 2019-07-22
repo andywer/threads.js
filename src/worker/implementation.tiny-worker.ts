@@ -1,8 +1,15 @@
-/// <reference no-default-lib="true"/>
-/// <reference types="../../types/webworker" />
+/// <reference lib="dom" />
 // tslint:disable no-shadowed-variable
 
 import { AbstractedWorkerAPI } from "../types/worker"
+
+interface WorkerGlobalScope {
+  addEventListener(eventName: string, listener: (event: Event) => void): void
+  postMessage(message: any, transferables?: any[]): void
+  removeEventListener(eventName: string, listener: (event: Event) => void): void
+}
+
+declare const self: WorkerGlobalScope
 
 if (typeof self === "undefined") {
   (global as any).self = global
