@@ -181,6 +181,7 @@ In case of exposing an object, `spawn()` will asynchronously return an object ex
 
 - [**Introduction**](https://threads.js.org/usage#introduction)
 - [**Basics**](https://threads.js.org/usage#basics)
+- [**TypeScript**](https://threads.js.org/usage#typescript)
 - [**Observables**](https://threads.js.org/usage#observables)
 - [**Thread pool**](https://threads.js.org/usage#thread-pool)
 - [**Transferable objects**](https://threads.js.org/usage#transferable-objects)
