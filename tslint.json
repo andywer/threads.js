@@ -16,6 +16,7 @@
       true,
       ["tiny-worker", "worker_threads"]
     ],
+    "no-reference": false,
     "no-submodule-imports": false,
     "object-literal-sort-keys": false,
     "only-arrow-functions": false,
