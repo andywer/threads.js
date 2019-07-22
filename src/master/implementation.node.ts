@@ -1,4 +1,4 @@
-// tslint:disable no-eval max-classes-per-file
+// tslint:disable function-constructor no-eval max-classes-per-file
 
 import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"
@@ -10,7 +10,39 @@ declare const __non_webpack_require__: typeof require
 
 type WorkerEventName = "error" | "message"
 
+let tsNodeAvailable: boolean | undefined
 const defaultPoolSize = cpus().length
+
+function detectTsNode() {
+  if (typeof __non_webpack_require__ === "function") {
+    // Webpack build: => No ts-node required or possible
+    return false
+  }
+  if (tsNodeAvailable) {
+    return tsNodeAvailable
+  }
+
+  try {
+    require.resolve("ts-node")
+    tsNodeAvailable = true
+  } catch (error) {
+    if (error && error.code === "MODULE_NOT_FOUND") {
+      tsNodeAvailable = false
+    } else {
+      // Re-throw
+      throw error
+    }
+  }
+  return tsNodeAvailable
+}
+
+function createTsNodeModule(scriptPath: string) {
+  const content = `
+    require("ts-node/register/transpile-only");
+    require(${JSON.stringify(scriptPath)});
+  `
+  return content
+}
 
 function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const parentCallSite = getCallsites().find((callsite: CallSite) => {
@@ -21,7 +53,7 @@ function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const callerPath = parentCallSite ? parentCallSite.getFileName() : null
   const rebasedScriptPath = callerPath ? path.join(path.dirname(callerPath), scriptPath) : scriptPath
 
-  return rebasedScriptPath.replace(/\.ts$/, ".js")
+  return rebasedScriptPath
 }
 
 function resolveScriptPath(scriptPath: string) {
@@ -43,7 +75,14 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
     constructor(scriptPath: string) {
-      super(resolveScriptPath(scriptPath))
+      const resolvedScriptPath = resolveScriptPath(scriptPath)
+
+      if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
+        super(createTsNodeModule(resolvedScriptPath), { eval: true })
+      } else {
+        super(resolvedScriptPath)
+      }
+
       this.mappedEventListeners = new WeakMap()
     }
 
@@ -78,7 +117,12 @@ function initTinyWorker(): typeof WorkerImplementation {
         ? `file:///${resolveScriptPath(scriptPath).replace(/\\/g, "/")}`
         : resolveScriptPath(scriptPath)
 
-      super(resolvedScriptPath, [], { esm: true })
+      if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
+        super(new Function(createTsNodeModule(resolveScriptPath(scriptPath))), [], { esm: true })
+      } else {
+        super(resolvedScriptPath, [], { esm: true })
+      }
+
       allWorkers.push(this)
 
       this.emitter = new EventEmitter()

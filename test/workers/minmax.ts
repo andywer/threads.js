@@ -1,4 +1,3 @@
-import "ts-node/register"
 import { Observable, Subject } from "../../src/observable"
 import { expose } from "../../src/worker"
 

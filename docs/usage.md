@@ -118,7 +118,32 @@ const counter = {
 expose(counter)
 ```
 
-### TypeScript
+### Error handling
+
+Works fully transparent - the promise in the master code's call will be rejected with the error thrown in the worker, also yielding the worker error's stack trace.
+
+```js
+// master.js
+import { spawn, Thread, Worker } from "threads"
+
+const counter = await spawn(new Worker("./workers/counter"))
+
+try {
+  await counter.increment()
+  await counter.increment()
+  await counter.decrement()
+
+  console.log(`Counter is now at ${await counter.getCount()}`)
+} catch (error) {
+  console.error("Counter thread errored:", error)
+} finally {
+  await Thread.terminate(counter)
+}
+```
+
+## TypeScript
+
+### Type-safe threads
 
 When using TypeScript you can declare the type of a `spawn()`-ed thread:
 
@@ -166,28 +191,15 @@ export type Counter = typeof counter
 expose(counter)
 ```
 
-### Error handling
+### TypeScript workers
 
-Works fully transparent - the promise in the master code's call will be rejected with the error thrown in the worker, also yielding the worker error's stack trace.
+**In node.js without webpack** you can spawn `*.ts` workers out-of-the-box without prior transpiling if <a href="https://github.com/TypeStrong/ts-node" rel="nofollow">ts-node</a> is installed.
 
-```js
-// master.js
-import { spawn, Thread, Worker } from "threads"
+If the path passed to `new Worker()` resolves to a `*.ts` file, threads.js will check if `ts-node` is available. If so, it will create an in-memory module that wraps the actual worker module and initializes `ts-node` before running the worker code.
 
-const counter = await spawn(new Worker("./workers/counter"))
+In case `ts-node` is not available, `new Worker()` will attempt to load the same file, but with a `*.js` extension. It is then in your hands to transpile the worker module before running the code.
 
-try {
-  await counter.increment()
-  await counter.increment()
-  await counter.decrement()
-
-  console.log(`Counter is now at ${await counter.getCount()}`)
-} catch (error) {
-  console.error("Counter thread errored:", error)
-} finally {
-  await Thread.terminate(counter)
-}
-```
+**When building your app with webpack**, the module path will automatically be replaced with the path of the worker's resulting bundle file.
 
 ## Observables
 
