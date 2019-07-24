@@ -22,7 +22,7 @@
   "bugs": {
     "url": "https://github.com/andywer/threads.js/issues"
   },
-  "homepage": "https://github.com/andywer/threads.js#readme",
+  "homepage": "https://threads.js.org",
   "keywords": [
     "thread",
     "worker",
