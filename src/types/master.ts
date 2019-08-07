@@ -2,7 +2,7 @@
 
 // Cannot use `compilerOptions.esModuleInterop` and default import syntax
 // See <https://github.com/microsoft/TypeScript/issues/28009>
-import Observable = require("zen-observable")
+import { Observable } from "observable-fns"
 import { ObservablePromise } from "../observable-promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
 

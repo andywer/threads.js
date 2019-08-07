@@ -1,5 +1,5 @@
 import DebugLogger from "debug"
-import { Observable } from "../observable"
+import { Observable } from "observable-fns"
 import { makeHot } from "../observable-promise"
 import Implementation from "./implementation"
 import { Thread } from "./thread"

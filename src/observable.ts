@@ -1,6 +1,5 @@
-// Cannot use `compilerOptions.esModuleInterop` and default import syntax
-// See <https://github.com/microsoft/TypeScript/issues/28009>
-import Observable = require("zen-observable")
+import { Observable } from "observable-fns"
+export { Observable }
 
 const $observers = Symbol("observers")
 
@@ -13,7 +12,7 @@ const $observers = Symbol("observers")
  * values, errors and the completion raised on this subject, but does not
  * expose the `next()`, `error()`, `complete()` methods.
  */
-class Subject<T> extends Observable<T> implements ZenObservable.ObservableLike<T> {
+export class Subject<T> extends Observable<T> implements ZenObservable.ObservableLike<T> {
   private [$observers]: Array<ZenObservable.SubscriptionObserver<T>>
 
   constructor() {
@@ -42,9 +41,4 @@ class Subject<T> extends Observable<T> implements ZenObservable.ObservableLike<T
   public next(value: T) {
     this[$observers].forEach(observer => observer.next(value))
   }
-}
-
-export {
-  Observable,
-  Subject
 }
