@@ -110,17 +110,22 @@ function initTinyWorker(): typeof WorkerImplementation {
   class Worker extends TinyWorker {
     private emitter: EventEmitter
 
-    constructor(scriptPath: string) {
-      // Need to apply a work-around for Windows or it will choke upon the absolute path
-      // (`Error [ERR_INVALID_PROTOCOL]: Protocol 'c:' not supported`)
-      const resolvedScriptPath = process.platform === "win32"
-        ? `file:///${resolveScriptPath(scriptPath).replace(/\\/g, "/")}`
-        : resolveScriptPath(scriptPath)
+    constructor(workerContent: string|Function) {
+      if (typeof workerContent === "function")
+      {
+        // Need to apply a work-around for Windows or it will choke upon the absolute path
+        // (`Error [ERR_INVALID_PROTOCOL]: Protocol 'c:' not supported`)
+        const resolvedScriptPath = process.platform === "win32"
+          ? `file:///${resolveScriptPath(workerContent).replace(/\\/g, "/")}`
+          : resolveScriptPath(workerContent)
 
-      if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
-        super(new Function(createTsNodeModule(resolveScriptPath(scriptPath))), [], { esm: true })
+        if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
+          super(new Function(createTsNodeModule(resolveScriptPath(workerContent))), [], { esm: true })
+        } else {
+          super(resolvedScriptPath, [], { esm: true })
+        }
       } else {
-        super(resolvedScriptPath, [], { esm: true })
+        super(workerContent, [], { esm: true })
       }
 
       allWorkers.push(this)
