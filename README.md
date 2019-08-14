@@ -11,10 +11,10 @@ Uses web workers in the browser, `worker_threads` in node 12+ and [`tiny-worker`
 ### Features
 
 * **Speed up** code by parallel processing
-* **Keep UI responsive** by offloading work from rendering thread
 * First-class support for **async functions** & **observables**
 * Manage bulk task executions with **thread pools**
 * Works great with **webpack**
+* Allows using **require()** and **import**/**export** in workers
 
 ### Version 0.x
 
