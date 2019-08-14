@@ -172,7 +172,7 @@ if (typeof self !== "undefined" && typeof self.addEventListener === "function" &
   })
 }
 
-if (typeof process !== "undefined" && Implementation.isWorkerRuntime()) {
+if (typeof process !== "undefined" && typeof process.on === "function" && Implementation.isWorkerRuntime()) {
   process.on("uncaughtException", (error) => {
     // Post with some delay, so the master had some time to subscribe to messages
     setTimeout(() => postUncaughtErrorMessage(error), 250)
