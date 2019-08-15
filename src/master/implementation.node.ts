@@ -71,6 +71,8 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
     ? __non_webpack_require__("worker_threads").Worker
     : eval("require")("worker_threads").Worker
 
+  let allWorkers: Array<typeof NativeWorker> = []
+
   class Worker extends NativeWorker {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
@@ -84,6 +86,7 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
       }
 
       this.mappedEventListeners = new WeakMap()
+      allWorkers.push(this)
     }
 
     public addEventListener(eventName: string, rawListener: EventListener) {
@@ -99,6 +102,16 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
       this.off(eventName, listener)
     }
   }
+
+  const terminateAll = () => {
+    allWorkers.forEach(worker => worker.terminate())
+    allWorkers = []
+  }
+
+  // Take care to not leave orphaned processes behind. See #147.
+  process.on("SIGINT", () => terminateAll())
+  process.on("SIGTERM", () => terminateAll())
+
   return Worker as any
 }
 
