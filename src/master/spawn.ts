@@ -49,13 +49,17 @@ const initMessageTimeout = typeof process !== "undefined" && process.env.THREADS
   : 10000
 
 async function withTimeout<T>(promise: Promise<T>, timeoutInMs: number, errorMessage: string): Promise<T> {
+  let timeoutHandle: any
+
   const timeout = new Promise<never>((resolve, reject) => {
-    setTimeout(() => reject(Error(errorMessage)), timeoutInMs)
+    timeoutHandle = setTimeout(() => reject(Error(errorMessage)), timeoutInMs)
   })
   const result = await Promise.race([
     promise,
     timeout
   ])
+
+  clearTimeout(timeoutHandle)
   return result
 }
 
