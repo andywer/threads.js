@@ -187,6 +187,14 @@ In case of exposing an object, `spawn()` will asynchronously return an object ex
 - [**Transferable objects**](https://threads.js.org/usage#transferable-objects)
 - [**Thread events**](https://threads.js.org/usage#thread-events)
 
+## Webpack
+
+Threads.js works with webpack. Usually all you need to do is adding the
+[`threads-plugin`](https://github.com/andywer/threads-plugin).
+
+See [Build with webpack](https://threads.js.org/getting-started#build-with-webpack)
+on the website for details.
+
 <!--
 ## API
 
