@@ -1,5 +1,6 @@
 import { expect } from "chai"
 import { spawn, Thread } from "../src/index"
+import { Worker } from '../src/index'
 
 // We need this as a work-around to make our threads Worker global, since
 // the Parcel bundler would otherwise not recognize `new Worker()` as a web worker
@@ -8,6 +9,18 @@ import "../src/master/register"
 describe("threads in browser", function() {
   it("can spawn and terminate a thread", async function() {
     const helloWorld = await spawn<() => string>(new Worker("./workers/hello-world.js"))
+    expect(await helloWorld()).to.equal("Hello World")
+    await Thread.terminate(helloWorld)
+  })
+
+  it("can spawn and terminate a thread with a prefix", async function() {
+    const helloWorld = await spawn<() => string>(
+      new Worker(
+        "./hello-world.js",
+        {},
+        () => {return "workers"; }
+       )
+     );
     expect(await helloWorld()).to.equal("Hello World")
     await Thread.terminate(helloWorld)
   })
