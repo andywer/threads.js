@@ -58,7 +58,7 @@
     "puppet-run": "^0.10.0-alpha",
     "puppet-run-plugin-mocha": "^0.10.0-alpha",
     "rimraf": "^2.6.3",
-    "threads-plugin": "^1.1.0",
+    "threads-plugin": "^1.2.0",
     "tiny-worker": "^2.2.0",
     "ts-loader": "^6.0.1",
     "ts-node": "^8.1.0",
