@@ -33,6 +33,11 @@ async function test2() {
 }
 
 async function test3() {
+  if (!(process as any).browser) {
+    // Running workers from remote URLs is disabled in node.js
+    return
+  }
+
   const hello = await spawn<HelloWorker>(new Worker("https://gist.githubusercontent.com/andywer/f5572520b103e0673204e3d11cd20404/raw/489a9c717f2acd1aecb7b7945d1695f583521cf5/hello-worker.js"))
   const result = await hello("World")
 
