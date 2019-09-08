@@ -13,12 +13,24 @@ describe("threads in browser", function() {
     await Thread.terminate(helloWorld)
   })
 
-  it("can spawn and terminate a thread with a prefix", async function() {
+  it("can spawn and terminate a thread with a prefix string", async function() {
     const helloWorld = await spawn<() => string>(
       new Worker(
         "./hello-world.js",
         {},
-        () => {return "workers"; }
+        "workers"
+       )
+     );
+    expect(await helloWorld()).to.equal("Hello World")
+    await Thread.terminate(helloWorld)
+  })
+
+  it("can spawn and terminate a thread with a prefix function", async function() {
+    const helloWorld = await spawn<() => string>(
+      new Worker(
+        "./hello-world.js",
+        {},
+        () => "workers"
        )
      );
     expect(await helloWorld()).to.equal("Hello World")

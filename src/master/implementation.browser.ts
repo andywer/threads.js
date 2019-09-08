@@ -19,6 +19,8 @@ function selectWorkerImplementation(): typeof WorkerImplementation {
 
       if (typeof prefixFunc === "function") {
         super(`${prefixFunc()}/${url}`, options);
+      } else if (typeof prefixFunc === "string") {
+        super(`${prefixFunc}/${url}`, options);
       } else {
         super(url, options);
       }
