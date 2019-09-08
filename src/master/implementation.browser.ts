@@ -6,7 +6,7 @@ const isAbsoluteURL = (value: string) => /^(https?:)?\/\//i.test(value)
 
 function selectWorkerImplementation(): typeof WorkerImplementation {
   return class BrowserWorker extends Worker {
-    constructor(url: string | URL, options?: WorkerOptions, prefixFunc? : Function) {
+    constructor(url: string | URL, options?: WorkerOptions, prefixFunc? : () => string | string) {
       if (typeof url === "string" && isAbsoluteURL(url)) {
         // Create source code blob loading JS file via `importScripts()`
         // to circumvent worker CORS restrictions
