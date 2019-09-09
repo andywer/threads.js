@@ -45,9 +45,14 @@ export interface Worker extends EventTarget {
   terminate(callback?: (error?: Error, exitCode?: number) => void): void
 }
 
+export interface ThreadsWorkerOptions extends WorkerOptions {
+  /** Prefix for the path passed to the Worker constructor. Web worker only. */
+  _baseURL?: string
+}
+
 /** Worker implementation. Either web worker or a node.js Worker class. */
 export declare class WorkerImplementation extends EventTarget implements Worker {
-  constructor(path: string)
+  constructor(path: string, options?: ThreadsWorkerOptions)
   public postMessage(value: any, transferList?: TransferList): void
   public terminate(): void
 }
