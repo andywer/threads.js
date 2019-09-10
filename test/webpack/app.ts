@@ -32,7 +32,22 @@ async function test2() {
   }
 }
 
+async function test3() {
+  if (!(process as any).browser) {
+    // Running workers from remote URLs is disabled in node.js
+    return
+  }
+
+  const hello = await spawn<HelloWorker>(new Worker("https://infallible-turing-115958.netlify.com/hello-worker.js"))
+  const result = await hello("World")
+
+  if (result !== "Hello, World") {
+    throw Error("Unexpected result returned by hello worker: " + result)
+  }
+}
+
 export default () => Promise.all([
   test(),
-  test2()
+  test2(),
+  test3()
 ])
