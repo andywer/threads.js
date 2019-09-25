@@ -1,6 +1,6 @@
 import Observable from "zen-observable"
 
-const $observers = Symbol("observers");
+const $observers = Symbol("observers")
 
 /**
  * Observable subject. Implements the Observable interface, but also exposes
@@ -25,28 +25,20 @@ class Subject<T> extends Observable<T> implements ZenObservable.ObservableLike<T
       }
       return unsubscribe
     })
+
+    this[$observers] = []
   }
 
   public complete() {
-      if(this.hasObservables()) {
-          this[ $observers ].forEach( observer => observer.complete() )
-      }
+    this[$observers].forEach(observer => observer.complete())
   }
 
   public error(error: any) {
-      if(this.hasObservables()) {
-          this[ $observers ].forEach( observer => observer.error( error ) )
-      }
+    this[$observers].forEach(observer => observer.error(error))
   }
 
   public next(value: T) {
-      if(this.hasObservables()){
-          this[$observers].forEach(observer => observer.next(value))
-      }
-  }
-
-  protected hasObservables(): boolean{
-      return this[$observers] && Array.isArray(this[$observers]);
+    this[$observers].forEach(observer => observer.next(value))
   }
 }
 
