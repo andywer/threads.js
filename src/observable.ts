@@ -46,7 +46,7 @@ class Subject<T> extends Observable<T> implements ZenObservable.ObservableLike<T
   }
 
   protected hasObservables(): boolean{
-      return this[$observers] && Array.isArray(this[$observers];
+      return this[$observers] && Array.isArray(this[$observers]);
   }
 }
 
