@@ -25,6 +25,8 @@ class Subject<T> extends Observable<T> implements ZenObservable.ObservableLike<T
       }
       return unsubscribe
     })
+
+    this[$observers] = []
   }
 
   public complete() {
