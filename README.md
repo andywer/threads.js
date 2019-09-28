@@ -162,9 +162,9 @@ expose(function hashPassword(password, salt) {
 
 ### spawn()
 
-The return value of `add()` in the master code depends on the `add()` return value in the worker:
+The `hashPassword()` function in the master code proxies the call to the `hashPassword()` function in the worker:
 
-If the function returns a promise or an observable then you can just use the return value as such in the master code. If the function returns a primitive value, expect the master function to return a promise resolving to that value.
+If the worker function returns a promise or an observable then you can just use the return value as such in the master code. If the function returns a primitive value, expect the master function to return a promise resolving to that value.
 
 ### expose()
 
