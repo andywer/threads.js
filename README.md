@@ -28,6 +28,8 @@ npm install threads tiny-worker
 
 *You only need to install the `tiny-worker` package to support node.js < 12. It's an optional dependency and used as a fallback if `worker_threads` are not available.*
 
+## Platform support
+
 <details>
 <summary>Run on node.js</summary>
 
@@ -140,24 +142,21 @@ Everything else should work out of the box.
 // master.js
 import { spawn, Thread, Worker } from "threads"
 
-async function main() {
-  const add = await spawn(new Worker("./workers/add"))
-  const sum = await add(2, 3)
+const hashPassword = await spawn(new Worker("./hash"))
+const hashed = await hashPassword("Super secret password", "1234")
 
-  console.log(`2 + 3 = ${sum}`)
+console.log("Hashed password:", hashed)
 
-  await Thread.terminate(add)
-}
-
-main().catch(console.error)
+await Thread.terminate(hashPassword)
 ```
 
 ```js
-// workers/add.js
+// workers/hash.js
+import sha256 from "js-sha256"
 import { expose } from "threads/worker"
 
-expose(function add(a, b) {
-  return a + b
+expose(function hashPassword(password, salt) {
+  return sha256(password + salt)
 })
 ```
 
