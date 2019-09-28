@@ -336,14 +336,9 @@ import { spawn, Pool } from "threads"
 
 const pool = Pool(() => spawn(new Worker("./workers/multiplier")), 8 /* optional size */)
 
-pool.events().subscribe(console.log)
-
 pool.queue(async multiplier => {
   const multiplied = await multiplier(2, 3)
   console.log(`2 * 3 = ${multiplied}`)
-
-  // When this async call completes, the worker thread (`multiplier`) will
-  // be marked as available for new work scheduled via `pool.queue()`
 })
 
 await pool.completed()
@@ -351,6 +346,8 @@ await pool.terminate()
 ```
 
 Note that `pool.queue()` will schedule a task to be run in a deferred way. It might execute straight away or it might take a while until a new worker thread becomes available.
+
+When a pool worker finishes a job, the next pool job is de-queued (that is the function you passed to `pool.queue()`). It is called with the worker as the first argument. The job function is supposed to return a promise - when this promise resolves, the job is considered done and the next job is de-queued and dispatched to the worker.
 
 The promise returned by `pool.completed()` will resolve once the scheduled callbacks have been executed and completed. A failing job will also make the promise reject.
 
