@@ -101,7 +101,7 @@ code.highlighter-rouge {
 }
 
 article hr {
-  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(252, 77, 80, 0.3) 30%, rgba(252, 77, 80, 0.3) 70%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(to right, hsla(210, 95%, 36%, 0) 0%, hsla(210, 95%, 36%, 0.3) 30%, hsla(210, 95%, 36%, 0.3) 70%, hsla(210, 95%, 36%, 0) 100%);
   border: none;
   display: inline-block;
   height: 2px;
@@ -145,11 +145,19 @@ pre.highlight code {
   color: inherit;
 }
 
+.header .navigation__item {
+  color: #ffffff;
+}
+
 .header .navigation__item--active a,
 .header .navigation__item--active a:link,
 .header .navigation__item--active a:visited,
-.root[data-is-touch="false"] .header .navigation__item a:hover {
-  color: #fc4d50;
+.root[data-is-touch="false"] .header .navigation__item--active a:hover {
+  color: #ffffff;
+}
+
+.header .navigation__item--active::after {
+  border-color: rgba(255, 255, 255, 1);
 }
 
 .header .button--secondary {
