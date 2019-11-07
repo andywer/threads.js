@@ -23,19 +23,25 @@ title: Worker threads and thread pools for node.js and the web
     line-height: 100%;
     margin-top: 0;
   }
-  .index-features ul {
-    font-size: 1.4rem;
+  .index-features-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     list-style-type: none;
-    padding-left: 1.2rem;
+    padding: 0;
   }
-  .index-features ul > li {
-    margin: 0.2rem 0;
+  .index-features-list > li {
+    display: flex;
+    flex-basis: 45%;
+    margin: 1rem 1rem 0.5rem;
+    min-width: 300px;
+    max-width: 400px;
   }
   .index-feature-icon {
+    align-self: center;
+    color: hsl(210, 95%, 36%);
     display: inline-block;
-    margin-right: 1rem;
     text-align: center;
-    width: 1.2rem;
   }
 
   .card__header {
@@ -109,11 +115,11 @@ title: Worker threads and thread pools for node.js and the web
 
 <hr />
 
-<section class="index-features my-5">
+<section class="my-5">
   <h2 class="text-center">Transparent API</h2>
 
   <p class="mt-3 text-center" markdown="1">
-    Write code once, run it everywhere.
+    Write code once, run it everywhere – in web workers and node worker threads.
   </p>
 
   <div class="d-flex flex-column" markdown="1">
@@ -141,50 +147,104 @@ expose(function hashPassword(password, salt) {
 
 <hr />
 
-<section class="index-features my-5">
+<section class="my-5">
   <h2 class="text-center">Modern Features</h2>
 
   <p class="mt-3 text-center" markdown="1">
     Designed for modern day JavaScript and TypeScript code.
   </p>
 
-  <ul class="mt-3">
+  <ul class="index-features-list">
     <li>
-      <span class="index-feature-icon"><i class="fab fa-js-square"></i></span>
-      Uses async functions &amp; observables
+      <span class="index-feature-icon mr-4">
+        <i class="fab fa-3x fa-js-square"></i>
+      </span>
+      <div>
+        <h4 class="m-0">Async functions &amp; observables</h4>
+        <p>
+          Built on functional paradigms and with modern APIs in mind, threads.js makes it easy to write clear, declarative code.
+        </p>
+      </div>
     </li>
     <li>
-      <span class="index-feature-icon"><i class="fas fa-check-square"></i></span>
-      Fully statically typed using TypeScript
+      <span class="index-feature-icon mr-4">
+        <i class="fas fa-3x fa-check-square"></i>
+      </span>
+      <div>
+        <h4 class="m-0">Statically typed using TypeScript</h4>
+        <p>
+          Completely written in TypeScript – providing a robust code base and always shipping up-to-date types out of the box.
+        </p>
+      </div>
     </li>
     <li>
-      <span class="index-feature-icon"><i class="fas fa-box"></i></span>
-      Works great with <a href="https://webpack.js.org/" rel="nofollow noopener" target="_blank">webpack</a>
+      <span class="index-feature-icon mr-4">
+        <i class="fas fa-3x fa-box"></i>
+      </span>
+      <div>
+        <h4 class="m-0">Webpack &amp; other bundlers</h4>
+        <p>
+          Works great with <a href="https://webpack.js.org/" rel="nofollow noopener" target="_blank">webpack</a> – just need to add one extra plugin!<br />
+          Works with other bundlers, too.
+        </p>
+      </div>
     </li>
   </ul>
 </section>
 
 <hr />
 
-<section class="index-features my-5">
-  <h2 class="text-center">Benefits</h2>
+<section class="my-5">
+  <h2 class="text-center">Use cases</h2>
 
   <p class="mt-3 text-center" markdown="1">
-    Don't underestimate the difference it can make.
+    Web workers and worker threads turn out to be pretty versatile.
   </p>
 
-  <ul class="mt-3">
+  <ul class="index-features-list">
     <li>
-      <span class="index-feature-icon"><i class="fas fa-forward"></i></span>
-      Speed up code by parallel processing
+      <span class="index-feature-icon mr-4">
+        <i class="fas fa-3x fa-forward"></i>
+      </span>
+      <div>
+        <h4 class="m-0">Speed-up CPU-bound code</h4>
+        <p>
+          Outsourcing calculation-intensive code to one or multiple workers can improve performance drastically.
+        </p>
+      </div>
     </li>
     <li>
-      <span class="index-feature-icon"><i class="fas fa-list-alt"></i></span>
-      Manage bulk task executions with thread pools
+      <span class="index-feature-icon mr-4">
+        <i class="fas fa-3x fa-list-alt"></i>
+      </span>
+      <div>
+        <h4 class="m-0">Thread pools</h4>
+        <p>
+          Manage bulk tasks by using a thread pool. The pool will dispatch the tasks to workers in a controlled and predictable way.
+        </p>
+      </div>
     </li>
     <li>
-      <span class="index-feature-icon"><i class="fas fa-desktop"></i></span>
-      Offload work from main thread for smooth animations
+      <span class="index-feature-icon mr-4">
+        <i class="fas fa-3x fa-desktop"></i>
+      </span>
+      <div>
+        <h4 class="m-0">Smooth UI transitions</h4>
+        <p>
+          Offload business logic from the main thread, since this is where the rendering happens. Enjoy smooth 60 FPS.
+        </p>
+      </div>
+    </li>
+    <li>
+      <span class="index-feature-icon mr-4">
+        <i class="fas fa-3x fa-shield-alt"></i>
+      </span>
+      <div>
+        <h4 class="m-0">Shield sensitive functionality</h4>
+        <p>
+          Security-relevant code should be shielded from other application code. Use worker to sandbox code and create secure enclaves.
+        </p>
+      </div>
     </li>
   </ul>
 </section>

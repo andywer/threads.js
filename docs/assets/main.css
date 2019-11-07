@@ -58,7 +58,7 @@ article .js-article-content > h2:first-child {
 }
 
 .button--primary, .button--primary:link, .button--primary:visited {
-  background: linear-gradient(8deg, hsl(210, 95%, 18%), hsl(210, 95%, 32%));
+  background: linear-gradient(8deg, hsl(210, 95%, 20%), hsl(210, 95%, 38%));
   border: 1px solid hsl(210, 95%, 28%);
   color: white;
   filter: brightness(115%);
