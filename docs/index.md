@@ -2,7 +2,7 @@
 layout: home
 permalink: /
 article_header: false
-title: Worker threads and thread pools for node.js and the web
+title: Worker threads meet web workers - threads.js
 # articles:
 #   excerpt_type: html
 ---
