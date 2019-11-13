@@ -252,7 +252,7 @@ expose(function hashPassword(password, salt) {
 <hr />
 
 <section class="index-features my-5">
-  <h2 class="text-center">Supported environments</h2>
+  <h2 class="text-center">Supported platforms</h2>
 
   <p class="mt-3 text-center" markdown="1">
     Serves as an abstraction layer for different worker implementations.
