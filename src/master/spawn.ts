@@ -7,6 +7,7 @@ import {
   FunctionThread,
   ModuleThread,
   PrivateThreadProps,
+  StripAsync,
   Worker as WorkerType,
   WorkerEvent,
   WorkerEventType,
@@ -30,12 +31,6 @@ type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
   ? ModuleThread<Exposed>
   : never
 
-type StripAsync<Type> =
-  Type extends Promise<infer PromiseBaseType>
-  ? PromiseBaseType
-  : Type extends Observable<infer ObservableBaseType>
-  ? ObservableBaseType
-  : Type
 
 const debugMessages = DebugLogger("threads:master:messages")
 const debugSpawn = DebugLogger("threads:master:spawn")

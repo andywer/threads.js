@@ -2,12 +2,31 @@ import Observable from "zen-observable"
 import { ObservablePromise } from "../observable-promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
 
+interface ObservableLikeSubscription {
+  unsubscribe(): any
+}
+interface ObservableLike<T> {
+  subscribe(onNext: (value: T) => any, onError?: (error: any) => any, onComplete?: () => any): ObservableLikeSubscription
+  subscribe(listeners: {
+    next?(value: T): any,
+    error?(error: any): any,
+    complete?(): any,
+  }): ObservableLikeSubscription
+}
+
+export type StripAsync<Type> =
+  Type extends Promise<infer PromiseBaseType>
+  ? PromiseBaseType
+  : Type extends ObservableLike<infer ObservableBaseType>
+  ? ObservableBaseType
+  : Type
+
 export type ModuleMethods = { [methodName: string]: (...args: any) => any }
 
 export type ProxyableFunction<Args extends any[], ReturnType> =
   Args extends []
-    ? () => ObservablePromise<ReturnType>
-    : (...args: Args) => ObservablePromise<ReturnType>
+    ? () => ObservablePromise<StripAsync<ReturnType>>
+  : (...args: Args) => ObservablePromise<StripAsync<ReturnType>>
 
 export type ModuleProxy<Methods extends ModuleMethods> = {
   [method in keyof Methods]: ProxyableFunction<Parameters<Methods[method]>, ReturnType<Methods[method]>>
