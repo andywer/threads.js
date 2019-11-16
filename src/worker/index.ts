@@ -67,13 +67,13 @@ function postJobErrorMessage(uid: number, rawError: Error | TransferDescriptor<E
 
 function postJobResultMessage(uid: number, completed: boolean, resultValue?: any) {
   const { payload, transferables } = deconstructTransfer(resultValue)
-  const startMessage: WorkerJobResultMessage = {
+  const resultMessage: WorkerJobResultMessage = {
     type: WorkerMessageType.result,
     uid,
     complete: completed ? true : undefined,
     payload
   }
-  Implementation.postMessageToMaster(startMessage, transferables)
+  Implementation.postMessageToMaster(resultMessage, transferables)
 }
 
 function postJobStartMessage(uid: number, resultType: WorkerJobStartMessage["resultType"]) {
@@ -161,7 +161,7 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
 if (typeof self !== "undefined" && typeof self.addEventListener === "function" && Implementation.isWorkerRuntime()) {
   self.addEventListener("error", event => {
     // Post with some delay, so the master had some time to subscribe to messages
-    setTimeout(() => postUncaughtErrorMessage(event.error), 250)
+    setTimeout(() => postUncaughtErrorMessage(event.error || event), 250)
   })
   self.addEventListener("unhandledrejection", event => {
     const error = (event as any).reason
