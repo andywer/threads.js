@@ -9,11 +9,11 @@ aside:
   toc: true
 ---
 
-## Returning observables
+## Basics
+
+### Returning observables
 
 You can return observables in your worker. It works fully transparent - just subscribe to the returned observable in the master code. The returned observable is based on the [`zen-observable`](https://github.com/zenparsing/zen-observable) implementation.
-
-Note that in contrast to the usual `zen-observable` behavior, the observable returned here is "hot". That means that if you subscribe to it twice, it will yield the same values, but won't run the thread twice. Keep in mind, though, that if the second subscriber subscribes to it late, it might miss out on data that has already been sent.
 
 ```js
 // master.js
@@ -41,9 +41,15 @@ function startCounting() {
 expose(startCounting)
 ```
 
+### Hot observables
+
+Note that in contrast to the usual `zen-observable` behavior, the observable returned here is "hot". That means that if you subscribe to it twice, the second subscription will mirror the first one, yielding the same values.
+
+It will **not** replay values from the past, in case the second subscriber subscribes after the first one has already received values.
+
 ## Observable subjects
 
-As described earlier, we can always return observables from our threads. While observables usually isolate the code that create observable events from the surrounding code, we do provide a way to trigger updates to the observable "from the outside".
+As described earlier, we can always return observables from our workers. While observables usually isolate the code that create observable events from the surrounding code, we do provide a way to trigger updates to the observable "from the outside".
 
 Using `Subject` we can create objects that implement the `Observable` interface, allowing other code to `.subscribe()` to it, while also exposing `.next(value)`, `.complete()` and `.error(error)`, so we can trigger those observable updates "from outside".
 
@@ -89,13 +95,16 @@ We can easily use observable subjects to stream results as they are computed.
 import { spawn, Thread, Worker } from "threads"
 
 const minmax = await spawn(new Worker("./workers/minmax"))
-minmax.values().subscribe(values => console.log(`Min: ${values.min}  Max: ${values.max}`))
 
-await minmax.push(2)
-await minmax.push(3)
-await minmax.push(4)
-await minmax.push(1)
-await minmax.push(5)
+minmax.values().subscribe(({ min, max }) => {
+  console.log(`Min: ${min} | Max: ${max}`)
+})
+
+await minmax.add(2)
+await minmax.add(3)
+await minmax.add(4)
+await minmax.add(1)
+await minmax.add(5)
 await minmax.finish()
 
 await Thread.terminate(minmax)
@@ -116,7 +125,7 @@ const minmax = {
     subject.complete()
     subject = new Subject()
   },
-  push(value) {
+  add(value) {
     max = Math.max(max, value)
     min = Math.min(min, value)
     subject.next({ max, min })
@@ -128,3 +137,5 @@ const minmax = {
 
 expose(minmax)
 ```
+
+And there we go! A simple worker that keeps track of the minimum and maximum value passed to it, yielding observable updates we can subscribe to. The updated values will be streamed as they happen.
