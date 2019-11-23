@@ -1,6 +1,6 @@
 ---
 layout: article
-title: Usage
+title: API and usage
 permalink: /usage
 excerpt: How to use the threads.js API, observables, thread pools and more.
 aside:
