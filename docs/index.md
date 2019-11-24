@@ -2,7 +2,7 @@
 layout: home
 permalink: /
 article_header: false
-title: Worker threads meet web workers - threads.js
+title: Web worker meets worker threads
 # articles:
 #   excerpt_type: html
 ---

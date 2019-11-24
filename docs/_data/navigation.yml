@@ -8,3 +8,14 @@ header:
   - title: '<i aria-label="GitHub" class="fab fa-github" style="font-size: 1.33em; line-height: 1.33em"></i>'
     url: https://github.com/andywer/threads.js
 
+sidebar:
+  - title: API & Usage
+    children:
+      - title: Basics
+        url: /usage
+      - title: Observables
+        url: /usage-observables
+      - title: Thread pool
+        url: /usage-pool
+      - title: Advanced
+        url: /usage-advanced

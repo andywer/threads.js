@@ -22,6 +22,13 @@ article {
   padding-bottom: 0.5rem;
 }
 
+@media (max-width: 499px) {
+  .article__content h2 {
+    font-size: 1.7rem;
+    margin: 1.9rem 0 1.0rem;
+  }
+}
+
 article .js-article-content > h2:first-child {
   margin-top: 0;
 }
@@ -32,10 +39,24 @@ article .js-article-content > h2:first-child {
   margin: 1.8rem 0 1.0rem;
 }
 
+@media (max-width: 499px) {
+  .article__content h3 {
+    font-size: 1.3rem;
+    margin: 1.5rem 0 1.0rem;
+  }
+}
+
 .article__content h4 {
   font-size: 1.3rem;
   line-height: 100%;
   margin: 2rem 0 1.0rem;
+}
+
+@media (max-width: 499px) {
+  .article__content h4 {
+    font-size: 1.1rem;
+    margin: 1.5rem 0 0.75rem;
+  }
 }
 
 .article__content h1 > .anchor,
@@ -178,6 +199,12 @@ pre.highlight code {
 .header__brand a {
   font-size: 1.4rem;
   line-height: 100%;
+}
+
+.sidebar-button {
+  background: linear-gradient(8deg, #262626 0%, #033d77 100%);
+  box-shadow: 0 0 4px #033d77;
+  color: #ffffff;
 }
 
 @media (max-width: 500px) {
