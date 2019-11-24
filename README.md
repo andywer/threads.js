@@ -178,7 +178,7 @@ In case of exposing an object, `spawn()` will asynchronously return an object ex
   Find the full documentation on the <a href="https://threads.js.org/" rel="nofollow">website</a>:
 </p>
 
-- [**Getting started**](https://threads.js.org/getting-started)
+- [**Quick start**](https://threads.js.org/getting-started)
 - [**Basic usage**](https://threads.js.org/usage)
 - [**Using observables**](https://threads.js.org/usage-observables)
 - [**Thread pools**](https://threads.js.org/usage-pool)
