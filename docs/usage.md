@@ -9,9 +9,9 @@ aside:
   toc: true
 ---
 
-## Introduction
+## Basics
 
-Here is what a simple use case looks like.
+A trivial worker example to demo the two most important functions provided by threads.js: `spawn()` and `expose()`.
 
 ```js
 // master.js
@@ -52,11 +52,11 @@ Use `expose()` to make either a function or an object callable from the master t
 
 In case of exposing an object, `spawn()` will asynchronously return an object exposing all the object's functions, following the same rules as functions directly `expose()`-ed.
 
-## Basics
+## Using workers
 
-### Function thread
+### Function worker
 
-There are two kinds of threads – this is the first one. A function thread exposes a single function that can be called from the master thread.
+This is one of two kinds of workers. A function worker exposes a single function that can be called from the master thread.
 
 ```js
 // master.js
@@ -81,9 +81,9 @@ expose(async function fetchGithubProfile(username) {
 })
 ```
 
-### Module thread
+### Module worker
 
-This is the second kind of thread. A module thread exposes an object whose values are functions. Use it if you want your thread to expose more than one function.
+This is the second kind of worker. A module worker exposes an object whose values are functions. Use it if you want your worker to expose more than one function.
 
 ```js
 // master.js
@@ -145,9 +145,9 @@ try {
 
 ## TypeScript
 
-### Type-safe threads
+### Type-safe workers
 
-When using TypeScript you can declare the type of a `spawn()`-ed thread:
+When using TypeScript you can declare the type of a `spawn()`-ed worker:
 
 ```ts
 // master.ts
