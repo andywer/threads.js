@@ -1,11 +1,56 @@
 ---
 layout: article
-title: Getting started
+title: Quick start
 permalink: /getting-started
 excerpt: Get started using threads.js – Install the package, optionally set up Webpack and TypeScript.
 aside:
   toc: true
 ---
+
+## Quick start
+
+This is how to spawn a super simple worker managed using threads.js. It will hash any string you pass to it, keeping the CPU load of the master thread low.
+
+```js
+// master.js
+import { spawn, Thread, Worker } from "threads"
+
+async function main() {
+  const hashPassword = await spawn(new Worker("./hash"))
+  const hashed = await hashPassword("Super secret password", "1234")
+
+  console.log("Hashed password:", hashed)
+
+  await Thread.terminate(hashPassword)
+}
+
+main().catch(console.error)
+```
+
+```js
+// hash.js - will be run in worker thread
+import sha256 from "js-sha256"
+import { expose } from "threads/worker"
+
+expose(function hashPassword(password, salt) {
+  return sha256(password + salt)
+})
+```
+
+### Moving parts
+
+The interesting bits in the sample code above are
+
+* `spawn()` to create a new worker
+* `expose()` to declare what functionality you want your worker to expose
+* `Thread.terminate()` to kill the worker once you don't need it anymore
+
+Also note that we imported `Worker` from threads.js. This is an important detail as you would usually use the global `Worker` on the `window` in browsers or import `Worker` from `worker_threads` in node.js.
+
+Importing the `Worker` from threads.js allows us not only to run the same code in browsers and node, but the threads.js `Worker` transparently provides additional functionality, too, to make using it as easy as possible.
+
+Learn more about it on the [Basic usage](/usage) page.
+
 
 ## Installation
 
@@ -15,7 +60,7 @@ npm install threads tiny-worker
 
 *You only need to install the `tiny-worker` package to support node.js < 12. It's an optional dependency and used as a fallback if `worker_threads` are not available.*
 
-## Environments
+## Platform setup
 
 ### Run using node.js
 
@@ -112,13 +157,19 @@ Everything else should work out of the box.
 
 ## Next
 
-Learn how to use the library. Let's write some code!
+Learn about the details and all the other features of the threads.js API, like
+
+* Exposing more than one function
+* Writing stateful workers
+* Using thread pools
+* Using observables to stream data
+* and more…
 
 <div class="mt-5">
   <p class="text-center">
-    <a class="button button--rounded button--secondary button--xl" href="/usage">
+    <a class="button button--rounded button--secondary button--lg" href="/usage">
       <i class="fas fa-arrow-right mr-2" style="font-size: 90%"></i>
-      Usage
+      API & Usage
     </a>
   </p>
 </div>

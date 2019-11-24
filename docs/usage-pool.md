@@ -11,9 +11,9 @@ aside:
 
 ## Pool basics
 
-A `Pool` allows you to create a set of worker threads and queue thread calls. The queued tasks are pulled from the queue and executed as previous tasks have finished.
+A `Pool` allows you to create a set of workers and queue worker calls. The queued tasks are pulled from the queue and executed as previous tasks are finished.
 
-Use it if you have a lot of work to offload to other threads and don't want to drown them in a huge pile of work at once, but run it in a controlled way with limited concurrency.
+Use it if you have a lot of work to offload to workers and don't want to drown them in a pile of work at once, but run those tasks in a controlled way with limited concurrency.
 
 ```js
 import { spawn, Pool } from "threads"

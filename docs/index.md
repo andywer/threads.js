@@ -316,6 +316,17 @@ expose(function hashPassword(password, salt) {
   </div>
 </section>
 
+<section>
+  <div class="my-3">
+    <p class="text-center">
+      <a class="button button--primary button--rounded button--xxl mt-4 mx-2" href="/getting-started">
+        <i class="fas fa-arrow-right mr-2" style="font-size: 90%"></i>
+        Get started
+      </a>
+    </p>
+  </div>
+</section>
+
 <!-- TODO: Section -->
   <!-- Link: Repository -->
   <!-- Link: Releases -->

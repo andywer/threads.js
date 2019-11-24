@@ -1,7 +1,7 @@
 header:
   - title: Home
     url: /
-  - title: Setup
+  - title: Quick start
     url: /getting-started
   - title: Usage
     url: /usage
