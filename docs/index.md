@@ -121,6 +121,9 @@ title: Web worker meets worker threads
   <p class="mt-3 text-center" markdown="1">
     Write code once, run it everywhere – in web workers and node worker threads.
   </p>
+  <p class="mt-1 text-center">
+    Call workers transparently, catch errors. It's never been easier.
+  </p>
 
   <div class="d-flex flex-column" markdown="1">
 ```js
