@@ -12,6 +12,11 @@ title: Web worker meets worker threads
     font-weight: inherit;
   }
 
+  h1 img {
+    width: 500px;
+    max-width: 100%;
+  }
+
   section {
     align-items: center;
     display: flex;
@@ -90,10 +95,14 @@ title: Web worker meets worker threads
 
 <section class="hero" style="position: relative">
   <div class="my-5">
-    <h1>threads.js</h1>
+    <h1 class="text-center">
+      <a href="https://threads.js.org/">
+        <img alt="threads.js" src="/assets/logo-label.png" />
+      </a>
+    </h1>
 
     <p>
-      Manage worker threads in node.js, web browsers and electron.
+      Manage worker threads in node.js, web&nbsp;browsers and electron.
     </p>
 
     <div class="highlighter-rouge my-4">
