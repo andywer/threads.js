@@ -197,8 +197,10 @@ pre.highlight code {
 }
 
 .header__brand a {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
+  font-weight: 500;
   line-height: 100%;
+  margin-top: -0.1rem;
 }
 
 .sidebar-button {
