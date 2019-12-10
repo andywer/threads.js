@@ -31,7 +31,7 @@ const resultBuffer = await xorBuffer(Transfer(testData), 127)
 // workers/arraybuffer-xor.js
 import { expose, Transfer } from "threads/worker"
 
-expose(function xorBuffer(buffer) {
+expose(function xorBuffer(buffer, value) {
   const view = new Uint8Array(buffer)
   view.forEach((byte, offset) => view.set([byte ^ value], offset))
   return Transfer(buffer)
