@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
     "declaration": true,
     "esModuleInterop": true,
     "target": "es2015",
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": ["dom", "es2015"],
+    "lib": ["es2015"],
     "outDir": "dist",
     "strict": true
   },

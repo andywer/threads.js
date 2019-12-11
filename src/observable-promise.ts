@@ -1,4 +1,4 @@
-import Observable from "zen-observable"
+import { Observable } from "observable-fns"
 
 export type ObservablePromise<T> = Promise<T> & Observable<T>
 

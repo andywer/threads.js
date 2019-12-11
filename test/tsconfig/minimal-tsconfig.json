@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "lib": ["es2017"],
+    "noEmit": true,
+    "strict": true
+  },
+  "include": [
+    "./minimal.ts"
+  ]
+}

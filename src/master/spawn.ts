@@ -1,5 +1,5 @@
 import DebugLogger from "debug"
-import Observable from "zen-observable"
+import { Observable } from "observable-fns"
 import { rehydrateError } from "../common"
 import { createPromiseWithResolver } from "../promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
