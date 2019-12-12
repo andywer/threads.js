@@ -22,7 +22,7 @@ url     : https://threads.js.org # the base hostname & protocol for your site e.
 baseurl : /               # does not include hostname
 title   : threads.js
 description: >            # this means to ignore newlines until "Language & timezone"
-  Developer-friendly worker library. Write code once, run it on node.js, web browsers and electron.  ▶️&nbsp;npm&nbsp;install&nbsp;threads
+  Promise-based worker library. Write code once, run it on node.js, web browsers and electron.  ▶️&nbsp;npm&nbsp;install&nbsp;threads
 
 ## => Language and Timezone
 ##############################
