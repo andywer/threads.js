@@ -131,27 +131,31 @@ title: Web worker meets worker threads
     Write code once, run it everywhere – in web workers and node worker threads.
   </p>
   <p class="mt-1 text-center">
-    Call workers transparently, catch errors. It's never been easier.
+    Call workers transparently, await results. It's never been easier.
   </p>
 
   <div class="d-flex flex-column" markdown="1">
 ```js
 // master.js
-import { spawn, Worker } from "threads"
+import { spawn, Thread, Worker } from "threads"
 
-const hashPassword = await spawn(new Worker("./hash"))
-const hashed = await hashPassword("Super secret password", "1234")
+const auth = await spawn(new Worker("./workers/auth"))
+const hashed = await auth.hashPassword("Super secret password", "1234")
 
 console.log("Hashed password:", hashed)
+
+await Thread.terminate(auth)
 ```
 
 ```js
-// hash.js - will be run in worker thread
+// workers/auth.js
 import sha256 from "js-sha256"
 import { expose } from "threads/worker"
 
-expose(function hashPassword(password, salt) {
-  return sha256(password + salt)
+expose({
+  hashPassword(password, salt) {
+    return sha256(password + salt)
+  }
 })
 ```
   </div>

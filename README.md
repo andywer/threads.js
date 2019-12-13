@@ -6,6 +6,8 @@
   <a href="https://www.npmjs.com/package/threads" target="_blank"><img alt="npm (tag)" src="https://img.shields.io/npm/v/threads.svg?style=flat-square"></a>
 </p>
 
+<br />
+
 Offload CPU-intensive tasks to worker threads in node.js, web browsers and electron using one uniform API.
 
 Uses web workers in the browser, `worker_threads` in node 12+ and [`tiny-worker`](https://github.com/avoidwork/tiny-worker) in node 8 to 11.
@@ -144,35 +146,37 @@ Everything else should work out of the box.
 // master.js
 import { spawn, Thread, Worker } from "threads"
 
-const hashPassword = await spawn(new Worker("./hash"))
-const hashed = await hashPassword("Super secret password", "1234")
+const auth = await spawn(new Worker("./workers/auth"))
+const hashed = await auth.hashPassword("Super secret password", "1234")
 
 console.log("Hashed password:", hashed)
 
-await Thread.terminate(hashPassword)
+await Thread.terminate(auth)
 ```
 
 ```js
-// workers/hash.js
+// workers/auth.js
 import sha256 from "js-sha256"
 import { expose } from "threads/worker"
 
-expose(function hashPassword(password, salt) {
-  return sha256(password + salt)
+expose({
+  hashPassword(password, salt) {
+    return sha256(password + salt)
+  }
 })
 ```
 
 ### spawn()
 
-The `hashPassword()` function in the master code proxies the call to the `hashPassword()` function in the worker:
+The `hashPassword()` function of the `auth` object in the master code proxies the call to the `hashPassword()` function in the worker:
 
-If the worker function returns a promise or an observable then you can just use the return value as such in the master code. If the function returns a primitive value, expect the master function to return a promise resolving to that value.
+If the worker's function returns a promise or an observable then you can just use the return value as such in the master code. If the function returns a primitive value, expect the master function to return a promise resolving to that value.
 
 ### expose()
 
-Use `expose()` to make either a function or an object callable from the master thread.
+Use `expose()` to make a function or an object containing methods callable from the master thread.
 
-In case of exposing an object, `spawn()` will asynchronously return an object exposing all the object's functions, following the same rules as functions directly `expose()`-ed.
+In case of exposing an object, `spawn()` will asynchronously return an object exposing all the object's functions. If you `expose()` a function, `spawn` will also return a callable function, not an object.
 
 ## Usage
 
