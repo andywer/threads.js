@@ -1,5 +1,5 @@
 import isSomeObservable from "is-observable"
-import Observable from "zen-observable"
+import { Observable } from "observable-fns"
 import { serializeError } from "../common"
 import { isTransferDescriptor, TransferDescriptor } from "../transferable"
 import {
@@ -21,7 +21,10 @@ let exposeCalled = false
 
 const isMasterJobRunMessage = (thing: any): thing is MasterJobRunMessage => thing && thing.type === MasterMessageType.run
 
-/** There are issues with `is-observable` not recognizing zen-observable's instances */
+/**
+ * There are issues with `is-observable` not recognizing zen-observable's instances.
+ * We are using `observable-fns`, but it's based on zen-observable, too.
+ */
 const isObservable = (thing: any): thing is Observable<any> => isSomeObservable(thing) || isZenObservable(thing)
 
 function isZenObservable(thing: any): thing is Observable<any> {

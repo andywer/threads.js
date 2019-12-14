@@ -34,12 +34,10 @@
     "worker_threads"
   ],
   "dependencies": {
-    "@types/zen-observable": "^0.8.0",
     "callsites": "^3.1.0",
     "debug": "^4.1.1",
     "is-observable": "^1.1.0",
-    "observable-fns": "^0.4.0",
-    "zen-observable": "^0.8.14"
+    "observable-fns": "^0.5.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",

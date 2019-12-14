@@ -1,5 +1,5 @@
 import test from "ava"
-import Observable from "zen-observable"
+import { Observable } from "observable-fns"
 import { spawn, Thread, Worker } from "../src/index"
 import { Counter } from "./workers/counter"
 

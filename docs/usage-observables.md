@@ -26,8 +26,8 @@ counter.subscribe(newCount => console.log(`Counter incremented to:`, newCount))
 
 ```js
 // workers/counter.js
+import { Observable } from "observable-fns"
 import { expose } from "threads/worker"
-import Observable from "zen-observable"
 
 function startCounting() {
   return new Observable(observer => {
@@ -43,7 +43,7 @@ expose(startCounting)
 
 ### Hot observables
 
-Note that in contrast to the usual `zen-observable` behavior, the observable returned here is "hot". That means that if you subscribe to it twice, the second subscription will mirror the first one, yielding the same values.
+Note that in contrast to the default Observable behavior, the observable returned here is "hot". That means that if you subscribe to it twice, the second subscription will mirror the first one, yielding the same values without subscribing to the data source a second time.
 
 It will **not** replay values from the past, in case the second subscriber subscribes after the first one has already received values.
 
