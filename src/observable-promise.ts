@@ -1,4 +1,4 @@
-import { Observable } from "observable-fns"
+import { Observable, SubscriptionObserver } from "observable-fns"
 
 export type ObservablePromise<T> = Promise<T> & Observable<T>
 
@@ -8,7 +8,7 @@ type OnRejected<Result = void> = (error: Error) => Result
 type Initializer<T> = (
   resolve: (value?: T) => void,
   reject: (error: Error) => void,
-  observer: ZenObservable.SubscriptionObserver<T>
+  observer: SubscriptionObserver<T>
 ) => UnsubscribeFn | void
 
 type UnsubscribeFn = () => void
@@ -28,7 +28,7 @@ function fail(error: Error): never {
  * if that async process will yield values once (-> Promise) or multiple
  * times (-> Observable).
  *
- * Note that the observable promise inherits some of zen-observable's characteristics:
+ * Note that the observable promise inherits some of the observable's characteristics:
  * The `init` function will be called *once for every time anyone subscribes to it*.
  *
  * If this is undesired, derive a hot observable from it using `makeHot()` and
@@ -178,7 +178,7 @@ export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T>
  * That one subscription on the input observable promise is setup immediately.
  */
 export function makeHot<T>(async: ObservablePromise<T> | Observable<T>): ObservablePromise<T> {
-  let observers: Array<ZenObservable.SubscriptionObserver<T>> = []
+  let observers: Array<SubscriptionObserver<T>> = []
 
   async.subscribe({
     complete() {

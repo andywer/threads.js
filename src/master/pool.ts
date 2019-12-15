@@ -1,5 +1,5 @@
 import DebugLogger from "debug"
-import { Observable } from "observable-fns"
+import { Observable, SubscriptionObserver } from "observable-fns"
 import { makeHot } from "../observable-promise"
 import Implementation from "./implementation"
 import { Thread } from "./thread"
@@ -101,7 +101,7 @@ async function runPoolTask<ThreadType extends Thread>(
   task: QueuedTask<ThreadType, any>,
   availableWorker: WorkerDescriptor<ThreadType>,
   workerID: number,
-  eventSubject: ZenObservable.SubscriptionObserver<PoolEvent<ThreadType>>,
+  eventSubject: SubscriptionObserver<PoolEvent<ThreadType>>,
   debug: DebugLogger.Debugger
 ) {
   debug(`Running task #${task.id} on worker #${workerID}...`)
@@ -227,7 +227,7 @@ function PoolConstructor<ThreadType extends Thread>(
   const initErrors: Error[] = []
   const workers = spawnWorkers(spawnWorker, size)
 
-  let eventSubject: ZenObservable.SubscriptionObserver<PoolEvent<ThreadType>>
+  let eventSubject: SubscriptionObserver<PoolEvent<ThreadType>>
 
   const eventObservable = makeHot(new Observable<PoolEvent<ThreadType>>(subscriber => {
     eventSubject = subscriber

@@ -1,4 +1,4 @@
-import Observable from "zen-observable"
+import { Observable } from "observable-fns"
 import { expose } from "../../src/worker"
 
 expose(function countToFive() {

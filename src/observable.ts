@@ -1,4 +1,4 @@
-import { Observable } from "observable-fns"
+import { Observable, ObservableLike, SubscriptionObserver } from "observable-fns"
 export { Observable }
 
 const $observers = Symbol("observers")
@@ -12,8 +12,8 @@ const $observers = Symbol("observers")
  * values, errors and the completion raised on this subject, but does not
  * expose the `next()`, `error()`, `complete()` methods.
  */
-export class Subject<T> extends Observable<T> implements ZenObservable.ObservableLike<T> {
-  private [$observers]: Array<ZenObservable.SubscriptionObserver<T>>
+export class Subject<T> extends Observable<T> implements ObservableLike<T> {
+  private [$observers]: Array<SubscriptionObserver<T>>
 
   constructor() {
     super(observer => {
