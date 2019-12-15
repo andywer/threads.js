@@ -1,7 +1,5 @@
 import { Observable, SubscriptionObserver } from "observable-fns"
 
-export type ObservablePromise<T> = Promise<T> & Observable<T>
-
 type OnFulfilled<T, Result = void> = (value: T) => Result
 type OnRejected<Result = void> = (error: Error) => Result
 
@@ -34,83 +32,91 @@ function fail(error: Error): never {
  * If this is undesired, derive a hot observable from it using `makeHot()` and
  * subscribe to that.
  */
-export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T> {
-  let initHasRun = false
-  const fulfillmentCallbacks: Array<OnFulfilled<T>> = []
-  const rejectionCallbacks: OnRejected[] = []
+export class ObservablePromise<T> extends Observable<T> implements Promise<T> {
+  private initHasRun = false
+  private fulfillmentCallbacks: Array<OnFulfilled<T>> = []
+  private rejectionCallbacks: OnRejected[] = []
 
-  let firstValue: T | undefined
-  let firstValueSet = false
-  let rejection: Error | undefined
-  let state: "fulfilled" | "pending" | "rejected" = "pending"
+  private firstValue: T | undefined
+  private firstValueSet = false
+  private rejection: Error | undefined
+  private state: "fulfilled" | "pending" | "rejected" = "pending"
 
-  const onNext = (value: T) => {
-    if (!firstValueSet) {
-      firstValue = value
-      firstValueSet = true
+  public readonly [Symbol.toStringTag]: "[object ObservablePromise]"
+
+  constructor(init: Initializer<T>) {
+    super(originalObserver => {
+      // tslint:disable-next-line no-this-assignment
+      const self = this
+      const observer = {
+        ...originalObserver,
+        complete() {
+          originalObserver.complete()
+          self.onCompletion()
+        },
+        error(error: Error) {
+          originalObserver.error(error)
+          self.onError(error)
+        },
+        next(value: T) {
+          originalObserver.next(value)
+          self.onNext(value)
+        }
+      }
+      const resolve: OnFulfilled<T | undefined> = (value?: T) => {
+        if (value !== undefined) {
+          observer.next(value)
+        }
+        observer.complete()
+      }
+      const reject: OnRejected = observer.error.bind(observer)
+
+      try {
+        this.initHasRun = true
+        return init(resolve, reject, observer)
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
+
+  private onNext(value: T) {
+    if (!this.firstValueSet) {
+      this.firstValue = value
+      this.firstValueSet = true
     }
   }
-  const onError = (error: Error) => {
-    state = "rejected"
-    rejection = error
 
-    for (const onRejected of rejectionCallbacks) {
+  private onError(error: Error) {
+    this.state = "rejected"
+    this.rejection = error
+
+    for (const onRejected of this.rejectionCallbacks) {
       // Promisifying the call to turn errors into unhandled promise rejections
       // instead of them failing sync and cancelling the iteration
       runDeferred(() => onRejected(error))
     }
   }
-  const onCompletion = () => {
-    state = "fulfilled"
 
-    for (const onFulfilled of fulfillmentCallbacks) {
+  private onCompletion() {
+    this.state = "fulfilled"
+
+    for (const onFulfilled of this.fulfillmentCallbacks) {
       // Promisifying the call to turn errors into unhandled promise rejections
       // instead of them failing sync and cancelling the iteration
-      runDeferred(() => onFulfilled(firstValue as T))
+      runDeferred(() => onFulfilled(this.firstValue as T))
     }
   }
 
-  const observable = new Observable<T>(originalObserver => {
-    const observer = {
-      ...originalObserver,
-      complete() {
-        originalObserver.complete()
-        onCompletion()
-      },
-      error(error: Error) {
-        originalObserver.error(error)
-        onError(error)
-      },
-      next(value: T) {
-        originalObserver.next(value)
-        onNext(value)
-      }
-    }
-    const resolve: OnFulfilled<T | undefined> = (value?: T) => {
-      if (value !== undefined) {
-        observer.next(value)
-      }
-      observer.complete()
-    }
-    const reject: OnRejected = observer.error.bind(observer)
-
-    try {
-      initHasRun = true
-      return init(resolve, reject, observer)
-    } catch (error) {
-      reject(error)
-    }
-  })
-
-  function then<Result1 = T, Result2 = never>(
-    onFulfilledRaw: OnFulfilled<T, Result1> | null | undefined,
-    onRejectedRaw?: OnRejected<Result2> | null | undefined
-  ): Promise<Result1 | Result2> {
-    const onFulfilled: OnFulfilled<T, Result1> = onFulfilledRaw || returnInput as any
+  public then<TResult1 = T, TResult2 = never>(
+    onFulfilledRaw?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+    onRejectedRaw?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
+  ): Promise<TResult1 | TResult2> {
+    const onFulfilled: OnFulfilled<T, TResult1> = onFulfilledRaw || returnInput as any
     const onRejected = onRejectedRaw || fail
     let onRejectedCalled = false
 
-    return new Promise<Result1 | Result2>((resolve, reject) => {
+    return new Promise<TResult1 | TResult2>((resolve, reject) => {
       const rejectionCallback = (error: Error) => {
         if (onRejectedCalled) return
         onRejectedCalled = true
@@ -128,45 +134,37 @@ export function ObservablePromise<T>(init: Initializer<T>): ObservablePromise<T>
           rejectionCallback(error)
         }
       }
-      if (!initHasRun) {
-        observable.subscribe({ error: rejectionCallback })
+      if (!this.initHasRun) {
+        this.subscribe({ error: rejectionCallback })
       }
-      if (state === "fulfilled") {
-        return resolve(onFulfilled(firstValue as T))
+      if (this.state === "fulfilled") {
+        return resolve(onFulfilled(this.firstValue as T))
       }
-      if (state === "rejected") {
+      if (this.state === "rejected") {
         onRejectedCalled = true
-        return resolve(onRejected(rejection as Error))
+        return resolve(onRejected(this.rejection as Error))
       }
-      fulfillmentCallbacks.push(fulfillmentCallback)
-      rejectionCallbacks.push(rejectionCallback)
+      this.fulfillmentCallbacks.push(fulfillmentCallback)
+      this.rejectionCallbacks.push(rejectionCallback)
     })
   }
 
-  const catchFn = <Result = never>(
-    onRejected: ((error: Error) => Promise<Result> | Result | void) | null | undefined
-  ) => {
-    return then(undefined, onRejected) as Promise<Result>
+  public catch<Result = never>(
+    onRejected: ((error: Error) => Promise<Result> | Result) | null | undefined
+  ) {
+    return this.then(undefined, onRejected) as Promise<Result>
   }
-  const finallyFn = (onCompleted: () => void) => {
-    onCompleted = onCompleted || doNothing
-    return then(
+
+  public finally(onCompleted?: (() => void) | null | undefined) {
+    const handler = onCompleted || doNothing
+    return this.then(
       (value: T) => {
-        onCompleted()
+        handler()
         return value
       },
-      () => onCompleted()
-    )
+      () => handler()
+    ) as Promise<T>
   }
-
-  // tslint:disable-next-line prefer-object-spread
-  return Object.assign(observable, {
-    [Symbol.toStringTag]: "[object ObservablePromise]",
-
-    then: then as Promise<T>["then"],
-    catch: catchFn as Promise<T>["catch"],
-    finally: finallyFn as Promise<T>["finally"]
-  })
 }
 
 /**
@@ -192,7 +190,7 @@ export function makeHot<T>(async: ObservablePromise<T> | Observable<T>): Observa
     }
   })
 
-  const aggregator = ObservablePromise<T>((resolve, reject, observer) => {
+  const aggregator = new ObservablePromise<T>((resolve, reject, observer) => {
     observers.push(observer)
 
     const unsubscribe = () => {

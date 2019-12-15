@@ -30,7 +30,7 @@ const isJobStartMessage = (data: any): data is WorkerJobStartMessage => data && 
 function createObservablePromiseForJob<ResultType>(worker: WorkerType, jobUID: number): ObservablePromise<ResultType> {
   let asyncType: "observable" | "promise" | undefined
 
-  return ObservablePromise((resolve, reject, observer) => {
+  return new ObservablePromise((resolve, reject, observer) => {
     const messageHandler = ((event: MessageEvent) => {
       debugMessages("Message from worker:", event.data)
       if (!event.data || event.data.uid !== jobUID) return
@@ -97,7 +97,7 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
     debugMessages("Sending command to run function to worker:", runMessage)
     worker.postMessage(runMessage, transferables)
     return makeHot(createObservablePromiseForJob<ReturnType>(worker, uid))
-  }) as ProxyableFunction<Args, ReturnType>
+  }) as any as ProxyableFunction<Args, ReturnType>
 }
 
 export function createProxyModule<Methods extends ModuleMethods>(
