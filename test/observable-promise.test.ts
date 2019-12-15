@@ -6,7 +6,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 test("can create an observable promise", async t => {
   t.plan(1)
 
-  await ObservablePromise((resolve) => {
+  await new ObservablePromise((resolve) => {
     t.true(true)
     resolve()
   })
@@ -15,7 +15,7 @@ test("can create an observable promise", async t => {
 test("init function is only called once", async t => {
   let initCallCount = 0
 
-  const async = ObservablePromise((resolve) => {
+  const async = new ObservablePromise((resolve) => {
     initCallCount++
     setTimeout(() => resolve(), 10)
   })
@@ -32,7 +32,7 @@ test("init function is only called once", async t => {
 test("can proxy a promise fulfillment", async t => {
   t.plan(2)
 
-  const async = ObservablePromise((resolve) => {
+  const async = new ObservablePromise((resolve) => {
     setTimeout(() => resolve(123), 1)
   })
 
@@ -46,7 +46,7 @@ test("can proxy a promise fulfillment", async t => {
 test("can proxy a promise rejection", async t => {
   let handlerCallCount = 0
 
-  const async = ObservablePromise((resolve, reject) => {
+  const async = new ObservablePromise((resolve, reject) => {
     setTimeout(() => reject(Error("I am supposed to be rejected.")), 1)
   })
 
@@ -67,7 +67,7 @@ test("can proxy a promise rejection", async t => {
 test("can proxy a promise rejection caused by a sync throw", async t => {
   let handlerCallCount = 0
 
-  const async = ObservablePromise(() => {
+  const async = new ObservablePromise(() => {
     throw Error("I am supposed to be rejected.")
   })
 
@@ -89,7 +89,7 @@ test("can subscribe to values and completion", async t => {
   let capturedValues: any[] = []
   let capturedCompletions = 0
 
-  const async = ObservablePromise((resolve, reject, observer) => {
+  const async = new ObservablePromise((resolve, reject, observer) => {
     setTimeout(() => observer.next(1), 10)
     setTimeout(() => observer.next(2), 20)
     setTimeout(() => observer.complete(), 30)
@@ -115,7 +115,7 @@ test("can subscribe to errors", async t => {
   let capturedValues: any[] = []
   let capturedCompletions = 0
 
-  const async = ObservablePromise((resolve, reject, observer) => {
+  const async = new ObservablePromise((resolve, reject, observer) => {
     setTimeout(() => observer.next(1), 10)
     setTimeout(() => observer.error(Error("Fails as expected.")), 20)
     setTimeout(() => observer.next(2), 30)
@@ -143,7 +143,7 @@ test("makeHot() causes a single immediate init() call for multiple subscriptions
   let capturedValues: any[] = []
   let initRuns = 0
 
-  const async = ObservablePromise((resolve, reject, observer) => {
+  const async = new ObservablePromise((resolve, reject, observer) => {
     initRuns++
     setTimeout(() => observer.next(1), 10)
     setTimeout(() => observer.next(2), 20)
@@ -168,7 +168,7 @@ test("makeHot() causes a single immediate init() call for multiple subscriptions
 })
 
 test("makeHot() proxies errors correctly", async t => {
-  const async = ObservablePromise((resolve, reject, observer) => {
+  const async = new ObservablePromise((resolve, reject, observer) => {
     setTimeout(() => observer.error(Error("I am supposed to fail")), 10)
   })
   const hot = makeHot(async)
