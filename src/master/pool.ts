@@ -1,30 +1,16 @@
 import DebugLogger from "debug"
-import { Observable, SubscriptionObserver } from "observable-fns"
-import { makeHot } from "../observable-promise"
+import { multicast, Observable, Subject } from "observable-fns"
 import Implementation from "./implementation"
+import {
+  PoolEvent,
+  PoolEventType,
+  QueuedTask,
+  TaskRunFunction,
+  WorkerDescriptor
+} from "./pool-types"
 import { Thread } from "./thread"
 
-export { Thread }
-
-let nextPoolID = 1
-
-const hasSymbols = () => typeof Symbol === 'function'
-const hasSymbol = (name: keyof typeof Symbol) => hasSymbols() && Boolean(Symbol[name])
-
-function flatMap<In, Out>(array: In[], mapper: ((element: In) => Out[])): Out[] {
-  return array.reduce<Out[]>(
-    (flattened, element) => [...flattened, ...mapper(element)],
-    []
-  )
-}
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function slugify(text: string) {
-  return text.replace(/\W/g, " ").trim().replace(/\s+/g, "-")
-}
+export { PoolEvent, PoolEventType, QueuedTask, Thread }
 
 // tslint:disable-next-line no-namespace
 export declare namespace Pool {
@@ -32,55 +18,7 @@ export declare namespace Pool {
   type EventType = PoolEventType
 }
 
-/** Pool event type. Specifies the type of each `PoolEvent`. */
-export enum PoolEventType {
-  initialized = "initialized",
-  taskCanceled = "taskCanceled",
-  taskCompleted = "taskCompleted",
-  taskFailed = "taskFailed",
-  taskQueued = "taskQueued",
-  taskQueueDrained = "taskQueueDrained",
-  taskStart = "taskStart",
-  terminated = "terminated"
-}
-
-type TaskRunFunction<ThreadType extends Thread, Return> = (worker: ThreadType) => Promise<Return>
-
-/** Pool event. Subscribe to those events using `pool.events()`. Useful for debugging. */
-export type PoolEvent<ThreadType extends Thread> = {
-  type: PoolEventType.initialized,
-  size: number
-} | {
-  type: PoolEventType.taskQueued,
-  taskID: number
-} | {
-  type: PoolEventType.taskQueueDrained
-} | {
-  type: PoolEventType.taskStart,
-  taskID: number,
-  workerID: number
-} | {
-  type: PoolEventType.taskCompleted,
-  returnValue: any,
-  taskID: number,
-  workerID: number
-} | {
-  type: PoolEventType.taskFailed,
-  error: Error,
-  taskID: number,
-  workerID: number
-} | {
-  type: PoolEventType.taskCanceled,
-  taskID: number
-} | {
-  type: PoolEventType.terminated,
-  remainingQueue: Array<QueuedTask<ThreadType, any>>
-}
-
-interface WorkerDescriptor<ThreadType extends Thread> {
-  init: Promise<ThreadType>
-  runningTasks: Array<Promise<any>>
-}
+let nextPoolID = 1
 
 function createArray(size: number): number[] {
   const array: number[] = []
@@ -90,46 +28,19 @@ function createArray(size: number): number[] {
   return array
 }
 
-function findIdlingWorker<ThreadType extends Thread>(
-  workers: Array<WorkerDescriptor<ThreadType>>,
-  maxConcurrency: number
-): WorkerDescriptor<ThreadType> | undefined {
-  return workers.find(worker => worker.runningTasks.length < maxConcurrency)
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function runPoolTask<ThreadType extends Thread>(
-  task: QueuedTask<ThreadType, any>,
-  availableWorker: WorkerDescriptor<ThreadType>,
-  workerID: number,
-  eventSubject: SubscriptionObserver<PoolEvent<ThreadType>>,
-  debug: DebugLogger.Debugger
-) {
-  debug(`Running task #${task.id} on worker #${workerID}...`)
-  eventSubject.next({
-    type: PoolEventType.taskStart,
-    taskID: task.id,
-    workerID
-  })
+function flatMap<In, Out>(array: In[], mapper: ((element: In) => Out[])): Out[] {
+  return array.reduce<Out[]>(
+    (flattened, element) => [...flattened, ...mapper(element)],
+    []
+  )
+}
 
-  try {
-    const returnValue = await task.run(await availableWorker.init)
-
-    debug(`Task #${task.id} completed successfully`)
-    eventSubject.next({
-      type: PoolEventType.taskCompleted,
-      returnValue,
-      taskID: task.id,
-      workerID
-    })
-  } catch (error) {
-    debug(`Task #${task.id} failed`)
-    eventSubject.next({
-      type: PoolEventType.taskFailed,
-      taskID: task.id,
-      error,
-      workerID
-    })
-  }
+function slugify(text: string) {
+  return text.replace(/\W/g, " ").trim().replace(/\s+/g, "-")
 }
 
 function spawnWorkers<ThreadType extends Thread>(
@@ -140,28 +51,6 @@ function spawnWorkers<ThreadType extends Thread>(
     init: spawnWorker(),
     runningTasks: []
   }))
-}
-
-/**
- * Task that has been `pool.queued()`-ed.
- */
-export interface QueuedTask<ThreadType extends Thread, Return> {
-  /** @private */
-  id: number
-
-  /** @private */
-  run: TaskRunFunction<ThreadType, Return>
-
-  /**
-   * Queued tasks can be cancelled until the pool starts running them on a worker thread.
-   */
-  cancel(): void
-
-  /**
-   * `QueuedTask` is thenable, so you can `await` it.
-   * Resolves when the task has successfully been executed. Rejects if the task fails.
-   */
-  then: Promise<Return>["then"]
 }
 
 /**
@@ -209,93 +98,155 @@ export interface PoolOptions {
   size?: number
 }
 
-function PoolConstructor<ThreadType extends Thread>(
-  spawnWorker: () => Promise<ThreadType>,
-  optionsOrSize?: number | PoolOptions
-): Pool<ThreadType> {
-  const options: PoolOptions = typeof optionsOrSize === "number"
-    ? { size: optionsOrSize }
-    : optionsOrSize || {}
+class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
+  public static EventType = PoolEventType
 
-  const debug = DebugLogger(`threads:pool:${slugify(options.name || String(nextPoolID++))}`)
-  const { concurrency = 1, size = Implementation.defaultPoolSize } = options
+  private readonly debug: DebugLogger.Debugger
+  private readonly eventObservable: Observable<PoolEvent<ThreadType>>
+  private readonly options: PoolOptions
+  private readonly workers: Array<WorkerDescriptor<ThreadType>>
 
-  let isClosing = false
-  let nextTaskID = 1
-  let taskQueue: Array<QueuedTask<ThreadType, any>> = []
+  private readonly eventSubject = new Subject<PoolEvent<ThreadType>>()
+  private initErrors: Error[] = []
+  private isClosing = false
+  private nextTaskID = 1
+  private taskQueue: Array<QueuedTask<ThreadType, any>> = []
 
-  const initErrors: Error[] = []
-  const workers = spawnWorkers(spawnWorker, size)
+  constructor(
+    spawnWorker: () => Promise<ThreadType>,
+    optionsOrSize?: number | PoolOptions
+  ) {
+    const options: PoolOptions = typeof optionsOrSize === "number"
+      ? { size: optionsOrSize }
+      : optionsOrSize || {}
 
-  let eventSubject: SubscriptionObserver<PoolEvent<ThreadType>>
+    const { size = Implementation.defaultPoolSize } = options
 
-  const eventObservable = makeHot(new Observable<PoolEvent<ThreadType>>(subscriber => {
-    eventSubject = subscriber
-  }))
+    this.debug = DebugLogger(`threads:pool:${slugify(options.name || String(nextPoolID++))}`)
+    this.options = options
+    this.workers = spawnWorkers(spawnWorker, size)
 
-  Promise.all(workers.map(worker => worker.init)).then(
-    () => eventSubject.next({
-      type: PoolEventType.initialized,
-      size: workers.length
-    }),
-    error => {
-      debug("Error while initializing pool worker:", error)
-      eventSubject.error(error)
-      initErrors.push(error)
+    this.eventObservable = multicast(Observable.from(this.eventSubject))
+
+    Promise.all(this.workers.map(worker => worker.init)).then(
+      () => this.eventSubject.next({
+        type: PoolEventType.initialized,
+        size: this.workers.length
+      }),
+      error => {
+        this.debug("Error while initializing pool worker:", error)
+        this.eventSubject.error(error)
+        this.initErrors.push(error)
+      }
+    )
+  }
+
+  private findIdlingWorker(): WorkerDescriptor<ThreadType> | undefined {
+    const { concurrency = 1 } = this.options
+    return this.workers.find(worker => worker.runningTasks.length < concurrency)
+  }
+
+  private async runPoolTask(worker: WorkerDescriptor<ThreadType>, task: QueuedTask<ThreadType, any>) {
+    const workerID = this.workers.indexOf(worker) + 1
+
+    this.debug(`Running task #${task.id} on worker #${workerID}...`)
+    this.eventSubject.next({
+      type: PoolEventType.taskStart,
+      taskID: task.id,
+      workerID
+    })
+
+    try {
+      const returnValue = await task.run(await worker.init)
+
+      this.debug(`Task #${task.id} completed successfully`)
+      this.eventSubject.next({
+        type: PoolEventType.taskCompleted,
+        returnValue,
+        taskID: task.id,
+        workerID
+      })
+    } catch (error) {
+      this.debug(`Task #${task.id} failed`)
+      this.eventSubject.next({
+        type: PoolEventType.taskFailed,
+        taskID: task.id,
+        error,
+        workerID
+      })
     }
-  )
+  }
 
-  const scheduleWork = () => {
-    debug(`Attempt de-queueing a task in order to run it...`)
-
-    const availableWorker = findIdlingWorker(workers, concurrency)
-    if (!availableWorker) return
-
-    const nextTask = taskQueue.shift()
-    if (!nextTask) {
-      debug(`Task queue is empty`)
-      eventSubject.next({ type: PoolEventType.taskQueueDrained })
-      return
-    }
-
-    const workerID = workers.indexOf(availableWorker) + 1
-
-    const run = async (worker: WorkerDescriptor<ThreadType>, task: QueuedTask<ThreadType, any>) => {
+  private async run(worker: WorkerDescriptor<ThreadType>, task: QueuedTask<ThreadType, any>) {
+    const runPromise = (async () => {
       const removeTaskFromWorkersRunningTasks = () => {
         worker.runningTasks = worker.runningTasks.filter(someRunPromise => someRunPromise !== runPromise)
       }
 
       // Defer task execution by one tick to give handlers time to subscribe
-      await sleep(0)
+      await delay(0)
 
       try {
-        await runPoolTask(task, availableWorker, workerID, eventSubject, debug)
+        await this.runPoolTask(worker, task)
       } finally {
         removeTaskFromWorkersRunningTasks()
 
-        if (!isClosing) {
-          scheduleWork()
+        if (!this.isClosing) {
+          this.scheduleWork()
         }
       }
-    }
+    })()
 
-    const runPromise = run(availableWorker, nextTask)
-    availableWorker.runningTasks.push(runPromise)
+    worker.runningTasks.push(runPromise)
   }
 
-  const pool: Pool<ThreadType> = {
-    async completed(allowResolvingImmediately: boolean = false) {
-      const getCurrentlyRunningTasks = () => flatMap(workers, worker => worker.runningTasks)
 
-      if (initErrors.length > 0) {
-        return Promise.reject(initErrors[0])
-      }
-      if (allowResolvingImmediately && taskQueue.length === 0) {
-        return Promise.all(getCurrentlyRunningTasks())
-      }
+  private scheduleWork() {
+    this.debug(`Attempt de-queueing a task in order to run it...`)
 
-      const poolEventPromise = new Promise((resolve, reject) => {
-        const subscription = eventObservable.subscribe(event => {
+    const availableWorker = this.findIdlingWorker()
+    if (!availableWorker) return
+
+    const nextTask = this.taskQueue.shift()
+    if (!nextTask) {
+      this.debug(`Task queue is empty`)
+      this.eventSubject.next({ type: PoolEventType.taskQueueDrained })
+      return
+    }
+
+    this.run(availableWorker, nextTask)
+  }
+
+  private taskCompletion(taskID: number) {
+    return new Promise<any>((resolve, reject) => {
+      const eventSubscription = this.events().subscribe(event => {
+        if (event.type === PoolEventType.taskCompleted && event.taskID === taskID) {
+          eventSubscription.unsubscribe()
+          resolve(event.returnValue)
+        } else if (event.type === PoolEventType.taskFailed && event.taskID === taskID) {
+          eventSubscription.unsubscribe()
+          reject(event.error)
+        } else if (event.type === PoolEventType.terminated) {
+          eventSubscription.unsubscribe()
+          reject(Error("Pool has been terminated before task was run."))
+        }
+      })
+    })
+  }
+
+  public async completed(allowResolvingImmediately: boolean = false) {
+    const getCurrentlyRunningTasks = () => flatMap(this.workers, worker => worker.runningTasks)
+
+    if (this.initErrors.length > 0) {
+      return Promise.reject(this.initErrors[0])
+    }
+    if (allowResolvingImmediately && this.taskQueue.length === 0) {
+      return Promise.all(getCurrentlyRunningTasks())
+    }
+
+    await new Promise((resolve, reject) => {
+      const subscription = this.eventObservable.subscribe({
+        next(event) {
           if (event.type === PoolEventType.taskQueueDrained) {
             subscription.unsubscribe()
             resolve()
@@ -303,96 +254,87 @@ function PoolConstructor<ThreadType extends Thread>(
             subscription.unsubscribe()
             reject(event.error)
           }
-        })
-      })
-
-      await Promise.race([
-        poolEventPromise,
-        eventObservable   // make a pool-wide error reject the completed() result promise
-      ])
-      await Promise.all(getCurrentlyRunningTasks())
-    },
-
-    events() {
-      return eventObservable
-    },
-
-    queue(taskFunction) {
-      if (isClosing) {
-        throw Error(`Cannot schedule pool tasks after terminate() has been called.`)
-      }
-      if (initErrors.length > 0) {
-        throw initErrors[0]
-      }
-
-      let resultPromiseThen: Promise<any>["then"] | undefined
-
-      const createResultPromise = () => new Promise<any>((resolve, reject) => {
-        const eventSubscription = pool.events().subscribe(event => {
-          if (event.type === PoolEventType.taskCompleted && event.taskID === task.id) {
-            eventSubscription.unsubscribe()
-            resolve(event.returnValue)
-          } else if (event.type === PoolEventType.taskFailed && event.taskID === task.id) {
-            eventSubscription.unsubscribe()
-            reject(event.error)
-          } else if (event.type === PoolEventType.terminated) {
-            eventSubscription.unsubscribe()
-            reject(Error("Pool has been terminated before task was run."))
-          }
-        })
-      })
-
-      const task: QueuedTask<ThreadType, any> = {
-        id: nextTaskID++,
-        run: taskFunction,
-        cancel() {
-          if (taskQueue.indexOf(task) === -1) return
-          taskQueue = taskQueue.filter(someTask => someTask !== task)
-          eventSubject.next({
-            type: PoolEventType.taskCanceled,
-            taskID: task.id
-          })
         },
-        get then() {
-          if (!resultPromiseThen) {
-            const resultPromise = createResultPromise()
-            resultPromiseThen = resultPromise.then.bind(resultPromise)
-          }
-          return resultPromiseThen
-        }
-      }
-      debug(`Queueing task #${task.id}...`)
-      taskQueue.push(task)
-
-      eventSubject.next({
-        type: PoolEventType.taskQueued,
-        taskID: task.id
+        error: reject     // make a pool-wide error reject the completed() result promise
       })
+    })
 
-      scheduleWork()
-      return task
-    },
+    await Promise.all(getCurrentlyRunningTasks())
+  }
 
-    async terminate(force?: boolean) {
-      isClosing = true
-      if (!force) {
-        await pool.completed(true)
-      }
-      eventSubject.next({
-        type: PoolEventType.terminated,
-        remainingQueue: [...taskQueue]
-      })
-      eventSubject.complete()
-      await Promise.all(
-        workers.map(async worker => Thread.terminate(await worker.init))
-      )
+  public events() {
+    return this.eventObservable
+  }
+
+  public queue(taskFunction: TaskRunFunction<ThreadType, any>) {
+    if (this.isClosing) {
+      throw Error(`Cannot schedule pool tasks after terminate() has been called.`)
     }
+    if (this.initErrors.length > 0) {
+      throw this.initErrors[0]
+    }
+
+    const taskCompleted = () => this.taskCompletion(task.id)
+    let taskCompletionDotThen: Promise<any>["then"] | undefined
+
+    const task: QueuedTask<ThreadType, any> = {
+      id: this.nextTaskID++,
+      run: taskFunction,
+      cancel: () => {
+        if (this.taskQueue.indexOf(task) === -1) return
+        this.taskQueue = this.taskQueue.filter(someTask => someTask !== task)
+        this.eventSubject.next({
+          type: PoolEventType.taskCanceled,
+          taskID: task.id
+        })
+      },
+      get then() {
+        if (!taskCompletionDotThen) {
+          const promise = taskCompleted()
+          taskCompletionDotThen = promise.then.bind(promise)
+        }
+        return taskCompletionDotThen
+      }
+    }
+
+    this.debug(`Queueing task #${task.id}...`)
+    this.taskQueue.push(task)
+
+    this.eventSubject.next({
+      type: PoolEventType.taskQueued,
+      taskID: task.id
+    })
+
+    this.scheduleWork()
+    return task
   }
 
-  if (hasSymbols() && hasSymbol("toStringTag")) {
-    (pool as any)[Symbol.toStringTag] = () => `[object Pool]`
+  public async terminate(force?: boolean) {
+    this.isClosing = true
+    if (!force) {
+      await this.completed(true)
+    }
+    this.eventSubject.next({
+      type: PoolEventType.terminated,
+      remainingQueue: [...this.taskQueue]
+    })
+    this.eventSubject.complete()
+    await Promise.all(
+      this.workers.map(async worker => Thread.terminate(await worker.init))
+    )
   }
-  return pool
+}
+
+/**
+ * Thread pool constructor. Creates a new pool and spawns its worker threads.
+ */
+function PoolConstructor<ThreadType extends Thread>(
+  spawnWorker: () => Promise<ThreadType>,
+  optionsOrSize?: number | PoolOptions
+) {
+  // The function exists only so we don't need to use `new` to create a pool (we still can, though).
+  // If the Pool is a class or not is an implementation detail that should not concern the user.
+  return new WorkerPool(spawnWorker, optionsOrSize)
 }
 
 (PoolConstructor as any).EventType = PoolEventType
