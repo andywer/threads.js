@@ -3,7 +3,9 @@
 import { ThreadsWorkerOptions, WorkerImplementation } from "../types/master"
 import { getBundleURL } from "./get-bundle-url.browser"
 
-const defaultPoolSize = navigator.hardwareConcurrency || 4
+export const defaultPoolSize = typeof navigator !== "undefined" && navigator.hardwareConcurrency
+  ? navigator.hardwareConcurrency
+  : 4
 
 const isAbsoluteURL = (value: string) => /^(file|https?:)?\/\//i.test(value)
 
@@ -16,7 +18,7 @@ function createSourceBlobURL(code: string): string {
 }
 
 
-function selectWorkerImplementation(): typeof WorkerImplementation {
+export function selectWorkerImplementation(): typeof WorkerImplementation {
   if (typeof Worker === "undefined") {
     // Might happen on Safari, for instance
     // The idea is to only fail if the constructor is actually used
@@ -43,9 +45,4 @@ function selectWorkerImplementation(): typeof WorkerImplementation {
       super(url, options)
     }
   }
-}
-
-export default {
-  defaultPoolSize,
-  selectWorkerImplementation
 }

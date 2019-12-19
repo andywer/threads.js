@@ -3,9 +3,12 @@
   "version": "1.0.0-beta.9",
   "description": "Easy to use, yet powerful multi-threading library for node.js, web browsers and Electron",
   "main": "dist/index.js",
+  "module": "dist-esm/index.js",
   "scripts": {
-    "prebuild": "rimraf dist/",
-    "build": "tsc",
+    "prebuild": "rimraf dist/ dist-esm/",
+    "build": "run-p build:cjs build:es",
+    "build:cjs": "tsc -p tsconfig.json",
+    "build:es": "tsc -p tsconfig-esm.json",
     "test": "run-s test:ava test:puppeteer:basic test:puppeteer:webpack",
     "test:ava": "cross-env TS_NODE_FILES=true ava",
     "test:puppeteer:basic": "puppet-run --plugin=mocha --bundle=./test/workers/:/workers/ ./test/*.chromium*.ts",
@@ -13,6 +16,12 @@
     "posttest": "tslint --project .",
     "prepare": "run-s build"
   },
+  "sideEffects": [
+    "./dist*/master/register.js",
+    "./dist*/worker/index.js",
+    "./register.*js",
+    "./worker.*js"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/andywer/threads.js.git"
@@ -40,25 +49,24 @@
     "observable-fns": "^0.5.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/plugin-transform-modules-commonjs": "^7.4.4",
-    "@babel/plugin-transform-typescript": "^7.4.4",
-    "@types/callsites": "^3.0.0",
     "@types/chai": "^4.1.7",
     "@types/debug": "^4.1.4",
     "@types/execa": "^0.9.0",
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.8",
     "@types/webpack": "^4.4.32",
-    "ava": "^1.4.1",
+    "ava": "^2.4.0",
     "chai": "^4.2.0",
     "cross-env": "^5.2.0",
-    "execa": "^2.0.3",
+    "execa": "^3.4.0",
     "mocha": "^5.2.0",
     "npm-run-all": "^4.1.5",
     "puppet-run": "^0.10.0-alpha",
     "puppet-run-plugin-mocha": "^0.10.0-alpha",
     "rimraf": "^2.6.3",
+    "rollup": "^1.16.2",
+    "rollup-plugin-commonjs": "^10.0.1",
+    "rollup-plugin-node-resolve": "^5.1.0",
     "threads-plugin": "^1.2.0",
     "tiny-worker": "^2.2.0",
     "ts-loader": "^6.0.1",
@@ -66,6 +74,7 @@
     "tslint": "^5.16.0",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.4.5",
+    "wavy": "^1.0.4",
     "webpack": "^4.32.2",
     "worker-plugin": "^3.1.0"
   },
@@ -91,14 +100,16 @@
     "ts-node": false,
     "ts-node/register": false,
     "worker_threads": false,
-    "./dist/master/implementation": "./dist/master/implementation.browser.js",
     "./dist/master/implementation.node.js": false,
-    "./dist/worker/implementation": "./dist/worker/implementation.browser.js",
     "./dist/worker/implementation.tiny-worker.js": false,
-    "./dist/worker/implementation.worker_threads.js": false
+    "./dist/worker/implementation.worker_threads.js": false,
+    "./dist-esm/master/implementation.node.js": false,
+    "./dist-esm/worker/implementation.tiny-worker.js": false,
+    "./dist-esm/worker/implementation.worker_threads.js": false
   },
   "files": [
     "dist/**",
+    "dist-esm/**",
     "*.js",
     "*.ts"
   ]

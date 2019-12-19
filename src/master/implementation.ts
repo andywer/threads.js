@@ -1,15 +1,16 @@
-// tslint:disable no-var-requires
 /*
  * This file is only a stub to make './implementation' resolve to the right module.
  */
 
-import { WorkerImplementation } from "../types/master"
+// We alias `src/master/implementation` to `src/master/implementation.browser` for web
+// browsers already in the package.json, so if get here, it's safe to pass-through the
+// node implementation
 
-interface ImplementationExports {
-  defaultPoolSize: number
-  selectWorkerImplementation(): typeof WorkerImplementation
-}
+import * as BrowserImplementation from "./implementation.browser"
+import * as NodeImplementation from "./implementation.node"
 
-export default typeof process !== 'undefined' && process.arch !== 'browser' && 'pid' in process
-  ? require('./implementation.node').default as ImplementationExports
-  : require('./implementation.browser').default as ImplementationExports
+const runningInNode = typeof process !== 'undefined' && process.arch !== 'browser' && 'pid' in process
+const implementation = runningInNode ? NodeImplementation : BrowserImplementation
+
+export const defaultPoolSize = implementation.defaultPoolSize
+export const selectWorkerImplementation = implementation.selectWorkerImplementation

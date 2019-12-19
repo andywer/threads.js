@@ -1,7 +1,7 @@
 import test from "ava"
 import { ObservablePromise, makeHot } from "../src/observable-promise"
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 test("can create an observable promise", async t => {
   t.plan(1)
@@ -37,7 +37,7 @@ test("can proxy a promise fulfillment", async t => {
   })
 
   const promise1 = async.then(value => t.is(value, 123), t.fail)
-  await sleep(10)
+  await delay(10)
   const promise2 = async.then(value => t.is(value, 123), t.fail)
 
   await Promise.all([promise1, promise2])
@@ -54,7 +54,7 @@ test("can proxy a promise rejection", async t => {
     () => t.fail("Promise should not become fulfilled"),
     () => Promise.resolve(handlerCallCount++)
   )
-  await sleep(10)
+  await delay(10)
   const promise2 = async.then(
     () => t.fail("Promise should not become fulfilled"),
     () => Promise.resolve(handlerCallCount++)
@@ -75,7 +75,7 @@ test("can proxy a promise rejection caused by a sync throw", async t => {
     () => t.fail("Promise should not become fulfilled"),
     () => Promise.resolve(handlerCallCount++)
   )
-  await sleep(10)
+  await delay(10)
   const promise2 = async.then(
     () => t.fail("Promise should not become fulfilled"),
     () => Promise.resolve(handlerCallCount++)
@@ -104,7 +104,7 @@ test("can subscribe to values and completion", async t => {
   }
 
   await async.finally()
-  await sleep(1)
+  await delay(1)
 
   t.deepEqual(capturedValues, [1, 1, 2, 2])
   t.is(capturedCompletions, 2)
@@ -131,7 +131,7 @@ test("can subscribe to errors", async t => {
   }
 
   await async.finally()
-  await sleep(1)
+  await delay(35)
 
   t.deepEqual(capturedValues, [1, 1])
   t.deepEqual(capturedErrorMessages, ["Fails as expected.", "Fails as expected."])
@@ -160,7 +160,7 @@ test("makeHot() causes a single immediate init() call for multiple subscriptions
   }
 
   await async.finally()
-  await sleep(1)
+  await delay(1)
 
   t.is(initRuns, 1)
   t.deepEqual(capturedValues, [1, 1, 2, 2])

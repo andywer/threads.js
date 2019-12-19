@@ -3,10 +3,26 @@
 
 declare function __non_webpack_require__(module: string): any
 
-const workerThreads = typeof __non_webpack_require__ === "function"
-  ? __non_webpack_require__("worker_threads")
-  : eval("require")("worker_threads")
+// FIXME
+type MessagePort = any
 
-export const MessagePort = workerThreads.MessagePort
-export const isMainThread = workerThreads.isMainThread
-export const parentPort = workerThreads.parentPort
+interface WorkerThreadsModule {
+  MessagePort: typeof MessagePort
+  isMainThread: boolean
+  parentPort: MessagePort
+}
+
+let implementation: WorkerThreadsModule | undefined
+
+function selectImplementation(): WorkerThreadsModule {
+  return typeof __non_webpack_require__ === "function"
+    ? __non_webpack_require__("worker_threads")
+    : eval("require")("worker_threads")
+}
+
+export default function getImplementation(): WorkerThreadsModule {
+  if (!implementation) {
+    implementation = selectImplementation()
+  }
+  return implementation
+}
