@@ -40,6 +40,12 @@ expose(function xorBuffer(buffer, value) {
 
 Without `Transfer()` the buffers would be copied on every call and every return. Using `Transfer()` their ownership is transferred to the other thread instead only, to make sure it is accessible in a thread-safe way. This is a much faster operation.
 
+## Task queue
+
+It is a fairly common use case to have a lot of work that needs to be done by workers, but is just too much to be run efficiently at once. You will need to schedule tasks and have them dispatched and run on workers in a controlled fashion.
+
+Threads.js does not provide a distinct task queue implementation, but it comes with [thread pools](./usage-pool.md) that covers the task queue functionality and more. Create a `Pool` and `.queue()` tasks to be dispatched to workers as they finish previous tasks.
+
 ## Thread events
 
 Every spawned thread emits events during its lifetime that you can subscribe to. This can be useful for debugging.
