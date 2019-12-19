@@ -15,7 +15,7 @@ sidebar:
         url: /usage
       - title: Observables
         url: /usage-observables
-      - title: Thread pool
+      - title: Thread pools
         url: /usage-pool
       - title: Advanced
         url: /usage-advanced
