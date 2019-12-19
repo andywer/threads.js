@@ -16,6 +16,12 @@
     "posttest": "tslint --project .",
     "prepare": "run-s build"
   },
+  "sideEffects": [
+    "./dist*/master/register.js",
+    "./dist*/worker/index.js",
+    "./register.*js",
+    "./worker.*js"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/andywer/threads.js.git"
