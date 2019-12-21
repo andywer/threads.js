@@ -51,6 +51,8 @@ export function Transfer(transferable: Transferable): TransferDescriptor
  * @param transferable Array buffer, message port or similar.
  * @see <https://developers.google.com/web/updates/2011/12/Transferable-Objects-Lightning-Fast>
  */
+export function Transfer<T>(payload: T, transferables: Transferable[]): TransferDescriptor
+
 export function Transfer<T>(payload: T, transferables?: Transferable[]): TransferDescriptor {
   if (!transferables) {
     if (!isTransferable(payload)) throw Error()
