@@ -1,3 +1,10 @@
+/*
+ * This source file contains the code for proxying calls in the master thread to calls in the workers
+ * by `.postMessage()`-ing.
+ *
+ * Keep in mind that this code can make or break the program's performance! Need to optimize more…
+ */
+
 import DebugLogger from "debug"
 import { rehydrateError } from "../common"
 import { makeHot, ObservablePromise } from "../observable-promise"
@@ -66,6 +73,14 @@ function createObservablePromiseForJob<ResultType>(worker: WorkerType, jobUID: n
 }
 
 function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transferable[] } {
+  if (rawArgs.length === 0) {
+    // Exit early if possible
+    return {
+      args: [],
+      transferables: []
+    }
+  }
+  
   const args: any[] = []
   const transferables: Transferable[] = []
 
@@ -80,7 +95,7 @@ function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transfe
 
   return {
     args,
-    transferables: dedupe(transferables)
+    transferables: transferables.length === 0 ? transferables : dedupe(transferables)
   }
 }
 
