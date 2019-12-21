@@ -91,6 +91,9 @@ export interface PoolOptions {
   /** Maximum no. of tasks to run on one worker thread at a time. Defaults to one. */
   concurrency?: number
 
+  /** Maximum no. of jobs to be queued for execution before throwing an error. */
+  maxQueuedJobs?: number
+
   /** Gives that pool a name to be used for debug logging, letting you distinguish between log output of different pools. */
   name?: string
 
@@ -267,6 +270,8 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
   }
 
   public queue(taskFunction: TaskRunFunction<ThreadType, any>) {
+    const { maxQueuedJobs = Infinity } = this.options
+
     if (this.isClosing) {
       throw Error(`Cannot schedule pool tasks after terminate() has been called.`)
     }
@@ -295,6 +300,14 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
         }
         return taskCompletionDotThen
       }
+    }
+
+    if (this.taskQueue.length >= maxQueuedJobs) {
+      throw Error(
+        "Maximum number of pool tasks queued. Refusing to queue another one.\n" +
+        "This usually happens for one of two reasons: We are either at peak " +
+        "workload right now or some tasks just won't finish, thus blocking the pool."
+      )
     }
 
     this.debug(`Queueing task #${task.id}...`)

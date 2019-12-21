@@ -36,6 +36,7 @@ Note that `pool.queue()` will schedule a task to be run in a deferred way. It mi
 ```ts
 interface PoolOptions {
   concurrency?: number
+  maxQueuedJobs?: number
   name?: string
   size?: number
 }
@@ -49,6 +50,7 @@ The first argument passed to the `Pool()` factory must be a function that spawns
 The second argument is optional and can either be the number of workers to spawn as a `number` or an options object (see `PoolOptions`):
 
 - `options.concurrency`: number of tasks to run simultaneously per worker, defaults to one
+- `options.maxQueuedJobs`: maximum number of tasks to queue before throwing on `.queue()`, defaults to unlimited
 - `options.name`: give the pool a custom name to use in the debug log, so you can tell multiple pools apart when debugging
 - `options.size`: number of workers to spawn, defaults to the number of CPU cores
 
