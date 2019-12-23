@@ -3,11 +3,7 @@ import { Observable, SubscriptionObserver } from "observable-fns"
 type OnFulfilled<T, Result = void> = (value: T) => Result
 type OnRejected<Result = void> = (error: Error) => Result
 
-type Initializer<T> = (
-  resolve: (value?: T) => void,
-  reject: (error: Error) => void,
-  observer: SubscriptionObserver<T>
-) => UnsubscribeFn | void
+type Initializer<T> = (observer: SubscriptionObserver<T>) => UnsubscribeFn | void
 
 type UnsubscribeFn = () => void
 
@@ -63,19 +59,12 @@ export class ObservablePromise<T> extends Observable<T> implements Promise<T> {
           self.onNext(value)
         }
       }
-      const resolve: OnFulfilled<T | undefined> = (value?: T) => {
-        if (value !== undefined) {
-          observer.next(value)
-        }
-        observer.complete()
-      }
-      const reject: OnRejected = observer.error.bind(observer)
 
       try {
         this.initHasRun = true
-        return init(resolve, reject, observer)
+        return init(observer)
       } catch (error) {
-        reject(error)
+        observer.error(error)
       }
     })
   }
@@ -165,38 +154,4 @@ export class ObservablePromise<T> extends Observable<T> implements Promise<T> {
       () => handler()
     ) as Promise<T>
   }
-}
-
-/**
- * Turns a cold observable into a hot observable.
- *
- * Returns a new observable promise that does exactly the same, but acts as a subscription aggregator,
- * so that N subscriptions to it only result in one subscription to the input observable promise.
- *
- * That one subscription on the input observable promise is setup immediately.
- */
-export function makeHot<T>(async: ObservablePromise<T> | Observable<T>): ObservablePromise<T> {
-  let observers: Array<SubscriptionObserver<T>> = []
-
-  async.subscribe({
-    complete() {
-      observers.forEach(observer => observer.complete())
-    },
-    error(error) {
-      observers.forEach(observer => observer.error(error))
-    },
-    next(value) {
-      observers.forEach(observer => observer.next(value))
-    }
-  })
-
-  const aggregator = new ObservablePromise<T>((resolve, reject, observer) => {
-    observers.push(observer)
-
-    const unsubscribe = () => {
-      observers = observers.filter(someObserver => someObserver !== observer)
-    }
-    return unsubscribe
-  })
-  return aggregator
 }
