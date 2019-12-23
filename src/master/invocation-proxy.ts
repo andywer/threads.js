@@ -1,6 +1,14 @@
+/*
+ * This source file contains the code for proxying calls in the master thread to calls in the workers
+ * by `.postMessage()`-ing.
+ *
+ * Keep in mind that this code can make or break the program's performance! Need to optimize more…
+ */
+
 import DebugLogger from "debug"
+import { multicast, Observable } from "observable-fns"
 import { rehydrateError } from "../common"
-import { makeHot, ObservablePromise } from "../observable-promise"
+import { ObservablePromise } from "../observable-promise"
 import { isTransferDescriptor } from "../transferable"
 import {
   ModuleMethods,
@@ -27,10 +35,10 @@ const isJobErrorMessage = (data: any): data is WorkerJobErrorMessage => data && 
 const isJobResultMessage = (data: any): data is WorkerJobResultMessage => data && data.type === WorkerMessageType.result
 const isJobStartMessage = (data: any): data is WorkerJobStartMessage => data && data.type === WorkerMessageType.running
 
-function createObservablePromiseForJob<ResultType>(worker: WorkerType, jobUID: number): ObservablePromise<ResultType> {
-  let asyncType: "observable" | "promise" | undefined
+function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number): Observable<ResultType> {
+  return new Observable(observer => {
+    let asyncType: "observable" | "promise" | undefined
 
-  return new ObservablePromise((resolve, reject, observer) => {
     const messageHandler = ((event: MessageEvent) => {
       debugMessages("Message from worker:", event.data)
       if (!event.data || event.data.uid !== jobUID) return
@@ -39,7 +47,10 @@ function createObservablePromiseForJob<ResultType>(worker: WorkerType, jobUID: n
         asyncType = event.data.resultType
       } else if (isJobResultMessage(event.data)) {
         if (asyncType === "promise") {
-          resolve(event.data.payload)
+          if (typeof event.data.payload !== "undefined") {
+            observer.next(event.data.payload)
+          }
+          observer.complete()
           worker.removeEventListener("message", messageHandler)
         } else {
           if (event.data.payload) {
@@ -53,7 +64,7 @@ function createObservablePromiseForJob<ResultType>(worker: WorkerType, jobUID: n
       } else if (isJobErrorMessage(event.data)) {
         const error = rehydrateError(event.data.error)
         if (asyncType === "promise" || !asyncType) {
-          reject(error)
+          observer.error(error)
         } else {
           observer.error(error)
         }
@@ -66,6 +77,14 @@ function createObservablePromiseForJob<ResultType>(worker: WorkerType, jobUID: n
 }
 
 function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transferable[] } {
+  if (rawArgs.length === 0) {
+    // Exit early if possible
+    return {
+      args: [],
+      transferables: []
+    }
+  }
+  
   const args: any[] = []
   const transferables: Transferable[] = []
 
@@ -80,7 +99,7 @@ function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transfe
 
   return {
     args,
-    transferables: dedupe(transferables)
+    transferables: transferables.length === 0 ? transferables : dedupe(transferables)
   }
 }
 
@@ -96,7 +115,7 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
     }
     debugMessages("Sending command to run function to worker:", runMessage)
     worker.postMessage(runMessage, transferables)
-    return makeHot(createObservablePromiseForJob<ReturnType>(worker, uid))
+    return ObservablePromise.from(multicast(createObservableForJob<ReturnType>(worker, uid)))
   }) as any as ProxyableFunction<Args, ReturnType>
 }
 
