@@ -1,7 +1,7 @@
 {
   "name": "threads",
   "version": "1.0.0-beta.9",
-  "description": "Easy to use, yet powerful multi-threading library for node.js, web browsers and Electron",
+  "description": "Web workers & worker threads as simple as a function call",
   "main": "dist/index.js",
   "module": "dist-esm/index.js",
   "scripts": {
