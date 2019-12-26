@@ -102,7 +102,7 @@ title: Web worker meets worker threads
     </h1>
 
     <p>
-      Manage worker threads in node.js, web&nbsp;browsers and electron.
+      Make web workers &amp; worker threads as simple as a function call.
     </p>
 
     <div class="highlighter-rouge my-4">
@@ -164,7 +164,7 @@ expose({
 <hr />
 
 <section class="my-5">
-  <h2 class="text-center">Modern Features</h2>
+  <h2 class="text-center">Modern features</h2>
 
   <p class="mt-3 text-center" markdown="1">
     Designed for modern day JavaScript and TypeScript code.
