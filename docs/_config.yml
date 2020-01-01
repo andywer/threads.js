@@ -22,7 +22,7 @@ url     : https://threads.js.org # the base hostname & protocol for your site e.
 baseurl : /               # does not include hostname
 title   : threads.js
 description: >            # this means to ignore newlines until "Language & timezone"
-  Make web workers & worker threads as simple as a function call. Works in node.js, web & electron. Javascript / TypeScript library.
+  Make web workers & worker threads as simple as a function call – worker library for node.js, web and electron. JavaScript/TypeScript, supports webpack.
 
 ## => Language and Timezone
 ##############################
