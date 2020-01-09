@@ -114,7 +114,11 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
       args
     }
     debugMessages("Sending command to run function to worker:", runMessage)
-    worker.postMessage(runMessage, transferables)
+    try {
+      worker.postMessage(runMessage, transferables)
+    } catch(e) {
+      return Promise.reject(e);
+    }
     return ObservablePromise.from(multicast(createObservableForJob<ReturnType>(worker, uid)))
   }) as any as ProxyableFunction<Args, ReturnType>
 }
