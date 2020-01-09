@@ -105,7 +105,11 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
   }
 
   const terminateAll = () => {
-    allWorkers.forEach(worker => worker.terminate())
+    // we should terminate all workers and then gracefully shutdown self process
+    Promise.all(allWorkers.map(worker => worker.terminate())).then(
+        () => process.exit(0),
+        () => process.exit(1),
+    )
     allWorkers = []
   }
 
@@ -156,7 +160,11 @@ function initTinyWorker(): typeof WorkerImplementation {
   }
 
   const terminateAll = () => {
-    allWorkers.forEach(worker => worker.terminate())
+    // we should terminate all workers and then gracefully shutdown self process
+    Promise.all(allWorkers.map(worker => worker.terminate())).then(
+        () => process.exit(0),
+        () => process.exit(1),
+    )
     allWorkers = []
   }
 
