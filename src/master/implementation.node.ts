@@ -90,6 +90,14 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
       allWorkers.push(this)
     }
 
+    public static fromScript(script: string) {
+      const worker = new NativeWorker(script, {eval: true})
+      worker.addEventListener = Worker.prototype.addEventListener
+      worker.removeEventListener = Worker.prototype.removeEventListener
+      allWorkers.push(worker)
+      return worker
+    }
+
     public addEventListener(eventName: string, rawListener: EventListener) {
       const listener = (message: any) => {
         rawListener({ data: message } as any)

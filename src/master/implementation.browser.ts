@@ -44,5 +44,10 @@ export function selectWorkerImplementation(): typeof WorkerImplementation {
       }
       super(url, options)
     }
+
+    public static fromScript(script: string) {
+      const blob = new Blob([script], {type: "text/javascript"})
+      return new Worker(window.URL.createObjectURL(blob))
+    }
   }
 }

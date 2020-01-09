@@ -78,6 +78,7 @@ export declare class WorkerImplementation extends EventTarget implements Worker 
   constructor(path: string, options?: ThreadsWorkerOptions)
   public postMessage(value: any, transferList?: TransferList): void
   public terminate(): void
+  public static fromScript(script: string): Worker
 }
 
 /** Event as emitted by worker thread. Subscribe to using `Thread.events(thread)`. */
