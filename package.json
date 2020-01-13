@@ -96,6 +96,7 @@
   },
   "browser": {
     "callsites": false,
+    "child_process": false,
     "tiny-worker": false,
     "ts-node": false,
     "ts-node/register": false,
