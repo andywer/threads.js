@@ -104,18 +104,18 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
     }
   }
 
-  const terminateAll = () => {
+  const terminateWorkersAndMaster = () => {
     // we should terminate all workers and then gracefully shutdown self process
     Promise.all(allWorkers.map(worker => worker.terminate())).then(
-        () => process.exit(0),
-        () => process.exit(1),
+      () => process.exit(0),
+      () => process.exit(1),
     )
     allWorkers = []
   }
 
   // Take care to not leave orphaned processes behind. See #147.
-  process.on("SIGINT", () => terminateAll())
-  process.on("SIGTERM", () => terminateAll())
+  process.on("SIGINT", () => terminateWorkersAndMaster())
+  process.on("SIGTERM", () => terminateWorkersAndMaster())
 
   return Worker as any
 }
@@ -159,19 +159,19 @@ function initTinyWorker(): typeof WorkerImplementation {
     }
   }
 
-  const terminateAll = () => {
+  const terminateWorkersAndMaster = () => {
     // we should terminate all workers and then gracefully shutdown self process
     Promise.all(allWorkers.map(worker => worker.terminate())).then(
-        () => process.exit(0),
-        () => process.exit(1),
+      () => process.exit(0),
+      () => process.exit(1),
     )
     allWorkers = []
   }
 
   // Take care to not leave orphaned processes behind
   // See <https://github.com/avoidwork/tiny-worker#faq>
-  process.on("SIGINT", () => terminateAll())
-  process.on("SIGTERM", () => terminateAll())
+  process.on("SIGINT", () => terminateWorkersAndMaster())
+  process.on("SIGTERM", () => terminateWorkersAndMaster())
 
   return Worker as any
 }
