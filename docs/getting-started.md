@@ -138,6 +138,20 @@ Make sure the TypeScript compiler keeps the `import` / `export` statements intac
   }
 ```
 
+#### Electron & webpack
+
+In case you are using `electron-webpack` for your electron application and your bundle does not work, you probably need to add `threads` to `whiteListedModules`. Add this to your `webpackElectron` field in your `package.json`:
+
+```diff
+  "electronWebpack": {
+    "whiteListedModules": [
++     "threads"
+    ]
+  }
+```
+
+
+
 ### Build with parcel bundler
 
 You need to import `threads/register` once at the beginning of your application code (in the master code, not in the workers):
