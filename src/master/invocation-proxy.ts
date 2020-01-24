@@ -84,7 +84,7 @@ function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transfe
       transferables: []
     }
   }
-  
+
   const args: any[] = []
   const transferables: Transferable[] = []
 
@@ -113,12 +113,15 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
       method,
       args
     }
+
     debugMessages("Sending command to run function to worker:", runMessage)
+
     try {
       worker.postMessage(runMessage, transferables)
-    } catch(e) {
-      return Promise.reject(e);
+    } catch (error) {
+      return ObservablePromise.from(Promise.reject(error))
     }
+
     return ObservablePromise.from(multicast(createObservableForJob<ReturnType>(worker, uid)))
   }) as any as ProxyableFunction<Args, ReturnType>
 }

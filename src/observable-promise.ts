@@ -1,9 +1,11 @@
-import { Observable, SubscriptionObserver } from "observable-fns"
+import { Observable, ObservableLike, SubscriptionObserver } from "observable-fns"
 
 type OnFulfilled<T, Result = void> = (value: T) => Result
 type OnRejected<Result = void> = (error: Error) => Result
 
 type Initializer<T> = (observer: SubscriptionObserver<T>) => UnsubscribeFn | void
+
+type Thenable<T> = { then: (onFulfilled?: (value: T) => any, onRejected?: (error: any) => any) => any }
 
 type UnsubscribeFn = () => void
 
@@ -13,6 +15,10 @@ const runDeferred = (fn: () => void) => Promise.resolve().then(fn)
 
 function fail(error: Error): never {
   throw error
+}
+
+function isThenable(thing: any): thing is Thenable<any> {
+  return thing && typeof thing.then === "function"
 }
 
 /**
@@ -153,5 +159,22 @@ export class ObservablePromise<T> extends Observable<T> implements Promise<T> {
       },
       () => handler()
     ) as Promise<T>
+  }
+
+  public static from<T>(thing: Observable<T> | ObservableLike<T> | ArrayLike<T> | Thenable<T>): ObservablePromise<T> {
+    if (isThenable(thing)) {
+      return new ObservablePromise(observer => {
+        const onFulfilled = (value: T) => {
+          observer.next(value)
+          observer.complete()
+        }
+        const onRejected = (error: any) => {
+          observer.error(error)
+        }
+        thing.then(onFulfilled, onRejected)
+      })
+    } else {
+      return super.from(thing) as ObservablePromise<T>
+    }
   }
 }
