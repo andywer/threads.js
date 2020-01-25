@@ -1,4 +1,5 @@
 import test from "ava"
+import { Observable } from "observable-fns"
 import { ObservablePromise } from "../src/observable-promise"
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -142,4 +143,44 @@ test("can subscribe to errors", async t => {
   t.deepEqual(capturedValues, [1, 1])
   t.deepEqual(capturedErrorMessages, ["Fails as expected.", "Fails as expected."])
   t.is(capturedCompletions, 0)
+})
+
+test("from(Observable) works", async t => {
+  let capturedErrorMessages: string[] = []
+  let capturedValues: any[] = []
+  let capturedCompletions = 0
+
+  const async = ObservablePromise.from(new Observable((observer) => {
+    setTimeout(() => observer.next(1), 10)
+    setTimeout(() => observer.error(Error("Fails as expected.")), 20)
+    setTimeout(() => observer.next(2), 30)
+    setTimeout(() => observer.complete(), 40)
+  }))
+
+  for (let index = 0; index < 2; index++) {
+    async.subscribe(
+      value => capturedValues.push(value),
+      error => capturedErrorMessages.push(error.message),
+      () => capturedCompletions++
+    )
+  }
+
+  await async.finally()
+  await delay(35)
+
+  t.deepEqual(capturedValues, [1, 1])
+  t.deepEqual(capturedErrorMessages, ["Fails as expected.", "Fails as expected."])
+  t.is(capturedCompletions, 0)
+})
+
+test("from(Promise) works", async t => {
+  const resolved = ObservablePromise.from(new Promise(resolve => {
+    setTimeout(() => resolve("Works"), 10)
+  }))
+  t.is(await resolved, "Works")
+
+  const rejected = ObservablePromise.from(Promise.reject(Error("Fails")))
+  const error = await t.throwsAsync(rejected)
+
+  t.is(error.message, "Fails")
 })

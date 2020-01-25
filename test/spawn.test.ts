@@ -50,6 +50,19 @@ test("thread job errors are handled", async t => {
   await Thread.terminate(fail)
 })
 
+test("thread transfer errors are handled", async t => {
+  const builtin = require('module').builtinModules;
+  if (builtin.indexOf('worker_threads') > -1) {
+    // test is actual for native worker_threads only
+    const helloWorld = await spawn(new Worker("./workers/hello-world"))
+    const badTransferObj = { fn: () => {} };
+    await t.throwsAsync(helloWorld(badTransferObj), {name: 'DataCloneError'})
+    await Thread.terminate(helloWorld)
+  } else {
+    t.pass();
+  }
+})
+
 test("catches top-level thread errors", async t => {
   await t.throwsAsync(spawn(new Worker("./workers/top-level-throw")), "Top-level worker error")
 })
