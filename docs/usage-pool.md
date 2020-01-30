@@ -16,7 +16,7 @@ A `Pool` allows you to create a set of workers and queue worker calls. The queue
 Use it if you have a lot of work to offload to workers and don't want to drown them in a pile of work at once, but run those tasks in a controlled way with limited concurrency.
 
 ```js
-import { spawn, Pool } from "threads"
+import { spawn, Pool, Worker } from "threads"
 
 const pool = Pool(() => spawn(new Worker("./workers/multiplier")), 8 /* optional size */)
 
