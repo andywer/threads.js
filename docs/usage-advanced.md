@@ -64,6 +64,75 @@ There is a specialized function to subscribe only to thread error events:
 Thread.errors(myThread).subscribe(error => console.log("Thread error:", error))
 ```
 
+## Custom message serializers
+
+Usually you can only pass values between threads that can be processed by the [Structured clone algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm). That means you cannot pass functions and if you pass an instance of some class, you will on the other end receive a plain object that's no longer an instance of that class.
+
+You can however define and register custom serializers to provide support for passing instances of classes and other complex data that would not work out-of-the-box.
+
+First you need to implement your serializer. Fortunately, this is pretty straight-forward.
+
+```typescript
+import { SerializerImplementation } from "threads"
+
+interface SerializedMyClass {
+  __type: "$$MyClass"
+  state: string
+}
+
+class MyClass {
+  state: string
+
+  constructor(initialState: string) {
+    this.state = initialState
+  }
+
+  doStuff() {
+    // Do fancy things
+  }
+
+  serialize(): SerializedMyClass {
+    return {
+      __type: "$$MyClass",
+      state: this.state
+    }
+  }
+
+  static deserialize(message: SerializedMyClass) {
+    return new MyClass(message.state)
+  }
+}
+
+const MySerializer: SerializerImplementation = {
+  deserialize(thing, defaultHandler) {
+    if (thing instanceof MyClass) {
+      return thing.serialize()
+    } else {
+      return defaultHandler(thing)
+    }
+  },
+
+  serialize(message, defaultHandler) {
+    if (thing && thing.__type === "$$MyClass") {
+      return MyClass.deserialize(thing as any)
+    } else {
+      return defaultHandler(thing)
+    }
+  }
+}
+```
+
+Finally, register your serializer in both the main thread and the worker. Register it early, before you `spawn()` or `expose()` anything.
+
+```typescript
+import { registerSerializer } from "threads"
+// also exported from the worker sub-module:
+// import { registerSerializer } from "threads/worker"
+
+registerSerializer(MySerializer)
+```
+
+
 ## Debug logging
 
 We are using the [`debug`](https://github.com/visionmedia/debug) package to provide opt-in debug logging. All the package's debug messages have a scope starting with `threads:`, with different sub-scopes:
