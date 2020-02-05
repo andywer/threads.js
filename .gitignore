@@ -1,4 +1,5 @@
 .cache/
+.vscode/
 docs/_site
 docs/vendor
 dist/*
