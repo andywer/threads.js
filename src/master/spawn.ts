@@ -137,13 +137,16 @@ function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Obse
  * the worker has initialized successfully.
  *
  * @param worker Instance of `Worker`. Either a web worker, `worker_threads` worker or `tiny-worker` worker.
+ * @param [options]
+ * @param [options.timeout] Init message timeout. Default: 10000 or set by environment variable.
  */
 export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> = ArbitraryWorkerInterface>(
-  worker: WorkerType
+  worker: WorkerType,
+  options?: { timeout?: number }
 ): Promise<ExposedToThreadType<Exposed>> {
   debugSpawn("Initializing new thread")
 
-  const initMessage = await withTimeout(receiveInitMessage(worker), initMessageTimeout, `Timeout: Did not receive an init message from worker after ${initMessageTimeout}ms. Make sure the worker calls expose().`)
+  const initMessage = await withTimeout(receiveInitMessage(worker), options && options.timeout ? options.timeout : initMessageTimeout, `Timeout: Did not receive an init message from worker after ${initMessageTimeout}ms. Make sure the worker calls expose().`)
   const exposed = initMessage.exposed
 
   const { termination, terminate } = createTerminator(worker)
