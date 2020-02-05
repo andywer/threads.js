@@ -132,6 +132,20 @@ import { registerSerializer } from "threads"
 registerSerializer(MySerializer)
 ```
 
+You can also register multiple serializers. Just call `registerSerializer()` multiple times – make sure to register the same serializers in the worker and main thread.
+
+The registered serializers will then be chained. The serializer that was registered at last is invoked first. If it does not know how to serialize the data, it will call its fallback handler which is the second-to-last serializer and so forth.
+
+```typescript
+import { registerSerializer } from "threads"
+
+registerSerializer(SomeSerializer)
+registerSerializer(AnotherSerializer)
+
+// threads.js will first try to use AnotherSerializer, will fall back to SomeSerializer,
+// eventually falls back to passing the data as is if no serializer can handle it
+```
+
 
 ## Debug logging
 
