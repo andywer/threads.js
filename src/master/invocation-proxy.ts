@@ -7,7 +7,7 @@
 
 import DebugLogger from "debug"
 import { multicast, Observable } from "observable-fns"
-import { rehydrateError } from "../common"
+import { deserialize, serialize } from "../common"
 import { ObservablePromise } from "../observable-promise"
 import { isTransferDescriptor } from "../transferable"
 import {
@@ -48,13 +48,13 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
       } else if (isJobResultMessage(event.data)) {
         if (asyncType === "promise") {
           if (typeof event.data.payload !== "undefined") {
-            observer.next(event.data.payload)
+            observer.next(deserialize(event.data.payload))
           }
           observer.complete()
           worker.removeEventListener("message", messageHandler)
         } else {
           if (event.data.payload) {
-            observer.next(event.data.payload)
+            observer.next(deserialize(event.data.payload))
           }
           if (event.data.complete) {
             observer.complete()
@@ -62,7 +62,7 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
           }
         }
       } else if (isJobErrorMessage(event.data)) {
-        const error = rehydrateError(event.data.error)
+        const error = deserialize(event.data.error as any)
         if (asyncType === "promise" || !asyncType) {
           observer.error(error)
         } else {
@@ -90,10 +90,10 @@ function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transfe
 
   for (const arg of rawArgs) {
     if (isTransferDescriptor(arg)) {
-      args.push(arg.send)
+      args.push(serialize(arg.send))
       transferables.push(...arg.transferables)
     } else {
-      args.push(arg)
+      args.push(serialize(arg))
     }
   }
 

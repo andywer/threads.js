@@ -1,3 +1,10 @@
+export interface SerializedError {
+  __error_marker: "$$error"
+  message: string
+  name: string
+  stack?: string
+}
+
 /////////////////////////////
 // Messages sent by master:
 
@@ -42,11 +49,7 @@ export type WorkerInitMessage = {
 export type WorkerJobErrorMessage = {
   type: WorkerMessageType.error,
   uid: number,
-  error: {
-    message: string,
-    name: string,
-    stack?: string
-  }
+  error: SerializedError
 }
 
 export type WorkerJobResultMessage = {
