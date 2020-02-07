@@ -1,20 +1,21 @@
-export interface SerializedError {
-  message: string
-  name: string
-  stack?: string
+import {
+  extendSerializer,
+  DefaultSerializer,
+  JsonSerializable,
+  Serializer,
+  SerializerImplementation
+} from "./serializers"
+
+let registeredSerializer: Serializer<JsonSerializable> = DefaultSerializer
+
+export function registerSerializer(serializer: SerializerImplementation<JsonSerializable>) {
+  registeredSerializer = extendSerializer(registeredSerializer, serializer)
 }
 
-export function rehydrateError(error: SerializedError): Error {
-  return Object.assign(Error(error.message), {
-    name: error.name,
-    stack: error.stack
-  })
+export function deserialize(message: JsonSerializable): any {
+  return registeredSerializer.deserialize(message)
 }
 
-export function serializeError(error: Error): SerializedError {
-  return {
-    message: error.message,
-    name: error.name,
-    stack: error.stack
-  }
+export function serialize(input: any): JsonSerializable {
+  return registeredSerializer.serialize(input)
 }

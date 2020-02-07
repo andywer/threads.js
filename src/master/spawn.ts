@@ -1,6 +1,6 @@
 import DebugLogger from "debug"
 import { Observable } from "observable-fns"
-import { rehydrateError } from "../common"
+import { deserialize } from "../common"
 import { createPromiseWithResolver } from "../promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
 import {
@@ -67,7 +67,7 @@ function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
         resolve(event.data)
       } else if (isUncaughtErrorMessage(event.data)) {
         worker.removeEventListener("message", messageHandler)
-        reject(rehydrateError(event.data.error))
+        reject(deserialize(event.data.error))
       }
     }) as EventListener
     worker.addEventListener("message", messageHandler)
