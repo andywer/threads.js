@@ -104,17 +104,16 @@ class MyClass {
 }
 
 const MySerializer: SerializerImplementation = {
-  deserialize(thing, defaultHandler) {
-    if (thing instanceof MyClass) {
-      return thing.serialize()
+  deserialize(message, defaultHandler) {
+    if (message && message.__type === "$$MyClass") {
+      return MyClass.deserialize(message as any)
     } else {
-      return defaultHandler(thing)
+      return defaultHandler(message)
     }
   },
-
-  serialize(message, defaultHandler) {
-    if (thing && thing.__type === "$$MyClass") {
-      return MyClass.deserialize(thing as any)
+  serialize(thing, defaultHandler) {
+    if (thing instanceof MyClass) {
+      return thing.serialize()
     } else {
       return defaultHandler(thing)
     }
