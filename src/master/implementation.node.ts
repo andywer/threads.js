@@ -4,7 +4,7 @@ import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"
 import { cpus } from 'os'
 import * as path from "path"
-import {ThreadsWorkerOptions, WorkerImplementation} from "../types/master"
+import { ThreadsWorkerOptions, WorkerImplementation } from "../types/master"
 
 declare const __non_webpack_require__: typeof require
 
