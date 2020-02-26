@@ -4,7 +4,7 @@ import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"
 import { cpus } from 'os'
 import * as path from "path"
-import { WorkerImplementation } from "../types/master"
+import { ThreadsWorkerOptions, WorkerImplementation } from "../types/master"
 
 declare const __non_webpack_require__: typeof require
 
@@ -77,13 +77,13 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
   class Worker extends NativeWorker {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
-    constructor(scriptPath: string) {
+    constructor(scriptPath: string, options?: ThreadsWorkerOptions) {
       const resolvedScriptPath = resolveScriptPath(scriptPath)
 
       if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
         super(createTsNodeModule(resolvedScriptPath), { eval: true })
       } else {
-        super(resolvedScriptPath)
+        super(resolvedScriptPath, options)
       }
 
       this.mappedEventListeners = new WeakMap()
