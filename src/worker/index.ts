@@ -91,11 +91,19 @@ function postJobStartMessage(uid: number, resultType: WorkerJobStartMessage["res
 }
 
 function postUncaughtErrorMessage(error: Error) {
-  const errorMessage: WorkerUncaughtErrorMessage = {
-    type: WorkerMessageType.uncaughtError,
-    error: serialize(error) as any as SerializedError
+  try {
+    const errorMessage: WorkerUncaughtErrorMessage = {
+      type: WorkerMessageType.uncaughtError,
+      error: serialize(error) as any as SerializedError
+    }
+    Implementation.postMessageToMaster(errorMessage)
+  } catch (subError) {
+    console.error(
+      "Not reporting uncaught error back to master thread as it occured while " +
+      "reporting an uncaught error already. Latest error:",
+      subError
+    )
   }
-  Implementation.postMessageToMaster(errorMessage)
 }
 
 async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
