@@ -98,6 +98,7 @@ function postUncaughtErrorMessage(error: Error) {
     }
     Implementation.postMessageToMaster(errorMessage)
   } catch (subError) {
+    // tslint:disable-next-line no-console
     console.error(
       "Not reporting uncaught error back to master thread as it occured while " +
       "reporting an uncaught error already. Latest error:",
