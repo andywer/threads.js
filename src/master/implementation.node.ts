@@ -48,7 +48,7 @@ function createTsNodeModule(scriptPath: string) {
 function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const parentCallSite = getCallsites().find((callsite: CallSite) => {
     const filename = callsite.getFileName()
-    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/[\/\\]master[\/\\]implementation/))
+    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/[\/\\]master[\/\\]implementation/) && !filename.match(/^internal\/process/))
   })
 
   const callerPath = parentCallSite ? parentCallSite.getFileName() : null
@@ -57,11 +57,12 @@ function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   return rebasedScriptPath
 }
 
-function resolveScriptPath(scriptPath: string) {
+function resolveScriptPath(scriptPath: string, options?: ThreadsWorkerOptions) {
   // eval() hack is also webpack-related
+  const relative = (filePath: string) => filePath.startsWith("/") ? filePath : path.join((options || {})._baseURL || eval("__dirname"), filePath)
   const workerFilePath = typeof __non_webpack_require__ === "function"
-    ? __non_webpack_require__.resolve(path.join(eval("__dirname"), scriptPath))
-    : require.resolve(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/))
+    ? __non_webpack_require__.resolve(relative(scriptPath))
+    : require.resolve(relative(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/)))
 
   return workerFilePath
 }
@@ -78,7 +79,7 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
     constructor(scriptPath: string, options?: ThreadsWorkerOptions) {
-      const resolvedScriptPath = resolveScriptPath(scriptPath)
+      const resolvedScriptPath = resolveScriptPath(scriptPath, options)
 
       if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
         super(createTsNodeModule(resolvedScriptPath), { eval: true })
