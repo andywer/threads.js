@@ -1,4 +1,4 @@
-import { spawn, Pool, Worker } from "../../src/index"
+import { isWorkerRuntime, spawn, Pool, Worker } from "../../src/index"
 
 type AdditionWorker = (a: number, b: number) => number
 type HelloWorker = (text: string) => string
@@ -46,8 +46,15 @@ async function test3() {
   }
 }
 
+function test4() {
+  if (isWorkerRuntime() !== false) {
+    throw Error("Expected isWorkerRuntime() to return false. Got: " + isWorkerRuntime())
+  }
+}
+
 export default () => Promise.all([
   test(),
   test2(),
-  test3()
+  test3(),
+  test4()
 ])

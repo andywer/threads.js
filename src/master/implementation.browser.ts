@@ -17,8 +17,7 @@ function createSourceBlobURL(code: string): string {
   return URL.createObjectURL(blob)
 }
 
-
-export function selectWorkerImplementation(): typeof WorkerImplementation {
+function selectWorkerImplementation(): typeof WorkerImplementation {
   if (typeof Worker === "undefined") {
     // Might happen on Safari, for instance
     // The idea is to only fail if the constructor is actually used
@@ -45,4 +44,18 @@ export function selectWorkerImplementation(): typeof WorkerImplementation {
       super(url, options)
     }
   }
+}
+
+let implementation: typeof WorkerImplementation
+
+export function getWorkerImplementation(): typeof WorkerImplementation {
+  if (!implementation) {
+    implementation = selectWorkerImplementation()
+  }
+  return implementation
+}
+
+export function isWorkerRuntime() {
+  const isWindowContext = typeof self !== "undefined" && typeof Window !== "undefined" && self instanceof Window
+  return typeof self !== "undefined" && self.postMessage && !isWindowContext ? true : false
 }
