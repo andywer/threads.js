@@ -48,7 +48,12 @@ function createTsNodeModule(scriptPath: string) {
 function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const parentCallSite = getCallsites().find((callsite: CallSite) => {
     const filename = callsite.getFileName()
-    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/[\/\\]master[\/\\]implementation/))
+    return Boolean(
+      filename &&
+      !filename.match(ignoreRegex) &&
+      !filename.match(/[\/\\]master[\/\\]implementation/) &&
+      !filename.match(/^internal\/process/)
+    )
   })
 
   const callerPath = parentCallSite ? parentCallSite.getFileName() : null
@@ -57,11 +62,15 @@ function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   return rebasedScriptPath
 }
 
-function resolveScriptPath(scriptPath: string) {
-  // eval() hack is also webpack-related
+function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
+  const makeRelative = (filePath: string) => {
+    // eval() hack is also webpack-related
+    return path.isAbsolute(filePath) ? filePath : path.join(baseURL || eval("__dirname"), filePath)
+  }
+
   const workerFilePath = typeof __non_webpack_require__ === "function"
-    ? __non_webpack_require__.resolve(path.join(eval("__dirname"), scriptPath))
-    : require.resolve(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/))
+    ? __non_webpack_require__.resolve(makeRelative(scriptPath))
+    : require.resolve(makeRelative(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/)))
 
   return workerFilePath
 }
@@ -78,7 +87,7 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
     constructor(scriptPath: string, options?: ThreadsWorkerOptions) {
-      const resolvedScriptPath = resolveScriptPath(scriptPath)
+      const resolvedScriptPath = resolveScriptPath(scriptPath, (options || {})._baseURL)
 
       if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
         super(createTsNodeModule(resolvedScriptPath), { ...options, eval: true })
