@@ -81,7 +81,7 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
       const resolvedScriptPath = resolveScriptPath(scriptPath)
 
       if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
-        super(createTsNodeModule(resolvedScriptPath), { eval: true })
+        super(createTsNodeModule(resolvedScriptPath), { ...options, eval: true })
       } else {
         super(resolvedScriptPath, options)
       }
