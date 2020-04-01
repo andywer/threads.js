@@ -96,7 +96,7 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
           super(resolvedScriptPath, options)
         } catch {
           // See <https://github.com/andywer/threads-plugin/issues/17>
-          super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpack$1"), options)
+          super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1"), options)
         }
       } else {
         super(resolvedScriptPath, options)
@@ -158,7 +158,7 @@ function initTinyWorker(): typeof WorkerImplementation {
           super(resolvedScriptPath, [], { esm: true })
         } catch {
           // See <https://github.com/andywer/threads-plugin/issues/17>
-          super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpack$1"), [], { esm: true })
+          super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1"), [], { esm: true })
         }
       } else {
         super(resolvedScriptPath, [], { esm: true })
