@@ -1,4 +1,4 @@
-// tslint:disable function-constructor no-eval max-classes-per-file
+// tslint:disable function-constructor no-eval no-duplicate-super max-classes-per-file
 
 import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"
@@ -91,6 +91,13 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
 
       if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
         super(createTsNodeModule(resolvedScriptPath), { ...options, eval: true })
+      } else if (resolvedScriptPath.match(/\.asar[\/\\]/)) {
+        try {
+          super(resolvedScriptPath, options)
+        } catch {
+          // See <https://github.com/andywer/threads-plugin/issues/17>
+          super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1"), options)
+        }
       } else {
         super(resolvedScriptPath, options)
       }
@@ -146,6 +153,13 @@ function initTinyWorker(): typeof WorkerImplementation {
 
       if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
         super(new Function(createTsNodeModule(resolveScriptPath(scriptPath))), [], { esm: true })
+      } else if (resolvedScriptPath.match(/\.asar[\/\\]/)) {
+        try {
+          super(resolvedScriptPath, [], { esm: true })
+        } catch {
+          // See <https://github.com/andywer/threads-plugin/issues/17>
+          super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1"), [], { esm: true })
+        }
       } else {
         super(resolvedScriptPath, [], { esm: true })
       }
