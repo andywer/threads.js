@@ -71,6 +71,15 @@ export interface Worker extends EventTarget {
 export interface ThreadsWorkerOptions extends WorkerOptions {
   /** Prefix for the path passed to the Worker constructor. Web worker only. */
   _baseURL?: string
+  /** Resource limits passed on to Node worker_threads */
+  resourceLimits?: {
+    /** The maximum size of the main heap in MB. */
+    maxOldGenerationSizeMb?: number;
+    /** The maximum size of a heap space for recently created objects. */
+    maxYoungGenerationSizeMb?: number;
+    /** The size of a pre-allocated memory range used for generated code. */
+    codeRangeSizeMb?: number;
+  }
 }
 
 /** Worker implementation. Either web worker or a node.js Worker class. */

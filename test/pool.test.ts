@@ -104,6 +104,38 @@ test.serial("pool.completed(true) works", async t => {
   t.pass()
 })
 
+test.serial("pool.settled() does not reject on task failure", async t => {
+  const returned: any[] = []
+
+  const spawnHelloWorld = () => spawn(new Worker("./workers/hello-world"))
+  const pool = Pool(spawnHelloWorld, 2)
+
+  pool.queue(async helloWorld => {
+    returned.push(await helloWorld())
+  })
+  pool.queue(async () => {
+    throw Error("Test error one")
+  })
+  pool.queue(async () => {
+    throw Error("Test error two")
+  })
+
+  const errors = await pool.settled()
+  t.is(errors.length, 2)
+  t.deepEqual(errors.map(error => error.message).sort(), [
+    "Test error one",
+    "Test error two"
+  ])
+})
+
+test.serial("pool.settled(true) works", async t => {
+  const spawnHelloWorld = () => spawn(new Worker("./workers/hello-world"))
+  const pool = Pool(spawnHelloWorld, 2)
+
+  await pool.settled(true)
+  t.pass()
+})
+
 test.serial("task.cancel() works", async t => {
   const events: Pool.Event[] = []
   const spawnHelloWorld = () => spawn(new Worker("./workers/hello-world"))

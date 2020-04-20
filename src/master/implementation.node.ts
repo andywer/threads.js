@@ -1,10 +1,10 @@
-// tslint:disable function-constructor no-eval max-classes-per-file
+// tslint:disable function-constructor no-eval no-duplicate-super max-classes-per-file
 
 import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"
 import { cpus } from 'os'
 import * as path from "path"
-import { WorkerImplementation } from "../types/master"
+import { ThreadsWorkerOptions, WorkerImplementation } from "../types/master"
 
 declare const __non_webpack_require__: typeof require
 
@@ -48,7 +48,12 @@ function createTsNodeModule(scriptPath: string) {
 function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const parentCallSite = getCallsites().find((callsite: CallSite) => {
     const filename = callsite.getFileName()
-    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/[\/\\]master[\/\\]implementation/))
+    return Boolean(
+      filename &&
+      !filename.match(ignoreRegex) &&
+      !filename.match(/[\/\\]master[\/\\]implementation/) &&
+      !filename.match(/^internal\/process/)
+    )
   })
 
   const callerPath = parentCallSite ? parentCallSite.getFileName() : null
@@ -57,11 +62,15 @@ function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   return rebasedScriptPath
 }
 
-function resolveScriptPath(scriptPath: string) {
-  // eval() hack is also webpack-related
+function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
+  const makeRelative = (filePath: string) => {
+    // eval() hack is also webpack-related
+    return path.isAbsolute(filePath) ? filePath : path.join(baseURL || eval("__dirname"), filePath)
+  }
+
   const workerFilePath = typeof __non_webpack_require__ === "function"
-    ? __non_webpack_require__.resolve(path.join(eval("__dirname"), scriptPath))
-    : require.resolve(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/))
+    ? __non_webpack_require__.resolve(makeRelative(scriptPath))
+    : require.resolve(makeRelative(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/)))
 
   return workerFilePath
 }
@@ -77,13 +86,20 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
   class Worker extends NativeWorker {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
-    constructor(scriptPath: string) {
-      const resolvedScriptPath = resolveScriptPath(scriptPath)
+    constructor(scriptPath: string, options?: ThreadsWorkerOptions) {
+      const resolvedScriptPath = resolveScriptPath(scriptPath, (options || {})._baseURL)
 
       if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
-        super(createTsNodeModule(resolvedScriptPath), { eval: true })
+        super(createTsNodeModule(resolvedScriptPath), { ...options, eval: true })
+      } else if (resolvedScriptPath.match(/\.asar[\/\\]/)) {
+        try {
+          super(resolvedScriptPath, options)
+        } catch {
+          // See <https://github.com/andywer/threads-plugin/issues/17>
+          super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1"), options)
+        }
       } else {
-        super(resolvedScriptPath)
+        super(resolvedScriptPath, options)
       }
 
       this.mappedEventListeners = new WeakMap()
@@ -137,6 +153,13 @@ function initTinyWorker(): typeof WorkerImplementation {
 
       if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
         super(new Function(createTsNodeModule(resolveScriptPath(scriptPath))), [], { esm: true })
+      } else if (resolvedScriptPath.match(/\.asar[\/\\]/)) {
+        try {
+          super(resolvedScriptPath, [], { esm: true })
+        } catch {
+          // See <https://github.com/andywer/threads-plugin/issues/17>
+          super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1"), [], { esm: true })
+        }
       } else {
         super(resolvedScriptPath, [], { esm: true })
       }
