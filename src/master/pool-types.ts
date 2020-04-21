@@ -48,6 +48,7 @@ export type PoolEvent<ThreadType extends Thread> = {
 export interface WorkerDescriptor<ThreadType extends Thread> {
   init: Promise<ThreadType>
   runningTasks: Array<Promise<any>>
+  lastActivity: number
 }
 
 /**
