@@ -90,7 +90,7 @@ function postJobStartMessage(uid: number, resultType: WorkerJobStartMessage["res
   Implementation.postMessageToMaster(startMessage)
 }
 
-function postUncaughtErrorMessage(error: Error) {
+function postUncaughtErrorMessage(error: Error | ErrorEvent) {
   try {
     const errorMessage: WorkerUncaughtErrorMessage = {
       type: WorkerMessageType.uncaughtError,
@@ -103,7 +103,14 @@ function postUncaughtErrorMessage(error: Error) {
       "Not reporting uncaught error back to master thread as it " +
       "occured while reporting an uncaught error already." +
       "\nLatest error:", subError,
-      "\nOriginal error:", error
+      "\nOriginal error:", {
+        ...error,
+        message: error.message,
+        error: (error as any).error && {
+          ...(error as any).error,
+          message: (error as any).error.message
+        }
+      }
     )
   }
 }
