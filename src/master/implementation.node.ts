@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 // tslint:disable function-constructor no-eval no-duplicate-super max-classes-per-file
 
 import getCallsites, { CallSite } from "callsites"
@@ -6,7 +7,14 @@ import { cpus } from 'os'
 import * as path from "path"
 import { ThreadsWorkerOptions, WorkerImplementation } from "../types/master"
 
+interface WorkerGlobalScope {
+  addEventListener(eventName: string, listener: (event: Event) => void): void
+  postMessage(message: any, transferables?: any[]): void
+  removeEventListener(eventName: string, listener: (event: Event) => void): void
+}
+
 declare const __non_webpack_require__: typeof require
+declare const self: WorkerGlobalScope
 
 type WorkerEventName = "error" | "message"
 
@@ -191,12 +199,36 @@ function initTinyWorker(): typeof WorkerImplementation {
   return Worker as any
 }
 
-export function selectWorkerImplementation(): typeof WorkerImplementation {
+let implementation: typeof WorkerImplementation
+let isTinyWorker: boolean
+
+function selectWorkerImplementation(): typeof WorkerImplementation {
   try {
+    isTinyWorker = false
     return initWorkerThreadsWorker()
   } catch(error) {
     // tslint:disable-next-line no-console
     console.debug("Node worker_threads not available. Trying to fall back to tiny-worker polyfill...")
+    isTinyWorker = true
     return initTinyWorker()
+  }
+}
+
+export function getWorkerImplementation(): typeof WorkerImplementation {
+  if (!implementation) {
+    implementation = selectWorkerImplementation()
+  }
+  return implementation
+}
+
+export function isWorkerRuntime() {
+  if (isTinyWorker) {
+    return typeof self !== "undefined" && self.postMessage ? true : false
+  } else {
+    // Webpack hack
+    const isMainThread = typeof __non_webpack_require__ === "function"
+      ? __non_webpack_require__("worker_threads").isMainThread
+      : eval("require")("worker_threads").isMainThread
+    return !isMainThread
   }
 }
