@@ -1,4 +1,5 @@
 /// <reference lib="dom" />
+// tslint:disable max-classes-per-file
 
 // Cannot use `compilerOptions.esModuleInterop` and default import syntax
 // See <https://github.com/microsoft/TypeScript/issues/28009>
@@ -87,6 +88,17 @@ export declare class WorkerImplementation extends EventTarget implements Worker 
   constructor(path: string, options?: ThreadsWorkerOptions)
   public postMessage(value: any, transferList?: TransferList): void
   public terminate(): void
+}
+
+/** Class to spawn workers from a blob or source string. */
+export declare class BlobWorker extends WorkerImplementation {
+  constructor(blob: Blob, options?: ThreadsWorkerOptions)
+  public static fromText(source: string, options?: ThreadsWorkerOptions): WorkerImplementation
+}
+
+export interface ImplementationExport {
+  blob: typeof BlobWorker
+  default: typeof WorkerImplementation
 }
 
 /** Event as emitted by worker thread. Subscribe to using `Thread.events(thread)`. */
