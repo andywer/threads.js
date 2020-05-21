@@ -1,5 +1,6 @@
 .cache/
 .vscode/
+bundle/
 docs/_site
 docs/vendor
 dist/*
