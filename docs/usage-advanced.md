@@ -40,6 +40,21 @@ expose(function xorBuffer(buffer, value) {
 
 Without `Transfer()` the buffers would be copied on every call and every return. Using `Transfer()` their ownership is transferred to the other thread instead only, to make sure it is accessible in a thread-safe way. This is a much faster operation.
 
+You can use transferable objects with observables, too.
+
+```js
+import { expose, Observable, Transfer } from "threads/worker"
+import { DataSource } from "./my-data-source"
+
+expose(function streamBuffers() {
+  return new Observable(observer => {
+    const datasource = new DataSource()
+    datasource.on("data", arrayBuffer => observer.next(Transfer(arrayBuffer)))
+    return () => datasource.close()
+  })
+})
+```
+
 ## Task queue
 
 It is a fairly common use case to have a lot of work that needs to be done by workers, but is just too much to be run efficiently at once. You will need to schedule tasks and have them dispatched and run on workers in a controlled fashion.
