@@ -103,8 +103,8 @@ function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transfe
   }
 }
 
-const doneAsyncIterator = (async function*() {
-  // this async generator function is used to avoid unnecessary calls of worker's async iterator that has been already done
+const doneIterator = (function*() {
+  // this generator function is used to avoid unnecessary calls of worker's async iterator that has been already done
 })()
 function mixinAsyncIterableIterator<T1, T2>(observable: Observable<T1>, worker: WorkerType, uid: number): Observable<T1> & AsyncIterableIterator<T2> {
   let done = false
@@ -112,7 +112,7 @@ function mixinAsyncIterableIterator<T1, T2>(observable: Observable<T1>, worker: 
   const createMethod = (method: "next" | "return" | "throw") => async (rawArg?: any) => {
     const result = previousCall.then(() => {
       if (done) {
-        return doneAsyncIterator[method](rawArg)
+        return doneIterator[method](rawArg)
       }
       const { args, transferables } = prepareArguments(rawArg ? [rawArg] : [])
       const runMessage: MasterJobRunMessage = {
