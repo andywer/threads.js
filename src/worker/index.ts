@@ -15,7 +15,6 @@ import {
 } from "../types/messages"
 import { WorkerFunction, WorkerModule } from "../types/worker"
 import Implementation from "./implementation"
-
 export { registerSerializer } from "../common"
 export { Transfer } from "../transferable"
 
@@ -31,6 +30,11 @@ const isMasterJobRunMessage = (thing: any): thing is MasterJobRunMessage => thin
  * We are using `observable-fns`, but it's based on zen-observable, too.
  */
 const isObservable = (thing: any): thing is Observable<any> => isSomeObservable(thing) || isZenObservable(thing)
+
+const isAsyncIterable = (obj: unknown): obj is AsyncIterable<unknown> =>
+  obj && typeof (obj as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function"
+
+const asyncIterators: Array<AsyncIterator<unknown, unknown, unknown>> = []
 
 function isZenObservable(thing: any): thing is Observable<any> {
   return thing && typeof thing === "object" && typeof thing.subscribe === "function"
@@ -120,22 +124,40 @@ async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
     return postJobErrorMessage(jobUID, error)
   }
 
-  const resultType = isObservable(syncResult) ? "observable" : "promise"
-  postJobStartMessage(jobUID, resultType)
-
-  if (isObservable(syncResult)) {
+  if (isAsyncIterable(syncResult)) {
+    postJobStartMessage(jobUID, "asyncIterable")
+    asyncIterators[jobUID] = syncResult[Symbol.asyncIterator]()
+  } else if (isObservable(syncResult)) {
+    postJobStartMessage(jobUID, "observable")
     syncResult.subscribe(
       value => postJobResultMessage(jobUID, false, serialize(value)),
       error => postJobErrorMessage(jobUID, serialize(error) as any),
       () => postJobResultMessage(jobUID, true)
     )
   } else {
+    postJobStartMessage(jobUID, "promise")
     try {
       const result = await syncResult
       postJobResultMessage(jobUID, true, serialize(result))
     } catch (error) {
       postJobErrorMessage(jobUID, serialize(error) as any)
     }
+  }
+}
+
+async function runIterator({ uid, method, args }: MasterJobRunMessage) {
+  const iterator = asyncIterators[uid]
+  if (method !== "next" && method !== "return" && method !== "throw" || !iterator[method]) {
+    return
+  }
+  try {
+    const result = await iterator[method]!(deserialize(args[0]))
+    postJobResultMessage(uid, !!result.done, serialize(result))
+    if (result.done) {
+      delete asyncIterators[uid]
+    }
+  } catch (error) {
+    return postJobErrorMessage(uid, error)
   }
 }
 
@@ -156,16 +178,24 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
   exposeCalled = true
 
   if (typeof exposed === "function") {
-    Implementation.subscribeToMasterMessages(messageData => {
-      if (isMasterJobRunMessage(messageData) && !messageData.method) {
-        runFunction(messageData.uid, exposed, messageData.args.map(deserialize))
+    Implementation.subscribeToMasterMessages(async messageData => {
+      if (isMasterJobRunMessage(messageData)) {
+        if (asyncIterators[messageData.uid]) {
+          runIterator(messageData)
+        } else if (!messageData.method) {
+          runFunction(messageData.uid, exposed, messageData.args.map(deserialize))
+        }
       }
     })
     postFunctionInitMessage()
   } else if (typeof exposed === "object" && exposed) {
     Implementation.subscribeToMasterMessages(messageData => {
       if (isMasterJobRunMessage(messageData) && messageData.method) {
-        runFunction(messageData.uid, exposed[messageData.method], messageData.args.map(deserialize))
+        if (asyncIterators[messageData.uid]) {
+          runIterator(messageData)
+        } else {
+          runFunction(messageData.uid, exposed[messageData.method], messageData.args.map(deserialize))
+        }
       }
     })
 

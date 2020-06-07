@@ -62,7 +62,7 @@ export type WorkerJobResultMessage = {
 export type WorkerJobStartMessage = {
   type: WorkerMessageType.running,
   uid: number,
-  resultType: "observable" | "promise"
+  resultType: "observable" | "promise" | "asyncIterable"
 }
 
 export type WorkerSentMessage =

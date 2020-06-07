@@ -31,6 +31,76 @@ test("can subscribe to an observable returned by a thread call", async t => {
   await Thread.terminate(countToFive)
 })
 
+test("can iterate over an AsyncIterableIterator returned by a thread call", async t => {
+  const countToFiveGenerator = await spawn<() => AsyncGenerator<number, number | undefined, boolean | undefined>>(new Worker("./workers/count-to-five-generator"))
+  const encounteredValues: number[] = []
+
+  for await (const value of countToFiveGenerator()) {
+    encounteredValues.push(value)
+  }
+
+  t.deepEqual(encounteredValues, [1, 2, 3, 4, 5])
+  await Thread.terminate(countToFiveGenerator)
+})
+
+test("can call next() and return() of an AsyncIterableIterator returned by a thread call", async t => {
+  const countToFiveGenerator = await spawn<() => AsyncGenerator<number, number | undefined, boolean | undefined>>(new Worker("./workers/count-to-five-generator"))
+
+  const iterator = countToFiveGenerator()
+  t.deepEqual(
+    await Promise.all([
+      iterator.next(),
+      iterator.next(),
+      iterator.next(),
+      iterator.next(true),
+      iterator.next(),
+      iterator.return(100),
+      iterator.next(),
+      iterator.return(10)
+    ]),
+    [
+      { value: 1, done: false },
+      { value: 2, done: false },
+      { value: 3, done: false },
+      { value: 1, done: false },
+      { value: 2, done: false },
+      { value: 100, done: true },
+      { value: undefined, done: true },
+      { value: 10, done: true }
+    ]
+  )
+  await Thread.terminate(countToFiveGenerator)
+})
+
+test("can call throw() of an AsyncIterableIterator returned by a thread call", async t => {
+  const countToFiveGenerator = await spawn<() => AsyncGenerator<number, number | undefined, boolean | undefined>>(new Worker("./workers/count-to-five-generator"))
+  
+  const iterator = countToFiveGenerator()
+  t.deepEqual(
+    await Promise.all([
+      iterator.next(),
+      iterator.next(),
+      iterator.throw(new Error('error thrown with throw()')).catch(() => undefined),
+      iterator.next(),
+      iterator.next(),
+      iterator.return(100),
+      iterator.next(),
+      iterator.return(10)
+    ]),
+    [
+      { value: 1, done: false },
+      { value: 2, done: false },
+      undefined,
+      { value: undefined, done: true },
+      { value: undefined, done: true },
+      { value: 100, done: true },
+      { value: undefined, done: true },
+      { value: 10, done: true }
+    ]
+  )
+  await Thread.terminate(countToFiveGenerator)
+})
+
 test("can spawn a module thread", async t => {
   const counter = await spawn<Counter>(new Worker("./workers/counter"))
   t.is(await counter.getCount(), 0)

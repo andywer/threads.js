@@ -37,7 +37,7 @@ const isJobStartMessage = (data: any): data is WorkerJobStartMessage => data && 
 
 function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number): Observable<ResultType> {
   return new Observable(observer => {
-    let asyncType: "observable" | "promise" | undefined
+    let asyncType: WorkerJobStartMessage["resultType"] | undefined
 
     const messageHandler = ((event: MessageEvent) => {
       debugMessages("Message from worker:", event.data)
@@ -103,6 +103,55 @@ function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transfe
   }
 }
 
+const doneAsyncIterator = (async function*() {
+  // this async generator function is used to avoid unnecessary calls of worker's async iterator that has been already done
+})()
+function mixinAsyncIterableIterator<T1, T2>(observable: Observable<T1>, worker: WorkerType, uid: number): Observable<T1> & AsyncIterableIterator<T2> {
+  let done = false
+  let previousCall: Promise<any> = Promise.resolve()
+  const createMethod = (method: "next" | "return" | "throw") => async (rawArg?: any) => {
+    const result = previousCall.then(() => {
+      if (done) {
+        return doneAsyncIterator[method](rawArg)
+      }
+      const { args, transferables } = prepareArguments(rawArg ? [rawArg] : [])
+      const runMessage: MasterJobRunMessage = {
+        type: MasterMessageType.run,
+        uid,
+        method,
+        args
+      }
+      debugMessages("Sending command to run function to worker:", runMessage)
+
+      worker.postMessage(runMessage, transferables)
+      return new Promise<IteratorResult<T2, any>>((resolve, reject) => {
+        const subscription = (observable as Observable<any>).subscribe(
+          message => {
+            subscription.unsubscribe()
+            done = message.done
+            resolve(message)
+          },
+          err => {
+            subscription.unsubscribe()
+            done = true
+            reject(err)
+          }
+        )
+      })
+    })
+    previousCall = result.catch(() => undefined)
+    return result
+  }
+  const mixin = observable as Observable<T1> & AsyncIterableIterator<T2>
+  mixin.next = createMethod("next")
+  mixin.return = createMethod("return")
+  mixin.throw = createMethod("throw")
+  mixin[Symbol.asyncIterator] = function() {
+    return this
+  }
+  return mixin
+}
+
 export function createProxyFunction<Args extends any[], ReturnType>(worker: WorkerType, method?: string) {
   return ((...rawArgs: Args) => {
     const uid = nextJobUID++
@@ -122,7 +171,7 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
       return ObservablePromise.from(Promise.reject(error))
     }
 
-    return ObservablePromise.from(multicast(createObservableForJob<ReturnType>(worker, uid)))
+    return mixinAsyncIterableIterator(ObservablePromise.from(multicast(createObservableForJob<ReturnType>(worker, uid))), worker, uid)
   }) as any as ProxyableFunction<Args, ReturnType>
 }
 
