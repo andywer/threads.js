@@ -1,64 +1,68 @@
 language: node_js
 cache: npm
 
-matrix:
-  include:
-    - os: linux
-      addons:
-        chrome: stable
-      node_js: "8.12"
-    - os: linux
-      addons:
-        chrome: stable
-      node_js: node  # Latest
-    - os: windows
-      addons:
-        grep: stable
-      filter_secrets: false  # Secrets will otherwise break Windows builds
-      node_js: "8.12"
-      script: npm run test:ava
-      env:
-        - THREADS_WORKER_INIT_TIMEOUT=30000
-    - os: windows
-      addons:
-        grep: stable
-      filter_secrets: false  # Secrets will otherwise break Windows builds
-      node_js: latest
-      script: npm run test:ava
-
 env:
   - THREADS_WORKER_INIT_TIMEOUT=15000
 
 stages:
   - name: test
   - name: publish
-    if: tag =~ /^[0-9]+\.[0-9]+\.[0-9]+/
+    if: tag =~ /^v?[0-9]+\.[0-9]+\.[0-9]+/
 
 jobs:
   include:
     - stage: test
+      os: linux
+      addons:
+        chrome: stable
+      node_js: "8.12"
       script: npm test
 
-    - stage: publish to latest
-      if: tag =~ /^v?[0-9]+\.[0-9]+\.[0-9]+$/
+    - stage: test
+      os: linux
+      addons:
+        chrome: stable
+      node_js: node
+      script: npm test
+
+    - stage: test
+      os: windows
+      addons:
+        grep: stable
+      filter_secrets: false  # Secrets will otherwise break Windows builds
+      node_js: "8.12"
       env:
-        - NPM_TOKEN
-        - TELEPROMPT_KEY
+        - THREADS_WORKER_INIT_TIMEOUT=30000
+      script: npm run test:ava
+
+    - stage: test
+      os: windows
+      addons:
+        grep: stable
+      filter_secrets: false  # Secrets will otherwise break Windows builds
+      node_js: latest
+      env:
+        - THREADS_WORKER_INIT_TIMEOUT=30000
+      script: npm run test:ava
+
+    - name: publish to latest
+      stage: publish
+      if: tag =~ /^v?[0-9]+\.[0-9]+\.[0-9]+$/
       node_js: node
       os: linux
       script:
+        - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > .npmrc
         - npm i -g teleprompt
-        - npm version from-git
+        - npm version $(echo $TRAVIS_TAG | sed s/^v//) --allow-same-version
         - npm publish $(teleprompt --output-format cli --prompt 'otp:otp:2FA Token')
 
-    - stage: publish to testing
+    - name: publish to testing
+      stage: publish
       if: tag =~ /^v?[0-9]+\.[0-9]+\.[0-9]+-test/
-      env:
-        - NPM_TOKEN
-        - TELEPROMPT_KEY
       node_js: node
       os: linux
       script:
+        - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > .npmrc
         - npm i -g teleprompt
-        - npm version from-git
+        - npm version $(echo $TRAVIS_TAG | sed s/^v//) --allow-same-version
         - npm publish --tag=testing $(teleprompt --output-format cli --prompt 'otp:otp:2FA Token')
