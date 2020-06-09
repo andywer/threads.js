@@ -64,7 +64,8 @@ function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
     )
   })
 
-  const callerPath = parentCallSite ? parentCallSite.getFileName() : null
+  const rawCallerPath = parentCallSite ? parentCallSite.getFileName() : null
+  const callerPath = rawCallerPath ? rawCallerPath.replace(/^file:\//, "") : null
   const rebasedScriptPath = callerPath ? path.join(path.dirname(callerPath), scriptPath) : scriptPath
 
   return rebasedScriptPath
