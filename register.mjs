@@ -1,1 +1,1 @@
-export * from "./dist-esm/master/register"
+import "./dist/master/register.js"

@@ -4,6 +4,12 @@
   "description": "Web workers & worker threads as simple as a function call",
   "main": "dist/index.js",
   "module": "dist-esm/index.js",
+  "exports": {
+    ".": "./index.mjs",
+    "./observable": "./observable.mjs",
+    "./register": "./register.mjs",
+    "./worker": "./worker.mjs"
+  },
   "scripts": {
     "prebuild": "rimraf dist/ dist-esm/",
     "build": "run-p build:cjs build:es",

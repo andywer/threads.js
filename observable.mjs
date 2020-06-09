@@ -1,1 +1,4 @@
-export * from "./dist-esm/observable"
+import Observables from "./dist/observable.js"
+
+export const Observable = Observables.Observable
+export const Subject = Observables.Subject
