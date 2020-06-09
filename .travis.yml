@@ -29,5 +29,36 @@ matrix:
 env:
   - THREADS_WORKER_INIT_TIMEOUT=15000
 
-script:
-  - npm test
+stages:
+  - name: test
+  - name: publish
+    if: tag =~ /^[0-9]+\.[0-9]+\.[0-9]+/
+
+jobs:
+  include:
+    - stage: test
+      script: npm test
+
+    - stage: publish to latest
+      if: tag =~ /^v?[0-9]+\.[0-9]+\.[0-9]+$/
+      env:
+        - NPM_TOKEN
+        - TELEPROMPT_KEY
+      node_js: node
+      os: linux
+      script:
+        - npm i -g teleprompt
+        - npm version from-git
+        - npm publish $(teleprompt --output-format cli --prompt 'otp:otp:2FA Token')
+
+    - stage: publish to testing
+      if: tag =~ /^v?[0-9]+\.[0-9]+\.[0-9]+-test/
+      env:
+        - NPM_TOKEN
+        - TELEPROMPT_KEY
+      node_js: node
+      os: linux
+      script:
+        - npm i -g teleprompt
+        - npm version from-git
+        - npm publish --tag=testing $(teleprompt --output-format cli --prompt 'otp:otp:2FA Token')
