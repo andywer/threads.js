@@ -50,19 +50,19 @@ jobs:
       if: tag =~ /^v?[0-9]+\.[0-9]+\.[0-9]+$/
       node_js: node
       os: linux
-      script:
+      before_script:
         - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > .npmrc
-        - npm i -g teleprompt
+      script:
         - npm version $(echo $TRAVIS_TAG | sed s/^v//) --allow-same-version
-        - npm publish $(teleprompt --output-format cli --prompt 'otp:otp:2FA Token')
+        - npm publish $(npx teleprompt --output-format cli --prompt 'otp:otp:2FA Token')
 
     - name: publish to testing
       stage: publish
       if: tag =~ /^v?[0-9]+\.[0-9]+\.[0-9]+-test/
       node_js: node
       os: linux
-      script:
+      before_script:
         - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > .npmrc
-        - npm i -g teleprompt
+      script:
         - npm version $(echo $TRAVIS_TAG | sed s/^v//) --allow-same-version
-        - npm publish --tag=testing $(teleprompt --output-format cli --prompt 'otp:otp:2FA Token')
+        - npm publish --tag=testing $(npx teleprompt --output-format cli --prompt 'otp:otp:2FA Token')
