@@ -10,7 +10,7 @@ module.exports = {
     library: "test",
     libraryExport: "default",
     libraryTarget: "commonjs",
-    path: path.resolve(__dirname, "./dist.web")
+    path: path.resolve(__dirname, "./dist/app.web")
   },
   module: {
     rules: [

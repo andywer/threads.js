@@ -13,7 +13,7 @@ module.exports = {
     library: "test",
     libraryExport: "default",
     libraryTarget: "commonjs",
-    path: path.resolve(__dirname, "./dist.node")
+    path: path.resolve(__dirname, "./dist/app.node")
   },
   module: {
     rules: [
