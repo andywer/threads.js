@@ -143,6 +143,29 @@ try {
 }
 ```
 
+## Blob workers
+
+Sometimes you need to ship master and worker code in a single file. There is an alternative way to create a worker for those situations, allowing you to inline the worker code in the master code.
+
+The `BlobWorker` class works just like the regular `Worker` class, but instead of taking a path to a worker, the constructor takes the worker source code as a binary blob.
+
+There is also a convenience function `BlobWorker.fromText()` that creates a new `BlobWorker`, but allows you to pass a source string instead of a binary buffer.
+
+Here is a webpack-based example, leveraging the `raw-loader` to inline the worker code. The worker code that we load using the `raw-loader` is the content of bundles that have been created by two previous webpack runs: one worker build targetting node.js, one for web browsers.
+
+```js
+import { spawn, BlobWorker } from "threads"
+import MyWorkerNode from "raw-loader!../dist/worker.node/worker.js"
+import MyWorkerWeb from "raw-loader!../dist/worker.web/worker.js"
+
+const MyWorker = process.browser ? MyWorkerWeb : MyWorkerNode
+
+const worker = await spawn(BlobWorker.fromText(MyWorker))
+// Now use this worker as always
+```
+
+Bundle this module and you will obtain a stand-alone bundle that has its worker inlined. This is particularly useful for libraries using threads.js.
+
 ## TypeScript
 
 ### Type-safe workers
