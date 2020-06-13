@@ -4,12 +4,6 @@
   "description": "Web workers & worker threads as simple as a function call",
   "main": "dist/index.js",
   "module": "dist-esm/index.js",
-  "exports": {
-    ".": "./index.mjs",
-    "./observable": "./observable.mjs",
-    "./register": "./register.mjs",
-    "./worker": "./worker.mjs"
-  },
   "scripts": {
     "prebuild": "rimraf dist/ dist-esm/",
     "build": "run-p build:cjs build:es",
@@ -23,6 +17,24 @@
     "test:puppeteer:webpack": "puppet-run --serve ./test/webpack/dist/app.web/0.worker.js --serve ./test/webpack/dist/app.web/1.worker.js --plugin=mocha ./test/webpack/webpack.chromium.mocha.ts",
     "posttest": "tslint --project .",
     "prepare": "run-s build"
+  },
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "default": "./index.mjs"
+    },
+    "./observable": {
+      "require": "./observable.js",
+      "default": "./observable.mjs"
+    },
+    "./register": {
+      "require": "./register.js",
+      "default": "./register.mjs"
+    },
+    "./worker": {
+      "require": "./worker.js",
+      "default": "./worker.mjs"
+    }
   },
   "sideEffects": [
     "./dist*/master/register.js",
