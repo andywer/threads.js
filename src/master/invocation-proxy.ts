@@ -76,11 +76,13 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
     worker.addEventListener("message", messageHandler)
 
     return () => {
-      const cancelMessage: MasterJobCancelMessage = {
-        type: MasterMessageType.cancel,
-        uid: jobUID
+      if (asyncType === "observable" || !asyncType) {
+        const cancelMessage: MasterJobCancelMessage = {
+          type: MasterMessageType.cancel,
+          uid: jobUID
+        }
+        worker.postMessage(cancelMessage)
       }
-      worker.postMessage(cancelMessage)
       worker.removeEventListener("message", messageHandler)
     }
   })
