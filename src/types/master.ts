@@ -4,12 +4,14 @@
 // Cannot use `compilerOptions.esModuleInterop` and default import syntax
 // See <https://github.com/microsoft/TypeScript/issues/28009>
 import { Observable } from "observable-fns"
-import { ObservablePromise } from "../observable-promise"
+import { ObservablePromise } from "../common/observable-promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
+import { MessageRelay, TransferList } from "./common"
 
 interface ObservableLikeSubscription {
   unsubscribe(): any
 }
+
 interface ObservableLike<T> {
   subscribe(onNext: (value: T) => any, onError?: (error: any) => any, onComplete?: () => any): ObservableLikeSubscription
   subscribe(listeners: {
@@ -61,11 +63,9 @@ interface AnyModuleThread extends PrivateThreadProps {
 /** Worker thread. Either a `FunctionThread` or a `ModuleThread`. */
 export type Thread = AnyFunctionThread | AnyModuleThread
 
-export type TransferList = Transferable[]
-
 /** Worker instance. Either a web worker or a node.js Worker provided by `worker_threads` or `tiny-worker`. */
-export interface Worker extends EventTarget {
-  postMessage(value: any, transferList?: TransferList): void
+export interface Worker extends MessageRelay {
+  removeEventListener(event: string, listener: EventListener): any
   terminate(callback?: (error?: Error, exitCode?: number) => void): void
 }
 
@@ -81,12 +81,16 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
     /** The size of a pre-allocated memory range used for generated code. */
     codeRangeSizeMb?: number;
   }
+  timeout?: number
 }
 
 /** Worker implementation. Either web worker or a node.js Worker class. */
 export declare class WorkerImplementation extends EventTarget implements Worker {
   constructor(path: string, options?: ThreadsWorkerOptions)
+  // Quick fix to use the more precise `addEventListener()` signatures:
+  public addEventListener: MessageRelay["addEventListener"]
   public postMessage(value: any, transferList?: TransferList): void
+  public removeEventListener(event: string, listener: EventListener): any
   public terminate(): void
 }
 

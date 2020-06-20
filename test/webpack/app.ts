@@ -38,7 +38,7 @@ async function test3() {
     return
   }
 
-  const hello = await spawn<HelloWorker>(new Worker("https://infallible-turing-115958.netlify.com/hello-worker.js"))
+  const hello = await spawn<HelloWorker>(new Worker("https://infallible-turing-115958.netlify.com/hello-worker-2020-06-21-callbacks.js"))
   const result = await hello("World")
 
   if (result !== "Hello, World") {

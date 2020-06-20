@@ -14,24 +14,8 @@ const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorke
   return !WorkerThreads().isMainThread
 }
 
-const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList) {
+const postMessage: AbstractedWorkerAPI["postMessage"] = function postMessage(data, transferList) {
   assertMessagePort(WorkerThreads().parentPort).postMessage(data, transferList as any)
-}
-
-const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {
-  const parentPort = WorkerThreads().parentPort
-
-  if (!parentPort) {
-    throw Error("Invariant violation: MessagePort to parent is not available.")
-  }
-  const messageHandler = (message: any) => {
-    onMessage(message)
-  }
-  const unsubscribe = () => {
-    assertMessagePort(parentPort).off("message", messageHandler)
-  }
-  assertMessagePort(parentPort).on("message", messageHandler)
-  return unsubscribe
 }
 
 function testImplementation() {
@@ -39,9 +23,20 @@ function testImplementation() {
   WorkerThreads()
 }
 
-export default {
+const Implementation: AbstractedWorkerAPI & { testImplementation: typeof testImplementation } = {
+  addEventListener(event: string, listener: (arg: any) => any) {
+    const port = assertMessagePort(WorkerThreads().parentPort)
+    return event === "message"
+      ? port.on(event, (data) => listener({ data }))
+      : port.on(event, listener)
+  },
+  removeEventListener(event, listener) {
+    const port = assertMessagePort(WorkerThreads().parentPort)
+    return port.off(event, listener)
+  },
   isWorkerRuntime,
-  postMessageToMaster,
-  subscribeToMasterMessages,
+  postMessage,
   testImplementation
 }
+
+export default Implementation

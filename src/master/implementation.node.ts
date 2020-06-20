@@ -198,7 +198,7 @@ function initTinyWorker(): ImplementationExport {
 
       this.emitter = new EventEmitter()
       this.onerror = (error: Error) => this.emitter.emit("error", error)
-      this.onmessage = (message: MessageEvent) => this.emitter.emit("message", message)
+      this.onmessage = (event: MessageEvent) => this.emitter.emit("message", event)
     }
 
     public addEventListener(eventName: WorkerEventName, listener: EventListener) {

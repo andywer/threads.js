@@ -13,8 +13,8 @@
   },
   "include": [
     "./src/index.ts",
-    "./src/observable.ts",
     "./src/master/*",
+    "./src/util/observable.ts",
     "./src/worker/*",
     "./types/tiny-worker.d.ts",
     "./types/is-observable.d.ts"

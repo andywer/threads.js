@@ -1,4 +1,4 @@
-import { $transferable } from "./symbols"
+import { $transferable } from "../symbols"
 
 export interface TransferDescriptor<T = any> {
   [$transferable]: true

@@ -1,40 +1,51 @@
-export interface SerializedError {
-  __error_marker: "$$error"
-  message: string
-  name: string
-  stack?: string
+import { SerializedError } from "./serializers"
+
+export enum CommonMessageType {
+  cancel = "call:cancel",
+  error = "call:error",
+  invoke = "call:invoke",
+  result = "call:result",
+  running = "call:running"
 }
 
-/////////////////////////////
-// Messages sent by master:
-
-export enum MasterMessageType {
-  cancel = "cancel",
-  run = "run"
-}
-
-export type MasterJobCancelMessage = {
-  type: MasterMessageType.cancel,
+export type CallCancelMessage = {
+  type: CommonMessageType.cancel,
   uid: number
 }
 
-export type MasterJobRunMessage = {
-  type: MasterMessageType.run,
+export type CallErrorMessage = {
+  type: CommonMessageType.error,
   uid: number,
-  method?: string,
+  error: SerializedError
+}
+
+export type CallInvocationMessage = {
+  type: CommonMessageType.invoke,
+  /** Function ID */
+  fid: number,
+  /** Unique call ID */
+  uid: number,
   args: any[]
 }
 
-export type MasterSentMessage = MasterJobCancelMessage | MasterJobRunMessage
+export type CallResultMessage = {
+  type: CommonMessageType.result,
+  uid: number,
+  complete?: true,
+  payload?: any
+}
+
+export type CallRunningMessage = {
+  type: CommonMessageType.running,
+  uid: number,
+  resultType: "observable" | "promise"
+}
 
 ////////////////////////////
 // Messages sent by worker:
 
 export enum WorkerMessageType {
-  error = "error",
   init = "init",
-  result = "result",
-  running = "running",
   uncaughtError = "uncaughtError"
 }
 
@@ -49,31 +60,5 @@ export type WorkerUncaughtErrorMessage = {
 
 export type WorkerInitMessage = {
   type: WorkerMessageType.init,
-  exposed: { type: "function" } | { type: "module", methods: string[] }
+  exposed: { type: "function" } | { type: "module", methods: Record<string, number> }
 }
-
-export type WorkerJobErrorMessage = {
-  type: WorkerMessageType.error,
-  uid: number,
-  error: SerializedError
-}
-
-export type WorkerJobResultMessage = {
-  type: WorkerMessageType.result,
-  uid: number,
-  complete?: true,
-  payload?: any
-}
-
-export type WorkerJobStartMessage = {
-  type: WorkerMessageType.running,
-  uid: number,
-  resultType: "observable" | "promise"
-}
-
-export type WorkerSentMessage =
-  | WorkerInitMessage
-  | WorkerJobErrorMessage
-  | WorkerJobResultMessage
-  | WorkerJobStartMessage
-  | WorkerUncaughtErrorMessage
