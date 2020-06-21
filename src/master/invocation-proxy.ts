@@ -17,6 +17,7 @@ import {
   Worker as WorkerType
 } from "../types/master"
 import {
+  MasterJobCancelMessage,
   MasterJobRunMessage,
   MasterMessageType,
   WorkerJobErrorMessage,
@@ -71,8 +72,19 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
         worker.removeEventListener("message", messageHandler)
       }
     }) as EventListener
+
     worker.addEventListener("message", messageHandler)
-    return () => worker.removeEventListener("message", messageHandler)
+
+    return () => {
+      if (asyncType === "observable" || !asyncType) {
+        const cancelMessage: MasterJobCancelMessage = {
+          type: MasterMessageType.cancel,
+          uid: jobUID
+        }
+        worker.postMessage(cancelMessage)
+      }
+      worker.removeEventListener("message", messageHandler)
+    }
   })
 }
 

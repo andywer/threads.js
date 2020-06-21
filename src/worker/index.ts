@@ -1,8 +1,9 @@
 import isSomeObservable from "is-observable"
-import { Observable } from "observable-fns"
+import { Observable, Subscription } from "observable-fns"
 import { deserialize, serialize } from "../common"
 import { isTransferDescriptor, TransferDescriptor } from "../transferable"
 import {
+  MasterJobCancelMessage,
   MasterJobRunMessage,
   MasterMessageType,
   SerializedError,
@@ -24,6 +25,9 @@ export const isWorkerRuntime = Implementation.isWorkerRuntime
 
 let exposeCalled = false
 
+const activeSubscriptions = new Map<number, Subscription<any>>()
+
+const isMasterJobCancelMessage = (thing: any): thing is MasterJobCancelMessage => thing && thing.type === MasterMessageType.cancel
 const isMasterJobRunMessage = (thing: any): thing is MasterJobRunMessage => thing && thing.type === MasterMessageType.run
 
 /**
@@ -124,11 +128,18 @@ async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
   postJobStartMessage(jobUID, resultType)
 
   if (isObservable(syncResult)) {
-    syncResult.subscribe(
+    const subscription = syncResult.subscribe(
       value => postJobResultMessage(jobUID, false, serialize(value)),
-      error => postJobErrorMessage(jobUID, serialize(error) as any),
-      () => postJobResultMessage(jobUID, true)
+      error => {
+        postJobErrorMessage(jobUID, serialize(error) as any)
+        activeSubscriptions.delete(jobUID)
+      },
+      () => {
+        postJobResultMessage(jobUID, true)
+        activeSubscriptions.delete(jobUID)
+      }
     )
+    activeSubscriptions.set(jobUID, subscription)
   } else {
     try {
       const result = await syncResult
@@ -174,6 +185,18 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
   } else {
     throw Error(`Invalid argument passed to expose(). Expected a function or an object, got: ${exposed}`)
   }
+
+  Implementation.subscribeToMasterMessages(messageData => {
+    if (isMasterJobCancelMessage(messageData)) {
+      const jobUID = messageData.uid
+      const subscription = activeSubscriptions.get(jobUID)
+
+      if (subscription) {
+        subscription.unsubscribe()
+        activeSubscriptions.delete(jobUID)
+      }
+    }
+  })
 }
 
 if (typeof self !== "undefined" && typeof self.addEventListener === "function" && Implementation.isWorkerRuntime()) {
