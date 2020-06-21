@@ -17,8 +17,8 @@ export type JsonSerializable =
   | JsonSerializableObject
   | JsonSerializableObject[]
 
-export interface Serializer<Msg = JsonSerializable, Input = any> {
-  deserialize(message: Msg, sender: MessageRelay | null): Input
+export interface Serializer<Msg = JsonSerializable, Input = any, Deserialized = Input> {
+  deserialize(message: Msg, sender: MessageRelay | null): Deserialized
   serialize(input: Input): Msg
 }
 
@@ -37,4 +37,9 @@ export interface SerializedError {
   message: string
   name: string
   stack?: string
+}
+
+export interface SerializedIterator {
+  __iterator_marker: "$$iterator"
+  next_fid: number
 }

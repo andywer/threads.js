@@ -3,6 +3,7 @@ import { MessageRelay } from "../types/common"
 import { JsonSerializable, Serializer, SerializerImplementation } from "../types/serializers"
 import { isSerializedCallback, DefaultCallbackSerializer } from "./callbacks"
 import { isSerializedError, DefaultErrorSerializer } from "./errors"
+import { isIterator, isSerializedIterator, DefaultIteratorSerializer } from "./iterators"
 
 export {
   JsonSerializable,
@@ -36,6 +37,8 @@ export const DefaultSerializer = (): Serializer<JsonSerializable> => {
         return errorSerializer.deserialize(message, sender)
       } else if (isSerializedCallback(message)) {
         return callbackSerializer.deserialize(message, sender)
+      } else if (isSerializedIterator(message)) {
+        return iteratorSerializer.deserialize(message, sender)
       } else {
         return message
       }
@@ -45,6 +48,8 @@ export const DefaultSerializer = (): Serializer<JsonSerializable> => {
         return errorSerializer.serialize(input) as any as JsonSerializable
       } else if (isCallback(input)) {
         return callbackSerializer.serialize(input) as any as JsonSerializable
+      } else if (isIterator(input)) {
+        return iteratorSerializer.serialize(input) as any as JsonSerializable
       } else {
         return input
       }
@@ -53,6 +58,7 @@ export const DefaultSerializer = (): Serializer<JsonSerializable> => {
 
   const callbackSerializer = DefaultCallbackSerializer(serializer)
   const errorSerializer = DefaultErrorSerializer()
+  const iteratorSerializer = DefaultIteratorSerializer(serializer)
 
   return serializer
 }

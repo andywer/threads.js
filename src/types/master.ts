@@ -28,12 +28,19 @@ export type StripAsync<Type> =
   ? ObservableBaseType
   : Type
 
+export type AsyncifyIterator<Type> =
+  Type extends Iterator<infer T>
+    ? AsyncIterator<T> & AsyncIterable<T>
+    : Type extends AsyncIterator<infer T2>
+      ? AsyncIterator<T2> & AsyncIterable<T2>
+      : Type
+
 export type ModuleMethods = { [methodName: string]: (...args: any) => any }
 
 export type ProxyableFunction<Args extends any[], ReturnType> =
   Args extends []
-    ? () => ObservablePromise<StripAsync<ReturnType>>
-  : (...args: Args) => ObservablePromise<StripAsync<ReturnType>>
+    ? () => ObservablePromise<AsyncifyIterator<StripAsync<ReturnType>>>
+  : (...args: Args) => ObservablePromise<AsyncifyIterator<StripAsync<ReturnType>>>
 
 export type ModuleProxy<Methods extends ModuleMethods> = {
   [method in keyof Methods]: ProxyableFunction<Parameters<Methods[method]>, ReturnType<Methods[method]>>
