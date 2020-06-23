@@ -41,7 +41,10 @@ export const DefaultIteratorSerializer = (rootSerializer: Serializer): Serialize
 })
 
 export const isIterator = (thing: any): thing is Iterator<any> | AsyncIterator<any> =>
-  thing && typeof thing === "object" && "next" in thing && typeof thing.next === "function"
+  thing && typeof thing === "object" && (
+    typeof thing.next === "function" ||
+    typeof (thing as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function"
+  )
 
 export const isSerializedIterator = (thing: any): thing is SerializedIterator =>
   thing && typeof thing === "object" && "__iterator_marker" in thing && thing.__iterator_marker === "$$iterator"
