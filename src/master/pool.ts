@@ -326,11 +326,12 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
       throw this.initErrors[0]
     }
 
-    const taskCompleted = () => this.taskCompletion(task.id)
+    const taskID = this.nextTaskID++
+    const taskCompletion = this.taskCompletion(taskID)
     let taskCompletionDotThen: Promise<any>["then"] | undefined
 
     const task: QueuedTask<ThreadType, any> = {
-      id: this.nextTaskID++,
+      id: taskID,
       run: taskFunction,
       cancel: () => {
         if (this.taskQueue.indexOf(task) === -1) return
@@ -340,13 +341,7 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
           taskID: task.id
         })
       },
-      get then() {
-        if (!taskCompletionDotThen) {
-          const promise = taskCompleted()
-          taskCompletionDotThen = promise.then.bind(promise)
-        }
-        return taskCompletionDotThen
-      }
+      then: taskCompletion.then.bind(taskCompletion)
     }
 
     if (this.taskQueue.length >= maxQueuedJobs) {
