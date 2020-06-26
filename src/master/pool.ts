@@ -1,6 +1,6 @@
 import DebugLogger from "debug"
 import { multicast, Observable, Subject } from "observable-fns"
-import { allSettled, SettlementResult } from "../ponyfills"
+import { allSettled } from "../ponyfills"
 import { defaultPoolSize } from "./implementation"
 import {
   PoolEvent,
@@ -328,7 +328,12 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
 
     const taskID = this.nextTaskID++
     const taskCompletion = this.taskCompletion(taskID)
-    let taskCompletionDotThen: Promise<any>["then"] | undefined
+
+    taskCompletion.catch((error) => {
+      // Prevent unhandled rejections here as we assume the user will use
+      // `pool.completed()`, `pool.settled()` or `task.catch()` to handle errors
+      this.debug(`Task #${taskID} errored:`, error)
+    })
 
     const task: QueuedTask<ThreadType, any> = {
       id: taskID,
