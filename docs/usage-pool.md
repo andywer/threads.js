@@ -97,3 +97,19 @@ The pool comes with two methods that allow `await`-ing the completion of all tas
 The first one is `pool.completed()`. It returns a promise that resolves once all tasks have been executed and there are no more tasks left to run. If a task fails, the promise will be rejected.
 
 The second one is `pool.settled()`. It also returns a promise that resolves when all tasks have been executed, but it will also resolve instead of reject if a task fails. The returned promise resolves to an array of errors.
+
+As outlined before, pool tasks provide a Promise-like `.then()` method. You can use it to await the completion of a subset of a pool's queued tasks only.
+
+```ts
+// (Created a pool and queued other pool tasks before…)
+
+const myTasks: QueuedTask[] = []
+
+for (let input = 0; input < 5; input++) {
+  const task = pool.queue(worker => worker.work(input))
+  myTasks.push(task)
+}
+
+await Promise.all(myTasks)
+console.log("All worker.work() tasks have completed. Other pool tasks might still be running.")
+```
