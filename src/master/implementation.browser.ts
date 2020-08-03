@@ -34,7 +34,6 @@ function selectWorkerImplementation(): ImplementationExport {
         url = new URL(url, options._baseURL)
       } else if (typeof url === "string" && !isAbsoluteURL(url) && getBundleURL().match(/^file:\/\//i)) {
         url = new URL(url, getBundleURL().replace(/\/[^\/]+$/, "/"))
-        url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
       }
       if (typeof url === "string" && isAbsoluteURL(url)) {
         // Create source code blob loading JS file via `importScripts()`
