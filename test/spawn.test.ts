@@ -67,4 +67,16 @@ test("catches top-level thread errors", async t => {
   await t.throwsAsync(spawn(new Worker("./workers/top-level-throw")), "Top-level worker error")
 })
 
+test("catches segfaults in a tiny-worker implementation", async t => {
+  const builtin = require('module').builtinModules;
+  if (builtin.indexOf('worker_threads') === -1) {
+    // test is actual for child process workers only (tiny-worker)
+    const segfault = await spawn<() => Promise<never>>(new Worker("./workers/sigsegv"))
+    await t.throwsAsync(segfault(), "Terminated with signal SIGSEGV")
+    await Thread.terminate(segfault)
+  } else {
+    t.pass()
+  }
+})
+
 test.todo("can subscribe to thread events")

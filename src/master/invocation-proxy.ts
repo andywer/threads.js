@@ -52,14 +52,14 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
             observer.next(deserialize(event.data.payload))
           }
           observer.complete()
-          worker.removeEventListener("message", messageHandler)
+          removeEventListeners()
         } else {
           if (event.data.payload) {
             observer.next(deserialize(event.data.payload))
           }
           if (event.data.complete) {
             observer.complete()
-            worker.removeEventListener("message", messageHandler)
+            removeEventListeners()
           }
         }
       } else if (isJobErrorMessage(event.data)) {
@@ -69,11 +69,23 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
         } else {
           observer.error(error)
         }
-        worker.removeEventListener("message", messageHandler)
+        removeEventListeners()
       }
     }) as EventListener
 
+    const errorHandler = ((error: Event) => {
+      debugMessages("Error from worker:", error)
+      observer.error(error)
+      removeEventListeners()
+    }) as EventListener
+
+    const removeEventListeners = () => {
+      worker.removeEventListener("error", errorHandler)
+      worker.removeEventListener("message", messageHandler)
+    }
+
     worker.addEventListener("message", messageHandler)
+    worker.addEventListener("error", errorHandler)
 
     return () => {
       if (asyncType === "observable" || !asyncType) {
