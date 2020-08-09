@@ -19,11 +19,12 @@ export function createWorker(workerPath: string & Blob, options: WorkerOptions) 
       getWebWorker().default
   } else if (options.backend === "node") {
     WorkerConstructor = options.blob ?
-      getNodeWorker().blob :
-      getNodeWorker().default
+      getNodeWorker("node").blob :
+      getNodeWorker("node").default
   } else if (options.backend === "tiny") {
-    // TODO
-    throw new Error("Tiny worker is not supported using `createWorker` yet.")
+    WorkerConstructor = options.blob ?
+      getNodeWorker("tiny").blob :
+      getNodeWorker("tiny").default
   } else {
     throw new Error("The worker backend is not supported.")
   }

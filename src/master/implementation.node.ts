@@ -248,21 +248,35 @@ function initTinyWorker(): ImplementationExport {
 let implementation: ImplementationExport
 let isTinyWorker: boolean
 
-function selectWorkerImplementation(): ImplementationExport {
-  try {
+function selectWorkerImplementation(selection?: string): ImplementationExport {
+  if (!selection) {
+
+    // automatic version based selection
+    try {
+      isTinyWorker = false
+      return initWorkerThreadsWorker()
+    } catch(error) {
+      // tslint:disable-next-line no-console
+      console.debug("Node worker_threads not available. Trying to fall back to tiny-worker polyfill...")
+      isTinyWorker = true
+      return initTinyWorker()
+    }
+
+    // manual selection
+  } else if (selection === "node") {
     isTinyWorker = false
     return initWorkerThreadsWorker()
-  } catch(error) {
-    // tslint:disable-next-line no-console
-    console.debug("Node worker_threads not available. Trying to fall back to tiny-worker polyfill...")
+  } else if (selection === "tiny") {
     isTinyWorker = true
     return initTinyWorker()
+  } else {
+    throw new Error("selection is not supported" + selection)
   }
 }
 
-export function getWorkerImplementation(): ImplementationExport {
+export function getWorkerImplementation(selection?: string): ImplementationExport {
   if (!implementation) {
-    implementation = selectWorkerImplementation()
+    implementation = selectWorkerImplementation(selection)
   }
   return implementation
 }
