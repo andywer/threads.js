@@ -1,5 +1,5 @@
-import * as WebImplementation from "./master/implementation.browser"
-import * as NodeImplementation from "./master/implementation.node"
+import {getWorkerImplementation as getWebWorker} from "./master/implementation.browser"
+import {getWorkerImplementation as getNodeWorker} from "./master/implementation.node"
 
 interface WorkerOptions {
   backend: string
@@ -10,12 +10,12 @@ export function createWorker(workerPath: string, options: WorkerOptions) {
   let WorkerConstructor: any
   if (options.backend === "web") {
     WorkerConstructor = options.blob ?
-      WebImplementation.getWorkerImplementation().blob :
-      WebImplementation.getWorkerImplementation().default
+      getWebWorker().blob :
+      getWebWorker().default
   } else if (options.backend === "node") {
     WorkerConstructor = options.blob ?
-      NodeImplementation.getWorkerImplementation().blob :
-      NodeImplementation.getWorkerImplementation().default
+      getNodeWorker().blob :
+      getNodeWorker().default
   } else if (options.backend === "tiny") {
     // TODO
     throw new Error("Tiny worker is not supported using `createWorker` yet.")
