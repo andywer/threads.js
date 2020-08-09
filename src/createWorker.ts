@@ -1,13 +1,18 @@
 import {getWorkerImplementation as getWebWorker} from "./master/implementation.browser"
-import {getWorkerImplementation as getNodeWorker} from "./master/implementation.node"
+import {getWorkerImplementation as getNodeWorker } from "./master/implementation.node"
+
+import {
+  BlobWorker,
+  WorkerImplementation,
+} from "./types/master"
 
 interface WorkerOptions {
   backend: string
   blob: boolean
 }
 
-export function createWorker(workerPath: string, options: WorkerOptions) {
-  let WorkerConstructor: any
+export function createWorker(workerPath: string & Blob, options: WorkerOptions) {
+  let WorkerConstructor: typeof WorkerImplementation | typeof BlobWorker
   if (options.backend === "web") {
     WorkerConstructor = options.blob ?
       getWebWorker().blob :
