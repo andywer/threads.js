@@ -146,7 +146,8 @@ export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> =
 ): Promise<ExposedToThreadType<Exposed>> {
   debugSpawn("Initializing new thread")
 
-  const initMessage = await withTimeout(receiveInitMessage(worker), options && options.timeout ? options.timeout : initMessageTimeout, `Timeout: Did not receive an init message from worker after ${initMessageTimeout}ms. Make sure the worker calls expose().`)
+  const timeout = options && options.timeout ? options.timeout : initMessageTimeout
+  const initMessage = await withTimeout(receiveInitMessage(worker), timeout, `Timeout: Did not receive an init message from worker after ${timeout}ms. Make sure the worker calls expose().`)
   const exposed = initMessage.exposed
 
   const { termination, terminate } = createTerminator(worker)
