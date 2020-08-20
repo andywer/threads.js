@@ -36,7 +36,7 @@ function detectTsNode() {
   }
 
   try {
-    require.resolve("ts-node")
+    eval("require").resolve("ts-node")
     tsNodeAvailable = true
   } catch (error) {
     if (error && error.code === "MODULE_NOT_FOUND") {
@@ -83,7 +83,7 @@ function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
 
   const workerFilePath = typeof __non_webpack_require__ === "function"
     ? __non_webpack_require__.resolve(makeRelative(scriptPath))
-    : require.resolve(makeRelative(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/)))
+    : eval("require").resolve(makeRelative(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/)))
 
   return workerFilePath
 }
