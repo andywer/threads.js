@@ -3,15 +3,16 @@ import {getWorkerImplementation as getNodeWorker } from "./master/implementation
 
 import {
   BlobWorker,
+  ThreadsWorkerOptions,
   WorkerImplementation,
 } from "./types/master"
 
-interface WorkerOptions {
+export interface CreateWorkerOptions extends ThreadsWorkerOptions {
   backend: string
   blob: boolean
 }
 
-export function createWorker(workerPath: string & Blob, options: WorkerOptions) {
+export function createWorker(workerPath: string & Blob, options: CreateWorkerOptions) {
   let WorkerConstructor: typeof WorkerImplementation | typeof BlobWorker
   if (options.backend === "web") {
     WorkerConstructor = options.blob ?
@@ -28,5 +29,5 @@ export function createWorker(workerPath: string & Blob, options: WorkerOptions) 
   } else {
     throw new Error("The worker backend is not supported.")
   }
-  return new WorkerConstructor(workerPath)
+  return new WorkerConstructor(workerPath, options)
 }
