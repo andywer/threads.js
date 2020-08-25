@@ -88,6 +88,11 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
   CORSWorkaround?: boolean
 }
 
+export interface CreateWorkerOptions extends ThreadsWorkerOptions {
+  backend: string
+  blob: boolean
+}
+
 /** Worker implementation. Either web worker or a node.js Worker class. */
 export declare class WorkerImplementation extends EventTarget implements Worker {
   constructor(path: string, options?: ThreadsWorkerOptions)

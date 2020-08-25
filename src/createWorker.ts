@@ -3,14 +3,9 @@ import {getWorkerImplementation as getNodeWorker } from "./master/implementation
 
 import {
   BlobWorker,
-  ThreadsWorkerOptions,
+  CreateWorkerOptions,
   WorkerImplementation,
 } from "./types/master"
-
-export interface CreateWorkerOptions extends ThreadsWorkerOptions {
-  backend: string
-  blob: boolean
-}
 
 export function createWorker(workerPath: string & Blob, options: CreateWorkerOptions) {
   let WorkerConstructor: typeof WorkerImplementation | typeof BlobWorker
