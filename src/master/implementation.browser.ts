@@ -7,7 +7,7 @@ export const defaultPoolSize = typeof navigator !== "undefined" && navigator.har
   ? navigator.hardwareConcurrency
   : 4
 
-const isAbsoluteURL = (value: string) => /^(file:|https?:)?\/\//i.test(value) || /^blob:/.test(value)
+const isAbsoluteURL = (value: string) => /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(value)
 
 function createSourceBlobURL(code: string): string {
   const blob = new Blob(
