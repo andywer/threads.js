@@ -89,7 +89,9 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
 }
 
 export interface CreateWorkerOptions extends ThreadsWorkerOptions {
-  backend: string
+  /** backend for the threads */
+  backend: "web" | "node" | "tiny"
+  /** flag to return a BlobWorker */
   blob: boolean
 }
 
