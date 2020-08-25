@@ -34,12 +34,16 @@ function selectWorkerImplementation(): ImplementationExport {
         url = new URL(url, options._baseURL)
       } else if (typeof url === "string" && !isAbsoluteURL(url) && getBundleURL().match(/^file:\/\//i)) {
         url = new URL(url, getBundleURL().replace(/\/[^\/]+$/, "/"))
-        url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        if (options?.CORSWorkaround ?? true) {
+          url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        }
       }
       if (typeof url === "string" && isAbsoluteURL(url)) {
         // Create source code blob loading JS file via `importScripts()`
         // to circumvent worker CORS restrictions
-        url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        if (options?.CORSWorkaround ?? true) {
+          url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        }
       }
       super(url, options)
     }

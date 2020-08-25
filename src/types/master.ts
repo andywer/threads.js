@@ -83,6 +83,9 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
   }
   /** Data passed on to Node worker_threads */
   workerData?: any
+
+  /** apply CORS protection workaround */
+  CORSWorkaround?: boolean
 }
 
 /** Worker implementation. Either web worker or a node.js Worker class. */
