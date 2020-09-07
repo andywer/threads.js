@@ -2,7 +2,7 @@
 // tslint:disable function-constructor no-eval no-duplicate-super max-classes-per-file
 
 import getCallsites, { CallSite } from "callsites"
-import EventEmitter from "events"
+import { EventEmitter } from "events"
 import { cpus } from 'os'
 import * as path from "path"
 import {
