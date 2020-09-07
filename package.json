@@ -104,7 +104,6 @@
     "tiny-worker": ">= 2"
   },
   "ava": {
-    "compileEnhancements": false,
     "extensions": [
       "ts"
     ],
