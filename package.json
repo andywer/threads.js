@@ -5,13 +5,14 @@
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist-esm/index.js",
+  "bundle": "bundle/worker.js",
   "scripts": {
     "prebuild": "rimraf dist/ dist-esm/",
     "build": "run-p build:cjs build:es",
     "build:cjs": "tsc -p tsconfig.json",
     "build:es": "tsc -p tsconfig-esm.json",
     "postbuild": "run-s bundle",
-    "bundle": "rollup -c -f umd --file=bundle/worker.js --name=threads --silent -- dist-esm/worker/bundle-entry.js",
+    "bundle": "parcel build --target bundle src/worker/bundle-entry.ts",
     "test": "run-s test:ava test:puppeteer:basic test:puppeteer:webpack",
     "test:ava": "cross-env TS_NODE_FILES=true ava",
     "test:puppeteer:basic": "puppet-run --plugin=mocha --bundle=./test/workers/:/workers/ --serve=./bundle/worker.js:/worker.js ./test/*.chromium*.ts",
@@ -82,6 +83,7 @@
     "execa": "^4.0.3",
     "mocha": "^5.2.0",
     "npm-run-all": "^4.1.5",
+    "parcel": "^2.0.0-beta.1",
     "puppet-run": "^0.11.1",
     "puppet-run-plugin-mocha": "^0.10.0-alpha",
     "raw-loader": "^4.0.1",
@@ -138,5 +140,13 @@
     "*.js",
     "*.mjs",
     "*.ts"
-  ]
+  ],
+  "targets": {
+    "bundle": {
+      "context": "browser",
+      "includeNodeModules": true,
+      "outputFormat": "global",
+      "isLibrary": true
+    }
+  }
 }
