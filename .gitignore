@@ -12,4 +12,3 @@ test/workers/*.js
 .DS_Store
 Thumbs.db
 *.log
-.parcel-cache
