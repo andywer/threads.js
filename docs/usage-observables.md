@@ -112,7 +112,7 @@ await Thread.terminate(minmax)
 
 ```js
 // minmax.js
-import { Subject } from "threads/observable"
+import { Observable, Subject } from "threads/observable"
 import { expose } from "threads/worker"
 
 let max = -Infinity
