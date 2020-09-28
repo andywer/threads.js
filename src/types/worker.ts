@@ -1,9 +1,7 @@
-type UnsubscribeFn = () => void
+import { MessageRelay } from "./common"
 
-export interface AbstractedWorkerAPI {
+export interface AbstractedWorkerAPI extends MessageRelay {
   isWorkerRuntime(): boolean
-  postMessageToMaster(message: any, transferList?: Transferable[]): void
-  subscribeToMasterMessages(onMessage: (data: any) => void): UnsubscribeFn
 }
 
 export type WorkerFunction = ((...args: any[]) => any) | (() => any)

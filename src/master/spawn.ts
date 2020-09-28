@@ -1,8 +1,9 @@
 import DebugLogger from "debug"
 import { Observable } from "observable-fns"
-import { deserialize } from "../common"
-import { createPromiseWithResolver } from "../promise"
+import { createProxyFunction, createProxyModule, handleFunctionInvocations } from "../common/call-proxy"
+import { deserialize, getRegisteredSerializer } from "../common/serialization"
 import { $errors, $events, $terminate, $worker } from "../symbols"
+import { MessageRelay } from "../types/common"
 import {
   FunctionThread,
   ModuleThread,
@@ -17,7 +18,7 @@ import {
 } from "../types/master"
 import { WorkerInitMessage, WorkerUncaughtErrorMessage } from "../types/messages"
 import { WorkerFunction, WorkerModule } from "../types/worker"
-import { createProxyFunction, createProxyModule } from "./invocation-proxy"
+import { createPromiseWithResolver } from "../util/promise"
 
 type ArbitraryWorkerInterface = WorkerFunction & WorkerModule<string> & { somekeythatisneverusedinproductioncode123: "magicmarker123" }
 type ArbitraryThreadType = FunctionThread<any, any> & ModuleThread<any>
@@ -30,7 +31,6 @@ type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
   : Exposed extends WorkerModule<any>
   ? ModuleThread<Exposed>
   : never
-
 
 const debugMessages = DebugLogger("threads:master:messages")
 const debugSpawn = DebugLogger("threads:master:spawn")
@@ -58,7 +58,7 @@ async function withTimeout<T>(promise: Promise<T>, timeoutInMs: number, errorMes
   return result
 }
 
-function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
+function receiveInitMessage(worker: MessageRelay): Promise<WorkerInitMessage> {
   return new Promise((resolve, reject) => {
     const messageHandler = ((event: MessageEvent) => {
       debugMessages("Message from worker before finishing initialization:", event.data)
@@ -67,7 +67,7 @@ function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
         resolve(event.data)
       } else if (isUncaughtErrorMessage(event.data)) {
         worker.removeEventListener("message", messageHandler)
-        reject(deserialize(event.data.error))
+        reject(deserialize(event.data.error, worker))
       }
     }) as EventListener
     worker.addEventListener("message", messageHandler)
@@ -152,12 +152,15 @@ export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> =
 
   const { termination, terminate } = createTerminator(worker)
   const events = createEventObservable(worker, termination)
+  const serializer = getRegisteredSerializer()
 
   if (exposed.type === "function") {
-    const proxy = createProxyFunction(worker)
+    const proxy = createProxyFunction(worker, serializer, 0, debugMessages)
+    handleFunctionInvocations(worker, serializer, debugMessages)
     return setPrivateThreadProps(proxy, worker, events, terminate) as ExposedToThreadType<Exposed>
   } else if (exposed.type === "module") {
-    const proxy = createProxyModule(worker, exposed.methods)
+    const proxy = createProxyModule(worker, serializer, exposed.methods, debugMessages)
+    handleFunctionInvocations(worker, serializer, debugMessages)
     return setPrivateThreadProps(proxy, worker, events, terminate) as ExposedToThreadType<Exposed>
   } else {
     const type = (exposed as WorkerInitMessage["exposed"]).type

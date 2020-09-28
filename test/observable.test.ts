@@ -1,5 +1,5 @@
 import test from "ava"
-import { Observable, Subject } from "../src/observable"
+import { Observable, Subject } from "../src/util/observable"
 
 test("Observable subject emits values and completion event", async t => {
   let completed1 = false

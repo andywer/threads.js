@@ -29,7 +29,7 @@ module.exports = {
     ]
   },
   plugins: [
-    new ThreadsPlugin()
+    new ThreadsPlugin({ target: "node" })
   ],
   resolve: {
     extensions: [".js", ".ts"]

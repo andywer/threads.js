@@ -50,8 +50,8 @@ test("can pass transferable objects on thread call", async t => {
   t.is(postMessageCalls[0].length, 2)
   t.deepEqual(postMessageCalls[0][0], {
     args: [arrayBufferPlaceholder, 15],
-    method: undefined,
-    type: "run",
+    fid: 0,
+    type: "call:invoke",
     uid: postMessageCalls[0][0].uid
   })
   t.deepEqual(postMessageCalls[0][1], [arrayBufferPlaceholder])

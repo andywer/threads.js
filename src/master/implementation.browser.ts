@@ -1,6 +1,7 @@
 // tslint:disable max-classes-per-file
 
-import { ImplementationExport, ThreadsWorkerOptions } from "../types/master"
+import { ImplementationExport, ThreadsWorkerOptions, WorkerImplementation } from "../types/master"
+import { multiplexEventTarget } from "../util/events"
 import { getBundleURL } from "./get-bundle-url.browser"
 
 export const defaultPoolSize = typeof navigator !== "undefined" && navigator.hardwareConcurrency
@@ -28,7 +29,7 @@ function selectWorkerImplementation(): ImplementationExport {
     } as any
   }
 
-  class WebWorker extends Worker {
+  class WebWorker extends Worker implements WorkerImplementation {
     constructor(url: string | URL, options?: ThreadsWorkerOptions) {
       if (typeof url === "string" && options && options._baseURL) {
         url = new URL(url, options._baseURL)
@@ -45,7 +46,7 @@ function selectWorkerImplementation(): ImplementationExport {
     }
   }
 
-  class BlobWorker extends WebWorker {
+  class BlobWorker extends WebWorker implements WorkerImplementation {
     constructor(blob: Blob, options?: ThreadsWorkerOptions) {
       const url = window.URL.createObjectURL(blob)
       super(url, options)

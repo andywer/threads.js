@@ -1,1 +1,1 @@
-module.exports = require("./dist/observable")
+module.exports = require("./dist/util/observable")

@@ -1,6 +1,6 @@
 import test from "ava"
 import { Observable } from "observable-fns"
-import { ObservablePromise } from "../src/observable-promise"
+import { ObservablePromise } from "../src/common/observable-promise"
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 

@@ -1,7 +1,9 @@
 /// <reference lib="dom" />
 // tslint:disable no-shadowed-variable
 
+import { MessageRelay } from "../types/common"
 import { AbstractedWorkerAPI } from "../types/worker"
+import { multiplexEventTarget } from "../util/events"
 
 interface WorkerGlobalScope {
   addEventListener(eventName: string, listener: (event: Event) => void): void
@@ -16,23 +18,23 @@ const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorke
   return typeof self !== "undefined" && self.postMessage && !isWindowContext ? true : false
 }
 
-const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList?) {
+const postMessage: AbstractedWorkerAPI["postMessage"] = function postMessageToMaster(data, transferList?) {
   self.postMessage(data, transferList)
 }
 
-const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {
-  const messageHandler = (messageEvent: MessageEvent) => {
-    onMessage(messageEvent.data)
-  }
-  const unsubscribe = () => {
-    self.removeEventListener("message", messageHandler as EventListener)
-  }
-  self.addEventListener("message", messageHandler as EventListener)
-  return unsubscribe
+let muxedSelfEvents: Pick<EventTarget, "addEventListener" | "removeEventListener"> | undefined
+
+const Implementation: AbstractedWorkerAPI = {
+  addEventListener(event: string, handler: (message: any) => any) {
+    muxedSelfEvents = muxedSelfEvents || multiplexEventTarget(self)
+    return muxedSelfEvents.addEventListener(event, handler)
+  },
+  removeEventListener(event: string, handler: (message: any) => any) {
+    muxedSelfEvents = muxedSelfEvents || multiplexEventTarget(self)
+    return muxedSelfEvents.removeEventListener(event, handler)
+  },
+  isWorkerRuntime,
+  postMessage
 }
 
-export default {
-  isWorkerRuntime,
-  postMessageToMaster,
-  subscribeToMasterMessages
-}
+export default Implementation

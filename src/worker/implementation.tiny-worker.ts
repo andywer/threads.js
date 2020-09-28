@@ -2,6 +2,7 @@
 // tslint:disable no-shadowed-variable
 
 import { AbstractedWorkerAPI } from "../types/worker"
+import { multiplexEventTarget } from "../util/events"
 
 interface WorkerGlobalScope {
   addEventListener(eventName: string, listener: (event: Event) => void): void
@@ -19,32 +20,15 @@ const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorke
   return typeof self !== "undefined" && self.postMessage ? true : false
 }
 
-const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data) {
+const postMessage: AbstractedWorkerAPI["postMessage"] = function postMessage(data) {
   // TODO: Warn that Transferables are not supported on first attempt to use feature
   self.postMessage(data)
 }
 
-let muxingHandlerSetUp = false
-const messageHandlers = new Set<(data: any) => void>()
-
-const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {
-  if (!muxingHandlerSetUp) {
-    // We have one multiplexing message handler as tiny-worker's
-    // addEventListener() only allows you to set a single message handler
-    self.addEventListener("message", ((event: MessageEvent) => {
-      messageHandlers.forEach(handler => handler(event.data))
-    }) as EventListener)
-    muxingHandlerSetUp = true
-  }
-
-  messageHandlers.add(onMessage)
-
-  const unsubscribe = () => messageHandlers.delete(onMessage)
-  return unsubscribe
-}
-
-export default {
+const Implementation: AbstractedWorkerAPI = {
+  ...(multiplexEventTarget(self) as Pick<AbstractedWorkerAPI, "addEventListener" | "removeEventListener">),
   isWorkerRuntime,
-  postMessageToMaster,
-  subscribeToMasterMessages
+  postMessage
 }
+
+export default Implementation

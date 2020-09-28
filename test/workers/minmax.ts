@@ -1,4 +1,4 @@
-import { Observable, Subject } from "../../src/observable"
+import { Observable, Subject } from "../../src/util/observable"
 import { expose } from "../../src/worker"
 
 let max = -Infinity
