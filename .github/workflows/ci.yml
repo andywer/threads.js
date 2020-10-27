@@ -20,7 +20,6 @@ jobs:
         uses: actions/setup-node@v2-beta
         with:
           node-version: ${{ matrix.node }}
-          node-arch: ${{ matrix.arch }}
 
       - name: install dependencies and build
         run: npm install
