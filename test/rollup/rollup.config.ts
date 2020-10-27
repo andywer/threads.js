@@ -1,20 +1,6 @@
-/* tslint:disable */
-//@ts-ignore
-let commonjs, nodeResolve; //@ts-ignore
-//@ts-ignore
-if (parseFloat(process.version.match(/^v(\d+\.\d+)/)[1]) < 10) {
-  //@ts-ignore
-  commonjs = require("rollup-plugin-commonjs");
-  //@ts-ignore
-  nodeResolve = require("rollup-plugin-node-resolve");
-} else {
-  //@ts-ignore
-  commonjs = require("@rollup/plugin-commonjs");
-  //@ts-ignore
-  nodeResolve = require("@rollup/plugin-node-resolve").nodeResolve;
-}
+import commonjs from "@rollup/plugin-commonjs"
+import { nodeResolve } from "@rollup/plugin-node-resolve"
 
-//@ts-ignore
 export default {
   plugins: [
     nodeResolve({
