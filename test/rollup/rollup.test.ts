@@ -5,6 +5,7 @@ import { rollup } from "rollup"
 import config from "./rollup.config"
 
 test("can be bundled using rollup", async t => {
+  t.timeout(200000); // milliseconds
   const [appBundle, workerBundle] = await Promise.all([
     rollup({
       input: path.resolve(__dirname, "app.js"),
