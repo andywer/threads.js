@@ -26,7 +26,12 @@ jobs:
         run: npm install
 
       - name: run the tests
-        run: npm test
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_on: timeout
+          command: npm run test
 
   Skip:
     if: contains(github.event.head_commit.message, '[skip ci]')
