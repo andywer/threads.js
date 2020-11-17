@@ -1,5 +1,6 @@
 import DebugLogger from "debug"
 import { multicast, Observable, Subject } from "observable-fns"
+import { allSettled } from "../ponyfills"
 import { defaultPoolSize } from "./implementation"
 import {
   PoolEvent,
@@ -61,10 +62,19 @@ function spawnWorkers<ThreadType extends Thread>(
 export interface Pool<ThreadType extends Thread> {
   /**
    * Returns a promise that resolves once the task queue is emptied.
+   * Promise will be rejected if any task fails.
    *
    * @param allowResolvingImmediately Set to `true` to resolve immediately if task queue is currently empty.
    */
   completed(allowResolvingImmediately?: boolean): Promise<any>
+
+  /**
+   * Returns a promise that resolves once the task queue is emptied.
+   * Failing tasks will not cause the promise to be rejected.
+   *
+   * @param allowResolvingImmediately Set to `true` to resolve immediately if task queue is currently empty.
+   */
+  settled(allowResolvingImmediately?: boolean): Promise<Error[]>
 
   /**
    * Returns an observable that yields pool events.
@@ -237,14 +247,23 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
     })
   }
 
-  public async completed(allowResolvingImmediately: boolean = false) {
+  public async settled(allowResolvingImmediately: boolean = false): Promise<Error[]> {
     const getCurrentlyRunningTasks = () => flatMap(this.workers, worker => worker.runningTasks)
+
+    const taskFailures: Error[] = []
+
+    const failureSubscription = this.eventObservable.subscribe(event => {
+      if (event.type === PoolEventType.taskFailed) {
+        taskFailures.push(event.error)
+      }
+    })
 
     if (this.initErrors.length > 0) {
       return Promise.reject(this.initErrors[0])
     }
     if (allowResolvingImmediately && this.taskQueue.length === 0) {
-      return Promise.all(getCurrentlyRunningTasks())
+      await allSettled(getCurrentlyRunningTasks())
+      return taskFailures
     }
 
     await new Promise((resolve, reject) => {
@@ -253,6 +272,27 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
           if (event.type === PoolEventType.taskQueueDrained) {
             subscription.unsubscribe()
             resolve()
+          }
+        },
+        error: reject     // make a pool-wide error reject the completed() result promise
+      })
+    })
+
+    await allSettled(getCurrentlyRunningTasks())
+    failureSubscription.unsubscribe()
+
+    return taskFailures
+  }
+
+  public async completed(allowResolvingImmediately: boolean = false) {
+    const settlementPromise = this.settled(allowResolvingImmediately)
+
+    const earlyExitPromise = new Promise<Error[]>((resolve, reject) => {
+      const subscription = this.eventObservable.subscribe({
+        next(event) {
+          if (event.type === PoolEventType.taskQueueDrained) {
+            subscription.unsubscribe()
+            resolve(settlementPromise)
           } else if (event.type === PoolEventType.taskFailed) {
             subscription.unsubscribe()
             reject(event.error)
@@ -262,7 +302,14 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
       })
     })
 
-    await Promise.all(getCurrentlyRunningTasks())
+    const errors = await Promise.race([
+      settlementPromise,
+      earlyExitPromise
+    ])
+
+    if (errors.length > 0) {
+      throw errors[0]
+    }
   }
 
   public events() {
@@ -279,11 +326,17 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
       throw this.initErrors[0]
     }
 
-    const taskCompleted = () => this.taskCompletion(task.id)
-    let taskCompletionDotThen: Promise<any>["then"] | undefined
+    const taskID = this.nextTaskID++
+    const taskCompletion = this.taskCompletion(taskID)
+
+    taskCompletion.catch((error) => {
+      // Prevent unhandled rejections here as we assume the user will use
+      // `pool.completed()`, `pool.settled()` or `task.catch()` to handle errors
+      this.debug(`Task #${taskID} errored:`, error)
+    })
 
     const task: QueuedTask<ThreadType, any> = {
-      id: this.nextTaskID++,
+      id: taskID,
       run: taskFunction,
       cancel: () => {
         if (this.taskQueue.indexOf(task) === -1) return
@@ -293,13 +346,7 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
           taskID: task.id
         })
       },
-      get then() {
-        if (!taskCompletionDotThen) {
-          const promise = taskCompleted()
-          taskCompletionDotThen = promise.then.bind(promise)
-        }
-        return taskCompletionDotThen
-      }
+      then: taskCompletion.then.bind(taskCompletion)
     }
 
     if (this.taskQueue.length >= maxQueuedJobs) {

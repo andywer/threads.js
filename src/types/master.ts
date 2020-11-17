@@ -1,4 +1,5 @@
 /// <reference lib="dom" />
+// tslint:disable max-classes-per-file
 
 // Cannot use `compilerOptions.esModuleInterop` and default import syntax
 // See <https://github.com/microsoft/TypeScript/issues/28009>
@@ -71,6 +72,15 @@ export interface Worker extends EventTarget {
 export interface ThreadsWorkerOptions extends WorkerOptions {
   /** Prefix for the path passed to the Worker constructor. Web worker only. */
   _baseURL?: string
+  /** Resource limits passed on to Node worker_threads */
+  resourceLimits?: {
+    /** The maximum size of the main heap in MB. */
+    maxOldGenerationSizeMb?: number;
+    /** The maximum size of a heap space for recently created objects. */
+    maxYoungGenerationSizeMb?: number;
+    /** The size of a pre-allocated memory range used for generated code. */
+    codeRangeSizeMb?: number;
+  }
 }
 
 /** Worker implementation. Either web worker or a node.js Worker class. */
@@ -78,6 +88,17 @@ export declare class WorkerImplementation extends EventTarget implements Worker 
   constructor(path: string, options?: ThreadsWorkerOptions)
   public postMessage(value: any, transferList?: TransferList): void
   public terminate(): void
+}
+
+/** Class to spawn workers from a blob or source string. */
+export declare class BlobWorker extends WorkerImplementation {
+  constructor(blob: Blob, options?: ThreadsWorkerOptions)
+  public static fromText(source: string, options?: ThreadsWorkerOptions): WorkerImplementation
+}
+
+export interface ImplementationExport {
+  blob: typeof BlobWorker
+  default: typeof WorkerImplementation
 }
 
 /** Event as emitted by worker thread. Subscribe to using `Thread.events(thread)`. */

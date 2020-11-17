@@ -171,6 +171,21 @@ Be aware that this might affect any code that tries to instantiate a normal web 
 
 Everything else should work out of the box.
 
+### Electron
+
+When building an Electron application you probably want to enable ASAR packaging – it's usually enabled by default. Your JavaScript files will then be packaged into an ASAR archive which can help reducing the executable size and time to launch.
+
+The problem is that you can `require()` / `import` JavaScript modules from within the ASAR archive, but you cannot spawn workers packaged in the archive as easily. In order to spawn workers, you can use the [`asarUnpack`](https://www.electron.build/configuration/configuration#configuration-asarUnpack) option to unpack the archive when the app launches. `threads.js` will automatically look for the worker in the unpacked archive directory.
+
+The following sample snippet shows how to set that option in your `package.json` file. You will have to use the right paths for your application's files.
+
+```diff
++ "asarUnpack": {
++   "dist/main/0.bundle.worker.js",
++   "dist/main/0.bundle.worker.js.map"
++ }
+```
+
 ## Next
 
 Learn about the details and all the other features of the threads.js API, like

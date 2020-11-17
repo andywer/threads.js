@@ -21,7 +21,7 @@ import { spawn, Thread, Worker } from "threads"
 
 const counter = await spawn(new Worker("./workers/counter"))
 
-counter.subscribe(newCount => console.log(`Counter incremented to:`, newCount))
+counter().subscribe(newCount => console.log(`Counter incremented to:`, newCount))
 ```
 
 ```js
@@ -112,7 +112,7 @@ await Thread.terminate(minmax)
 
 ```js
 // minmax.js
-import { Subject } from "threads/observable"
+import { Observable, Subject } from "threads/observable"
 import { expose } from "threads/worker"
 
 let max = -Infinity

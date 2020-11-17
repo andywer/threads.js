@@ -1,11 +1,13 @@
 .cache/
+.vscode/
+bundle/
 docs/_site
 docs/vendor
 dist/*
 dist-*/*
 node_modules/
 test/rollup/dist/
-test/webpack/dist*
+test/webpack/dist/
 test/workers/*.js
 .DS_Store
 Thumbs.db

@@ -4,6 +4,7 @@
 <p align="center">
   <a href="https://travis-ci.org/andywer/threads.js" target="_blank"><img alt="Build status" src="https://img.shields.io/travis/andywer/threads.js/v1.svg?style=flat-square"></a>
   <a href="https://www.npmjs.com/package/threads" target="_blank"><img alt="npm (tag)" src="https://img.shields.io/npm/v/threads.svg?style=flat-square"></a>
+  <a href="https://gitter.im/threadsjs/community" target="_blank"><img alt="Chat room" src="https://img.shields.io/badge/chat-gitter.im-orange" /></a>
 </p>
 
 <br />

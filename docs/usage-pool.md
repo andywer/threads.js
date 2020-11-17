@@ -67,7 +67,7 @@ The promise returned by `pool.queue()` resolves or rejects when the queued task 
 
 Whenever a pool worker finishes a job, the next pool job is de-queued (that is the function you passed to `pool.queue()`). It is called with the worker as the first argument. The job function is supposed to return a promise - when this promise resolves, the job is considered done and the next job is de-queued and dispatched to the worker.
 
-The promise returned by `pool.completed()` will resolve once the scheduled callbacks have been executed and completed. A failing job will also make the promise reject.
+The promise returned by `pool.completed()` will resolve once the scheduled callbacks have been executed and completed. A failing job will make the promise reject. Use `pool.settled()` if you need a promise that resolves without an error even if a task has failed.
 
 ## Cancelling a queued task
 
@@ -89,3 +89,27 @@ pool.terminate(true)
 ```
 
 By default the pool will wait until all scheduled tasks have completed before terminating the workers. Pass `true` to force-terminate the pool immediately.
+
+## Waiting for tasks to complete
+
+The pool comes with two methods that allow `await`-ing the completion of all tasks.
+
+The first one is `pool.completed()`. It returns a promise that resolves once all tasks have been executed and there are no more tasks left to run. If a task fails, the promise will be rejected.
+
+The second one is `pool.settled()`. It also returns a promise that resolves when all tasks have been executed, but it will also resolve instead of reject if a task fails. The returned promise resolves to an array of errors.
+
+As outlined before, pool tasks provide a Promise-like `.then()` method. You can use it to await the completion of a subset of a pool's queued tasks only.
+
+```ts
+// (Created a pool and queued other pool tasks before…)
+
+const myTasks: QueuedTask[] = []
+
+for (let input = 0; input < 5; input++) {
+  const task = pool.queue(worker => worker.work(input))
+  myTasks.push(task)
+}
+
+await Promise.all(myTasks)
+console.log("All worker.work() tasks have completed. Other pool tasks might still be running.")
+```

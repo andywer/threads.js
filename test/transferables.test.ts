@@ -21,10 +21,10 @@ function replaceArrayBufferWithPlaceholder<In extends any>(obj: In, arrayBuffer:
   } else if (Array.isArray(obj)) {
     return (obj as any[]).map(element => replaceArrayBufferWithPlaceholder(element, arrayBuffer)) as any
   } else if (obj && typeof obj === "object") {
-    const result: typeof obj = Object.create(Object.getPrototypeOf(obj))
+    const result: In = Object.create(Object.getPrototypeOf(obj))
 
     for (const key of Object.getOwnPropertyNames(obj)) {
-      result[key] = replaceArrayBufferWithPlaceholder(obj[key], arrayBuffer)
+      (result as any)[key] = replaceArrayBufferWithPlaceholder((obj as any)[key], arrayBuffer)
     }
     return result as any
   } else {

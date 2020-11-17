@@ -1,6 +1,6 @@
 // tslint:disable max-classes-per-file
 
-import { ThreadsWorkerOptions, WorkerImplementation } from "../types/master"
+import { ImplementationExport, ThreadsWorkerOptions } from "../types/master"
 import { getBundleURL } from "./get-bundle-url.browser"
 
 export const defaultPoolSize = typeof navigator !== "undefined" && navigator.hardwareConcurrency
@@ -17,8 +17,7 @@ function createSourceBlobURL(code: string): string {
   return URL.createObjectURL(blob)
 }
 
-
-export function selectWorkerImplementation(): typeof WorkerImplementation {
+function selectWorkerImplementation(): ImplementationExport {
   if (typeof Worker === "undefined") {
     // Might happen on Safari, for instance
     // The idea is to only fail if the constructor is actually used
@@ -29,7 +28,7 @@ export function selectWorkerImplementation(): typeof WorkerImplementation {
     } as any
   }
 
-  return class WebWorker extends Worker {
+  class WebWorker extends Worker {
     constructor(url: string | URL, options?: ThreadsWorkerOptions) {
       if (typeof url === "string" && options && options._baseURL) {
         url = new URL(url, options._baseURL)
@@ -45,4 +44,35 @@ export function selectWorkerImplementation(): typeof WorkerImplementation {
       super(url, options)
     }
   }
+
+  class BlobWorker extends WebWorker {
+    constructor(blob: Blob, options?: ThreadsWorkerOptions) {
+      const url = window.URL.createObjectURL(blob)
+      super(url, options)
+    }
+
+    public static fromText(source: string, options?: ThreadsWorkerOptions): WebWorker {
+      const blob = new window.Blob([source], { type: "text/javascript" })
+      return new BlobWorker(blob, options)
+    }
+  }
+
+  return {
+    blob: BlobWorker,
+    default: WebWorker
+  }
+}
+
+let implementation: ImplementationExport
+
+export function getWorkerImplementation(): ImplementationExport {
+  if (!implementation) {
+    implementation = selectWorkerImplementation()
+  }
+  return implementation
+}
+
+export function isWorkerRuntime() {
+  const isWindowContext = typeof self !== "undefined" && typeof Window !== "undefined" && self instanceof Window
+  return typeof self !== "undefined" && self.postMessage && !isWindowContext ? true : false
 }

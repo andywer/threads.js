@@ -1,12 +1,24 @@
-// tslint:disable function-constructor no-eval max-classes-per-file
+/// <reference lib="dom" />
+// tslint:disable function-constructor no-eval no-duplicate-super max-classes-per-file
 
 import getCallsites, { CallSite } from "callsites"
 import EventEmitter from "events"
 import { cpus } from 'os'
 import * as path from "path"
-import { WorkerImplementation } from "../types/master"
+import {
+  ImplementationExport,
+  ThreadsWorkerOptions,
+  WorkerImplementation
+} from "../types/master"
+
+interface WorkerGlobalScope {
+  addEventListener(eventName: string, listener: (event: Event) => void): void
+  postMessage(message: any, transferables?: any[]): void
+  removeEventListener(eventName: string, listener: (event: Event) => void): void
+}
 
 declare const __non_webpack_require__: typeof require
+declare const self: WorkerGlobalScope
 
 type WorkerEventName = "error" | "message"
 
@@ -24,7 +36,7 @@ function detectTsNode() {
   }
 
   try {
-    require.resolve("ts-node")
+    eval("require").resolve("ts-node")
     tsNodeAvailable = true
   } catch (error) {
     if (error && error.code === "MODULE_NOT_FOUND") {
@@ -48,25 +60,35 @@ function createTsNodeModule(scriptPath: string) {
 function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   const parentCallSite = getCallsites().find((callsite: CallSite) => {
     const filename = callsite.getFileName()
-    return Boolean(filename && !filename.match(ignoreRegex) && !filename.match(/[\/\\]master[\/\\]implementation/))
+    return Boolean(
+      filename &&
+      !filename.match(ignoreRegex) &&
+      !filename.match(/[\/\\]master[\/\\]implementation/) &&
+      !filename.match(/^internal\/process/)
+    )
   })
 
-  const callerPath = parentCallSite ? parentCallSite.getFileName() : null
+  const rawCallerPath = parentCallSite ? parentCallSite.getFileName() : null
+  const callerPath = rawCallerPath ? rawCallerPath.replace(/^file:\//, "") : null
   const rebasedScriptPath = callerPath ? path.join(path.dirname(callerPath), scriptPath) : scriptPath
 
   return rebasedScriptPath
 }
 
-function resolveScriptPath(scriptPath: string) {
-  // eval() hack is also webpack-related
+function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
+  const makeRelative = (filePath: string) => {
+    // eval() hack is also webpack-related
+    return path.isAbsolute(filePath) ? filePath : path.join(baseURL || eval("__dirname"), filePath)
+  }
+
   const workerFilePath = typeof __non_webpack_require__ === "function"
-    ? __non_webpack_require__.resolve(path.join(eval("__dirname"), scriptPath))
-    : require.resolve(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/))
+    ? __non_webpack_require__.resolve(makeRelative(scriptPath))
+    : eval("require").resolve(makeRelative(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/)))
 
   return workerFilePath
 }
 
-function initWorkerThreadsWorker(): typeof WorkerImplementation {
+function initWorkerThreadsWorker(): ImplementationExport {
   // Webpack hack
   const NativeWorker = typeof __non_webpack_require__ === "function"
     ? __non_webpack_require__("worker_threads").Worker
@@ -77,13 +99,22 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
   class Worker extends NativeWorker {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
 
-    constructor(scriptPath: string) {
-      const resolvedScriptPath = resolveScriptPath(scriptPath)
+    constructor(scriptPath: string, options?: ThreadsWorkerOptions & { fromSource: boolean }) {
+      const resolvedScriptPath = options && options.fromSource
+        ? null
+        : resolveScriptPath(scriptPath, (options || {})._baseURL)
 
-      if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
-        super(createTsNodeModule(resolvedScriptPath), { eval: true })
+      if (!resolvedScriptPath) {
+        // `options.fromSource` is true
+        const sourceCode = scriptPath
+        super(sourceCode, { ...options, eval: true })
+      } else if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
+        super(createTsNodeModule(resolvedScriptPath), { ...options, eval: true })
+      } else if (resolvedScriptPath.match(/\.asar[\/\\]/)) {
+        // See <https://github.com/andywer/threads-plugin/issues/17>
+        super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1"), options)
       } else {
-        super(resolvedScriptPath)
+        super(resolvedScriptPath, options)
       }
 
       this.mappedEventListeners = new WeakMap()
@@ -117,10 +148,23 @@ function initWorkerThreadsWorker(): typeof WorkerImplementation {
   process.on("SIGINT", () => terminateWorkersAndMaster())
   process.on("SIGTERM", () => terminateWorkersAndMaster())
 
-  return Worker as any
+  class BlobWorker extends Worker {
+    constructor(blob: Uint8Array, options?: ThreadsWorkerOptions) {
+      super(Buffer.from(blob).toString("utf-8"), { ...options, fromSource: true })
+    }
+
+    public static fromText(source: string, options?: ThreadsWorkerOptions): WorkerImplementation {
+      return new Worker(source, { ...options, fromSource: true }) as any
+    }
+  }
+
+  return {
+    blob: BlobWorker as any,
+    default: Worker as any
+  }
 }
 
-function initTinyWorker(): typeof WorkerImplementation {
+function initTinyWorker(): ImplementationExport {
   const TinyWorker = require("tiny-worker")
 
   let allWorkers: Array<typeof TinyWorker> = []
@@ -128,15 +172,24 @@ function initTinyWorker(): typeof WorkerImplementation {
   class Worker extends TinyWorker {
     private emitter: EventEmitter
 
-    constructor(scriptPath: string) {
+    constructor(scriptPath: string, options?: ThreadsWorkerOptions & { fromSource?: boolean }) {
       // Need to apply a work-around for Windows or it will choke upon the absolute path
       // (`Error [ERR_INVALID_PROTOCOL]: Protocol 'c:' not supported`)
-      const resolvedScriptPath = process.platform === "win32"
-        ? `file:///${resolveScriptPath(scriptPath).replace(/\\/g, "/")}`
-        : resolveScriptPath(scriptPath)
+      const resolvedScriptPath = options && options.fromSource
+        ? null
+        : process.platform === "win32"
+          ? `file:///${resolveScriptPath(scriptPath).replace(/\\/g, "/")}`
+          : resolveScriptPath(scriptPath)
 
-      if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
+      if (!resolvedScriptPath) {
+        // `options.fromSource` is true
+        const sourceCode = scriptPath
+        super(new Function(sourceCode), [], { esm: true })
+      } else if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
         super(new Function(createTsNodeModule(resolveScriptPath(scriptPath))), [], { esm: true })
+      } else if (resolvedScriptPath.match(/\.asar[\/\\]/)) {
+        // See <https://github.com/andywer/threads-plugin/issues/17>
+        super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1"), [], { esm: true })
       } else {
         super(resolvedScriptPath, [], { esm: true })
       }
@@ -147,12 +200,15 @@ function initTinyWorker(): typeof WorkerImplementation {
       this.onerror = (error: Error) => this.emitter.emit("error", error)
       this.onmessage = (message: MessageEvent) => this.emitter.emit("message", message)
     }
+
     public addEventListener(eventName: WorkerEventName, listener: EventListener) {
       this.emitter.addListener(eventName, listener)
     }
+
     public removeEventListener(eventName: WorkerEventName, listener: EventListener) {
       this.emitter.removeListener(eventName, listener)
     }
+
     public terminate() {
       allWorkers = allWorkers.filter(worker => worker !== this)
       return super.terminate()
@@ -173,15 +229,52 @@ function initTinyWorker(): typeof WorkerImplementation {
   process.on("SIGINT", () => terminateWorkersAndMaster())
   process.on("SIGTERM", () => terminateWorkersAndMaster())
 
-  return Worker as any
+  class BlobWorker extends Worker {
+    constructor(blob: Uint8Array, options?: ThreadsWorkerOptions) {
+      super(Buffer.from(blob).toString("utf-8"), { ...options, fromSource: true })
+    }
+
+    public static fromText(source: string, options?: ThreadsWorkerOptions): WorkerImplementation {
+      return new Worker(source, { ...options, fromSource: true }) as any
+    }
+  }
+
+  return {
+    blob: BlobWorker as any,
+    default: Worker as any
+  }
 }
 
-export function selectWorkerImplementation(): typeof WorkerImplementation {
+let implementation: ImplementationExport
+let isTinyWorker: boolean
+
+function selectWorkerImplementation(): ImplementationExport {
   try {
+    isTinyWorker = false
     return initWorkerThreadsWorker()
   } catch(error) {
     // tslint:disable-next-line no-console
     console.debug("Node worker_threads not available. Trying to fall back to tiny-worker polyfill...")
+    isTinyWorker = true
     return initTinyWorker()
+  }
+}
+
+export function getWorkerImplementation(): ImplementationExport {
+  if (!implementation) {
+    implementation = selectWorkerImplementation()
+  }
+  return implementation
+}
+
+export function isWorkerRuntime() {
+  if (isTinyWorker) {
+    return typeof self !== "undefined" && self.postMessage ? true : false
+  } else {
+    // Webpack hack
+    const isMainThread = typeof __non_webpack_require__ === "function"
+      ? __non_webpack_require__("worker_threads").isMainThread
+      : eval("require")("worker_threads").isMainThread
+    return !isMainThread
   }
 }

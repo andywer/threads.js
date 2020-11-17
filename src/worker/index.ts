@@ -1,10 +1,12 @@
 import isSomeObservable from "is-observable"
-import { Observable } from "observable-fns"
-import { serializeError } from "../common"
+import { Observable, Subscription } from "observable-fns"
+import { deserialize, serialize } from "../common"
 import { isTransferDescriptor, TransferDescriptor } from "../transferable"
 import {
+  MasterJobCancelMessage,
   MasterJobRunMessage,
   MasterMessageType,
+  SerializedError,
   WorkerInitMessage,
   WorkerJobErrorMessage,
   WorkerJobResultMessage,
@@ -15,10 +17,17 @@ import {
 import { WorkerFunction, WorkerModule } from "../types/worker"
 import Implementation from "./implementation"
 
+export { registerSerializer } from "../common"
 export { Transfer } from "../transferable"
+
+/** Returns `true` if this code is currently running in a worker. */
+export const isWorkerRuntime = Implementation.isWorkerRuntime
 
 let exposeCalled = false
 
+const activeSubscriptions = new Map<number, Subscription<any>>()
+
+const isMasterJobCancelMessage = (thing: any): thing is MasterJobCancelMessage => thing && thing.type === MasterMessageType.cancel
 const isMasterJobRunMessage = (thing: any): thing is MasterJobRunMessage => thing && thing.type === MasterMessageType.run
 
 /**
@@ -63,7 +72,7 @@ function postJobErrorMessage(uid: number, rawError: Error | TransferDescriptor<E
   const errorMessage: WorkerJobErrorMessage = {
     type: WorkerMessageType.error,
     uid,
-    error: serializeError(error)
+    error: serialize(error) as any as SerializedError
   }
   Implementation.postMessageToMaster(errorMessage, transferables)
 }
@@ -89,11 +98,21 @@ function postJobStartMessage(uid: number, resultType: WorkerJobStartMessage["res
 }
 
 function postUncaughtErrorMessage(error: Error) {
-  const errorMessage: WorkerUncaughtErrorMessage = {
-    type: WorkerMessageType.uncaughtError,
-    error: serializeError(error)
+  try {
+    const errorMessage: WorkerUncaughtErrorMessage = {
+      type: WorkerMessageType.uncaughtError,
+      error: serialize(error) as any as SerializedError
+    }
+    Implementation.postMessageToMaster(errorMessage)
+  } catch (subError) {
+    // tslint:disable-next-line no-console
+    console.error(
+      "Not reporting uncaught error back to master thread as it " +
+      "occured while reporting an uncaught error already." +
+      "\nLatest error:", subError,
+      "\nOriginal error:", error
+    )
   }
-  Implementation.postMessageToMaster(errorMessage)
 }
 
 async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
@@ -109,17 +128,24 @@ async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
   postJobStartMessage(jobUID, resultType)
 
   if (isObservable(syncResult)) {
-    syncResult.subscribe(
-      value => postJobResultMessage(jobUID, false, value),
-      error => postJobErrorMessage(jobUID, error),
-      () => postJobResultMessage(jobUID, true)
+    const subscription = syncResult.subscribe(
+      value => postJobResultMessage(jobUID, false, serialize(value)),
+      error => {
+        postJobErrorMessage(jobUID, serialize(error) as any)
+        activeSubscriptions.delete(jobUID)
+      },
+      () => {
+        postJobResultMessage(jobUID, true)
+        activeSubscriptions.delete(jobUID)
+      }
     )
+    activeSubscriptions.set(jobUID, subscription)
   } else {
     try {
       const result = await syncResult
-      postJobResultMessage(jobUID, true, result)
+      postJobResultMessage(jobUID, true, serialize(result))
     } catch (error) {
-      postJobErrorMessage(jobUID, error)
+      postJobErrorMessage(jobUID, serialize(error) as any)
     }
   }
 }
@@ -143,14 +169,14 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
   if (typeof exposed === "function") {
     Implementation.subscribeToMasterMessages(messageData => {
       if (isMasterJobRunMessage(messageData) && !messageData.method) {
-        runFunction(messageData.uid, exposed, messageData.args)
+        runFunction(messageData.uid, exposed, messageData.args.map(deserialize))
       }
     })
     postFunctionInitMessage()
   } else if (typeof exposed === "object" && exposed) {
     Implementation.subscribeToMasterMessages(messageData => {
       if (isMasterJobRunMessage(messageData) && messageData.method) {
-        runFunction(messageData.uid, exposed[messageData.method], messageData.args)
+        runFunction(messageData.uid, exposed[messageData.method], messageData.args.map(deserialize))
       }
     })
 
@@ -159,6 +185,18 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
   } else {
     throw Error(`Invalid argument passed to expose(). Expected a function or an object, got: ${exposed}`)
   }
+
+  Implementation.subscribeToMasterMessages(messageData => {
+    if (isMasterJobCancelMessage(messageData)) {
+      const jobUID = messageData.uid
+      const subscription = activeSubscriptions.get(jobUID)
+
+      if (subscription) {
+        subscription.unsubscribe()
+        activeSubscriptions.delete(jobUID)
+      }
+    }
+  })
 }
 
 if (typeof self !== "undefined" && typeof self.addEventListener === "function" && Implementation.isWorkerRuntime()) {
