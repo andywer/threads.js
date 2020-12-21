@@ -33,7 +33,10 @@ interface Terminable {
 
 // Terminates the workers, empties the workers array, and exits.
 const onSignal = (workers: Terminable[], signal: string) => {
-  Promise.all(workers.map(worker => worker.terminate())).then(
+  // worker.terminate() might return a Promise or might be synchronous. This async helper function
+  // creates a consistent interface.
+  const terminate = async (worker: Terminable) => worker.terminate()
+  Promise.all(workers.map(worker => terminate(worker))).then(
     () => process.exit(1),
     () => process.exit(1),
   )
