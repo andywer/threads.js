@@ -34,7 +34,7 @@ interface Terminable {
 // Terminates the workers, empties the workers array, and exits.
 const onSignal = (workers: Terminable[], signal: string) => {
   Promise.all(workers.map(worker => worker.terminate())).then(
-    () => process.exit(0),
+    () => process.exit(1),
     () => process.exit(1),
   )
   workers.length = 0
