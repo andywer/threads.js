@@ -27,6 +27,19 @@ let tsNodeAvailable: boolean | undefined
 
 export const defaultPoolSize = cpus().length
 
+interface Terminable {
+  terminate(this: Terminable): any
+}
+
+// Terminates the workers, empties the workers array, and exits.
+const onSignal = (workers: Terminable[], signal: string) => {
+  Promise.all(workers.map(worker => worker.terminate())).then(
+    () => process.exit(0),
+    () => process.exit(1),
+  )
+  workers.length = 0
+}
+
 function detectTsNode() {
   if (typeof __non_webpack_require__ === "function") {
     // Webpack build: => No ts-node required or possible
@@ -98,7 +111,7 @@ function initWorkerThreadsWorker(): ImplementationExport {
     ? __non_webpack_require__("worker_threads").Worker
     : eval("require")("worker_threads").Worker
 
-  let allWorkers: Array<typeof NativeWorker> = []
+  const allWorkers: Array<typeof NativeWorker> = []
 
   class Worker extends NativeWorker {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
@@ -139,18 +152,9 @@ function initWorkerThreadsWorker(): ImplementationExport {
     }
   }
 
-  const terminateWorkersAndMaster = () => {
-    // we should terminate all workers and then gracefully shutdown self process
-    Promise.all(allWorkers.map(worker => worker.terminate())).then(
-      () => process.exit(0),
-      () => process.exit(1),
-    )
-    allWorkers = []
-  }
-
   // Take care to not leave orphaned processes behind. See #147.
-  process.on("SIGINT", () => terminateWorkersAndMaster())
-  process.on("SIGTERM", () => terminateWorkersAndMaster())
+  process.on("SIGINT", (signal) => onSignal(allWorkers, signal))
+  process.on("SIGTERM", (signal) => onSignal(allWorkers, signal))
 
   class BlobWorker extends Worker {
     constructor(blob: Uint8Array, options?: ThreadsWorkerOptions) {
@@ -219,19 +223,10 @@ function initTinyWorker(): ImplementationExport {
     }
   }
 
-  const terminateWorkersAndMaster = () => {
-    // we should terminate all workers and then gracefully shutdown self process
-    Promise.all(allWorkers.map(worker => worker.terminate())).then(
-      () => process.exit(0),
-      () => process.exit(1),
-    )
-    allWorkers = []
-  }
-
   // Take care to not leave orphaned processes behind
   // See <https://github.com/avoidwork/tiny-worker#faq>
-  process.on("SIGINT", () => terminateWorkersAndMaster())
-  process.on("SIGTERM", () => terminateWorkersAndMaster())
+  process.on("SIGINT", (signal) => onSignal(allWorkers, signal))
+  process.on("SIGTERM", (signal) => onSignal(allWorkers, signal))
 
   class BlobWorker extends Worker {
     constructor(blob: Uint8Array, options?: ThreadsWorkerOptions) {
