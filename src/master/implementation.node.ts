@@ -31,12 +31,29 @@ interface Terminable {
   terminate(this: Terminable): any
 }
 
-// Terminates the workers, empties the workers array, and exits.
+// Terminates the workers, empties the workers array, and possibly exits.
 const onSignal = (workers: Terminable[], signal: string) => {
   // worker.terminate() might return a Promise or might be synchronous. This async helper function
   // creates a consistent interface.
   const terminate = async (worker: Terminable) => worker.terminate()
-  Promise.all(workers.map(worker => terminate(worker).catch(() => {}))).then(() => process.exit(1))
+  Promise.all(workers.map(worker => terminate(worker).catch(() => {}))).then(() => {
+    // Adding a signal listener suppresses the default signal handling behavior. That default
+    // behavior must be replicated here, but only if the default behavior isn't intentionally
+    // suppressed by another signal listener. Unfortunately there is no robust way to determine
+    // whether the default behavior was intentionally suppressed, so a heuristic is used. (Note: The
+    // 'exit' event is not suitable for terminating workers because it is not emitted when the
+    // default signal handler terminates the process.)
+    if (process.listenerCount(signal) > 1) {
+      // Assume that one of the other signal listeners will take care of calling process.exit().
+      // This assumption breaks down if all of the other listeners are making the same assumption.
+      return
+    }
+    // Right now this is the only signal listener, so assume that this listener is to blame for
+    // inhibiting the default signal handler. (This assumption fails if the number of listeners
+    // changes during signal handling. This can happen if a listener was added by process.once().)
+    // Mimic the default behavior, which is to exit with a non-0 code.
+    process.exit(1)
+  })
   workers.length = 0
 }
 
