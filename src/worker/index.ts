@@ -23,6 +23,9 @@ export { Transfer } from "../transferable"
 /** Returns `true` if this code is currently running in a worker. */
 export const isWorkerRuntime = Implementation.isWorkerRuntime
 
+export const postMessage = Implementation.postMessageToMaster;
+export const subscribeToMasterMessages = Implementation.subscribeToMasterMessages;
+
 let exposeCalled = false
 
 const activeSubscriptions = new Map<number, Subscription<any>>()
