@@ -26,7 +26,8 @@
         "named-imports-order": "lowercase-first"
       }
     ],
-    "semicolon": false
+    "semicolon": false,
+    "array-type": false
   },
   "rulesDirectory": []
 }
