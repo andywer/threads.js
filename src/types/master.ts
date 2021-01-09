@@ -75,12 +75,14 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
   /** Resource limits passed on to Node worker_threads */
   resourceLimits?: {
     /** The maximum size of the main heap in MB. */
-    maxOldGenerationSizeMb?: number;
+    maxOldGenerationSizeMb?: number
     /** The maximum size of a heap space for recently created objects. */
-    maxYoungGenerationSizeMb?: number;
+    maxYoungGenerationSizeMb?: number
     /** The size of a pre-allocated memory range used for generated code. */
-    codeRangeSizeMb?: number;
+    codeRangeSizeMb?: number
   }
+  /** Data passed on to Node worker_threads */
+  workerData?: any
 }
 
 /** Worker implementation. Either web worker or a node.js Worker class. */
