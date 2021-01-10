@@ -1,26 +1,27 @@
-import {getWorkerImplementation as getWebWorker} from "./master/implementation.browser"
-import {getWorkerImplementation as getNodeWorker } from "./master/implementation.node"
-
 import {
   BlobWorker,
   CreateWorkerOptions,
   WorkerImplementation,
 } from "./types/master"
 
-export function createWorker(workerPath: string & Blob, options: CreateWorkerOptions) {
+/** async function to creat a webworker. This function uses dynamic imports to only import the required implementation */
+export async function createWorker(workerPath: string & Blob, options: CreateWorkerOptions) {
   let WorkerConstructor: typeof WorkerImplementation | typeof BlobWorker
   if (options.backend === "web") {
+    const { getWorkerImplementation } = await import("./master/implementation.browser")
     WorkerConstructor = options.blob ?
-      getWebWorker().blob :
-      getWebWorker().default
+      getWorkerImplementation().blob :
+      getWorkerImplementation().default
   } else if (options.backend === "node") {
+    const { getWorkerImplementation } = await import("./master/implementation.node")
     WorkerConstructor = options.blob ?
-      getNodeWorker("node").blob :
-      getNodeWorker("node").default
+      getWorkerImplementation("node").blob :
+      getWorkerImplementation("node").default
   } else if (options.backend === "tiny") {
+    const { getWorkerImplementation } = await import("./master/implementation.node")
     WorkerConstructor = options.blob ?
-      getNodeWorker("tiny").blob :
-      getNodeWorker("tiny").default
+      getWorkerImplementation("tiny").blob :
+      getWorkerImplementation("tiny").default
   } else {
     throw new Error("The worker backend is not supported.")
   }
