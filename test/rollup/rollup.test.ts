@@ -12,6 +12,11 @@ test("can be bundled using rollup", async t => {
     ...config
   })
 
+  const appCreateWorkerBundleP = rollup({
+     input: path.resolve(__dirname, "app-createWorker.js"),
+    ...config
+  })
+
   const workerBundleP = rollup({
     input: path.resolve(__dirname, "worker.js"),
     ...config
@@ -22,12 +27,17 @@ test("can be bundled using rollup", async t => {
     format: "iife"
   })
 
+  const appCreateWorkerBundleWriteP = (await appCreateWorkerBundleP).write({
+    dir: path.resolve(__dirname, "dist"),
+    format: "es"
+  })
+
   const workerBundleWriteP = (await workerBundleP).write({
     dir: path.resolve(__dirname, "dist"),
     format: "iife"
   })
 
-  await Promise.all([appBundleWriteP, workerBundleWriteP])
+  await Promise.all([appBundleWriteP, workerBundleWriteP, appCreateWorkerBundleWriteP])
 
   if (process.platform === "win32") {
     // Quick-fix for weird Windows issue in CI
