@@ -81,8 +81,11 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
     /** The size of a pre-allocated memory range used for generated code. */
     codeRangeSizeMb?: number
   }
-  /** Data passed on to Node worker_threads */
+  /** Data passed on to node.js worker_threads. */
   workerData?: any
+
+  /** Whether to apply CORS protection workaround. Defaults to true. */
+  CORSWorkaround?: boolean
 }
 
 /** Worker implementation. Either web worker or a node.js Worker class. */

@@ -7,7 +7,7 @@ export const defaultPoolSize = typeof navigator !== "undefined" && navigator.har
   ? navigator.hardwareConcurrency
   : 4
 
-const isAbsoluteURL = (value: string) => /^(file|https?:)?\/\//i.test(value)
+const isAbsoluteURL = (value: string) => /^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(value)
 
 function createSourceBlobURL(code: string): string {
   const blob = new Blob(
@@ -34,12 +34,16 @@ function selectWorkerImplementation(): ImplementationExport {
         url = new URL(url, options._baseURL)
       } else if (typeof url === "string" && !isAbsoluteURL(url) && getBundleURL().match(/^file:\/\//i)) {
         url = new URL(url, getBundleURL().replace(/\/[^\/]+$/, "/"))
-        url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        if (options?.CORSWorkaround ?? true) {
+          url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        }
       }
       if (typeof url === "string" && isAbsoluteURL(url)) {
         // Create source code blob loading JS file via `importScripts()`
         // to circumvent worker CORS restrictions
-        url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        if (options?.CORSWorkaround ?? true) {
+          url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        }
       }
       super(url, options)
     }
