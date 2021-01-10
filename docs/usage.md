@@ -166,6 +166,30 @@ const worker = await spawn(BlobWorker.fromText(MyWorker))
 
 Bundle this module and you will obtain a stand-alone bundle that has its worker inlined. This is particularly useful for libraries using threads.js.
 
+### createWorker - select worker backend
+`createWorker` allows selecting the worker backend (among web, node, and tiny), and also if you want a blob worker. The second argument to the `createWorker` is an object that specifies `backend: 'web' | 'node' | 'tiny'` and `blob: boolean`.
+
+`createWorker` uses dynamic imports to only import the needed implementation, so you can import the needed functions directly to reduce the bundle size.
+
+```js
+import { createWorker, spawn, Thread } from "threads"
+
+async function run() {
+  const worker = await createWorker("./worker.js", {backend: "node"})
+  const add = await spawn(worker)
+  const result = await add(2, 3)
+  await Thread.terminate(add)
+  return result
+}
+
+run().then(result => {
+  console.log(`Result: ${result}`)
+}).catch(error => {
+  console.error(error)
+})
+```
+
+
 ## TypeScript
 
 ### Type-safe workers
