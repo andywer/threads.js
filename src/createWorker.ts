@@ -13,12 +13,12 @@ export async function createWorker(workerPath: string & Blob, options: CreateWor
       getWorkerImplementation().blob :
       getWorkerImplementation().default
   } else if (options.backend === "node") {
-    const { getWorkerImplementation } = await import("./master/implementation.node")
+    const { getWorkerImplementation } = await import("./master/implementation-node")
     WorkerConstructor = options.blob ?
       getWorkerImplementation("node").blob :
       getWorkerImplementation("node").default
   } else if (options.backend === "tiny") {
-    const { getWorkerImplementation } = await import("./master/implementation.node")
+    const { getWorkerImplementation } = await import("./master/implementation-node")
     WorkerConstructor = options.blob ?
       getWorkerImplementation("tiny").blob :
       getWorkerImplementation("tiny").default
