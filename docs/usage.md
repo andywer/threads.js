@@ -164,7 +164,7 @@ const worker = await spawn(BlobWorker.fromText(MyWorker))
 // Now use this worker as always
 ```
 
-This can be used with a two-config webpack configuration to create the single bundle. The first config builds the worker and the second builds the library that uses it. The two can be linked together using the `WaitPlugin` described in [this article](https://www.viget.com/articles/run-multiple-webpack-configs-sequentially/). Example `webpack.config.js`:
+This can be used with a two-config webpack configuration to create the single bundle. The first config builds the worker and the second builds the library that uses it. The two are built sequentially using the `WaitPlugin` described in [this article](https://www.viget.com/articles/run-multiple-webpack-configs-sequentially/). Example `webpack.config.js`:
 
 ```js
 class WaitPlugin extends WebpackBeforeBuildPlugin {
