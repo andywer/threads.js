@@ -31,6 +31,27 @@ await pool.terminate()
 
 Note that `pool.queue()` will schedule a task to be run in a deferred way. It might execute straight away or it might take a while until a new worker thread becomes available.
 
+Sometimes you may also to receive values from a thread for instance while encrypting password.
+You can use await pool.queue() to obtain the job's result. But be aware, though, that if you await the result directly on queueing, you will only queue another job after this one has finished, so you might rather want to .then() the old-fashioned way
+
+```js
+import { spawn, Pool, Worker } from "threads"
+
+const pool = Pool(() => spawn(new Worker("./workers/crytpo")), 8 /* optional size */)
+
+pool.queue(crypto => crypto.encrypt("some-password"))
+.then(
+  result => {
+     
+// do sometging with the result
+     
+});
+
+await pool.completed()
+await pool.terminate()
+```
+
+
 ## Pool creation
 
 ```ts
