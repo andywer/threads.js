@@ -31,27 +31,6 @@ await pool.terminate()
 
 Note that `pool.queue()` will schedule a task to be run in a deferred way. It might execute straight away or it might take a while until a new worker thread becomes available.
 
-Sometimes you may also to receive values from a thread for instance while encrypting password.
-You can use await pool.queue() to obtain the job's result. But be aware, though, that if you await the result directly on queueing, you will only queue another job after this one has finished, so you might rather want to .then() the old-fashioned way
-
-```js
-import { spawn, Pool, Worker } from "threads"
-
-const pool = Pool(() => spawn(new Worker("./workers/crytpo")), 8 /* optional size */)
-
-pool.queue(crypto => crypto.encrypt("some-password"))
-.then(
-  result => {
-     
-// do sometging with the result
-     
-});
-
-await pool.completed()
-await pool.terminate()
-```
-
-
 ## Pool creation
 
 ```ts
@@ -89,6 +68,24 @@ The promise returned by `pool.queue()` resolves or rejects when the queued task 
 Whenever a pool worker finishes a job, the next pool job is de-queued (that is the function you passed to `pool.queue()`). It is called with the worker as the first argument. The job function is supposed to return a promise - when this promise resolves, the job is considered done and the next job is de-queued and dispatched to the worker.
 
 The promise returned by `pool.completed()` will resolve once the scheduled callbacks have been executed and completed. A failing job will make the promise reject. Use `pool.settled()` if you need a promise that resolves without an error even if a task has failed.
+
+## Handling task results
+
+Track a pooled task via the object that the `pool.queue()` promise resolves to. You can `await pool.queue()` to obtain the job's result. Be aware, though, that if you `await` the result directly on queueing, you will only queue another job after this one has finished. You might rather want to `pool.queue().then()` to defer handling the outcome and keep queueing tasks uninterruptedly.
+
+```js
+import { spawn, Pool, Worker } from "threads"
+
+const pool = Pool(() => spawn(new Worker("./workers/crytpo")))
+const task = pool.queue(crypto => crypto.encrypt("some-password"))
+
+task.then(result => {
+  // do something with the result 
+})
+
+await pool.completed()
+await pool.terminate()
+```
 
 ## Cancelling a queued task
 
