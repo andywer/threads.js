@@ -69,6 +69,24 @@ Whenever a pool worker finishes a job, the next pool job is de-queued (that is t
 
 The promise returned by `pool.completed()` will resolve once the scheduled callbacks have been executed and completed. A failing job will make the promise reject. Use `pool.settled()` if you need a promise that resolves without an error even if a task has failed.
 
+## Handling task results
+
+Track a pooled task via the object that the `pool.queue()` promise resolves to. You can `await pool.queue()` to obtain the job's result. Be aware, though, that if you `await` the result directly on queueing, you will only queue another job after this one has finished. You might rather want to `pool.queue().then()` to defer handling the outcome and keep queueing tasks uninterruptedly.
+
+```js
+import { spawn, Pool, Worker } from "threads"
+
+const pool = Pool(() => spawn(new Worker("./workers/crytpo")))
+const task = pool.queue(crypto => crypto.encrypt("some-password"))
+
+task.then(result => {
+  // do something with the result 
+})
+
+await pool.completed()
+await pool.terminate()
+```
+
 ## Cancelling a queued task
 
 You can cancel queued tasks, too. If the pool has already started to execute the task, you cannot cancel it anymore, though.
