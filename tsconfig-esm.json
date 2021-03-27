@@ -3,6 +3,8 @@
   "compilerOptions": {
     "declaration": false,
     "module": "esnext",
+    "target": "esnext",
+    "lib": ["esnext"],
     "outDir": "dist-esm"
   }
 }
