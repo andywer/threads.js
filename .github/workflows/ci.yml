@@ -7,7 +7,40 @@ env:
   THREADS_WORKER_INIT_TIMEOUT: 15000
 
 jobs:
+  # Building threads library from source
+  Build:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node_version: ['15']
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: install dependencies and build
+        run: npm install
+
+      - name: Dev test
+        run: npm run test:dev
+
+      - name: Upload artifacts
+        if: contains(matrix.os, 'ubuntu')
+        uses: actions/upload-artifact@v2
+        with:
+          path: |
+            ./bundle
+            ./dist
+            ./dist-esm
+
+  # Testing the built files
   Test:
+    needs: Build
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ${{ matrix.os }}
     strategy:
@@ -18,15 +51,22 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup node
-        uses: actions/setup-node@v2-beta
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
 
-      - name: install dependencies and build
-        run: npm install
+      - name: install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Download articats
+        uses: actions/download-artifact@v2
+
+      - name: Place built files
+        shell: bash
+        run: mv artifact/* .
 
       - name: run the tests
-        run: npm test
+        run: npm run test:ava && npm run test:puppeteer:basic && npm run test:puppeteer:webpack
 
   Skip:
     if: contains(github.event.head_commit.message, '[skip ci]')
