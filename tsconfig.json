@@ -13,6 +13,7 @@
   },
   "include": [
     "./src/index.ts",
+    "./src/createWorker.ts",
     "./src/observable.ts",
     "./src/master/*",
     "./src/worker/*",

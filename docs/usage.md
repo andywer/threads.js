@@ -175,7 +175,8 @@ You can also pass other `WorkerOptions` in this object.
 `createWorker` uses dynamic imports to only import the needed implementation, so you can import the needed functions directly to reduce the bundle size.
 
 ```js
-import { createWorker, spawn, Thread } from "threads"
+import { createWorker } from "threads/createWorker"
+import { spawn, Thread } from "threads"
 
 async function run() {
   const worker = await createWorker("./worker.js", {backend: "node"})
