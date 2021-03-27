@@ -2,9 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declaration": false,
-    "module": "esnext",
-    "target": "esnext",
-    "lib": ["esnext"],
+    "module": "es2020",
+    "target": "es2020",
+    "lib": ["es2020"],
     "outDir": "dist-esm"
   }
 }
