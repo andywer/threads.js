@@ -64,7 +64,11 @@ jobs:
 
       - name: Place built files
         shell: bash
-        run: mv artifact/* .
+        run: |
+          mkdir dist && mv artifact/dist/* ./dist
+          mkdir dist-esm && mv artifact/dist-esm/* ./dist-esm
+          mkdir bundle && mv artifact/bundle/* ./bundle
+          mkdir -p test-dev/webpack/dist/ && mv artifact/test-dev/webpack/dist/* ./test-dev/webpack/dist/
 
       - name: run the tests
         run: npm run test:ava && npm run test:puppeteer:basic && npm run test:puppeteer:webpack
