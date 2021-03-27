@@ -169,8 +169,7 @@ Bundle this module and you will obtain a stand-alone bundle that has its worker 
 ### createWorker - select worker backend
 `createWorker` allows selecting the worker backend (among web, node, and tiny), and also if you want a blob worker.
 
-The second argument to the `createWorker` is an object that specifies `backend: 'web' | 'node' | 'tiny'` and `blob: boolean`.
-You can also pass other `WorkerOptions` in this object.
+The second required argument to the `createWorker` is a string that specifies `backend: 'web' | 'node' | 'tiny'`. The third optional argument is an object that can be used to specify `blob: boolean` or other `WorkerOptions`.
 
 `createWorker` uses dynamic imports to only import the needed implementation, so you can import the needed functions directly to reduce the bundle size.
 
@@ -179,7 +178,7 @@ import { createWorker } from "threads/createWorker"
 import { spawn, Thread } from "threads"
 
 async function run() {
-  const worker = await createWorker("./worker.js", {backend: "node"})
+  const worker = await createWorker("./worker.js", "node")
   const add = await spawn(worker)
   const result = await add(2, 3)
   await Thread.terminate(add)
