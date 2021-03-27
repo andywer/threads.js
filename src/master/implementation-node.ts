@@ -88,7 +88,8 @@ function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
   return workerFilePath
 }
 
-function initWorkerThreadsWorker(): ImplementationExport {
+export function initWorkerThreadsWorker(): ImplementationExport {
+  isTinyWorker = false
   // Webpack hack
   const NativeWorker = typeof __non_webpack_require__ === "function"
     ? __non_webpack_require__("worker_threads").Worker
@@ -164,7 +165,8 @@ function initWorkerThreadsWorker(): ImplementationExport {
   }
 }
 
-function initTinyWorker(): ImplementationExport {
+export function initTinyWorker(): ImplementationExport {
+  isTinyWorker = true
   const TinyWorker = require("tiny-worker")
 
   let allWorkers: Array<typeof TinyWorker> = []
@@ -253,21 +255,17 @@ function selectWorkerImplementation(selection?: string): ImplementationExport {
 
     // automatic version based selection
     try {
-      isTinyWorker = false
       return initWorkerThreadsWorker()
     } catch(error) {
       // tslint:disable-next-line no-console
       console.debug("Node worker_threads not available. Trying to fall back to tiny-worker polyfill...")
-      isTinyWorker = true
       return initTinyWorker()
     }
 
     // manual selection
   } else if (selection === "node") {
-    isTinyWorker = false
     return initWorkerThreadsWorker()
   } else if (selection === "tiny") {
-    isTinyWorker = true
     return initTinyWorker()
   } else {
     throw new Error("selection is not supported" + selection)

@@ -18,15 +18,15 @@ export async function createWorker(workerPath: string & Blob, backend: "web" | "
       getWorkerImplementation().blob :
       getWorkerImplementation().default
   } else if (backend === "node") {
-    const { getWorkerImplementation } = await import("./master/implementation-node")
+    const { initWorkerThreadsWorker } = await import("./master/implementation-node")
     WorkerConstructor = options.blob ?
-      getWorkerImplementation("node").blob :
-      getWorkerImplementation("node").default
+      initWorkerThreadsWorker().blob :
+      initWorkerThreadsWorker().default
   } else if (backend === "tiny") {
-    const { getWorkerImplementation } = await import("./master/implementation-node")
+    const { initTinyWorker } = await import("./master/implementation-node")
     WorkerConstructor = options.blob ?
-      getWorkerImplementation("tiny").blob :
-      getWorkerImplementation("tiny").default
+      initTinyWorker().blob :
+      initTinyWorker().default
   } else {
     throw new Error("The worker backend is not supported.")
   }
