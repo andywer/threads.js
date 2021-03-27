@@ -37,6 +37,7 @@ jobs:
             ./bundle
             ./dist
             ./dist-esm
+            ./test-dev/webpack/dist
 
   # Testing the built files
   Test:
