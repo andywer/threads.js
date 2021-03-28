@@ -27,7 +27,7 @@ jobs:
         run: npm install
 
       - name: Dev test
-        run: npm run test:dev
+        run: npm run test:tooling
 
       - name: Upload artifacts
         if: contains(matrix.os, 'ubuntu')
@@ -37,7 +37,7 @@ jobs:
             ./bundle
             ./dist
             ./dist-esm
-            ./test-dev/webpack/dist
+            ./test-tooling/webpack/dist
 
   # Testing the built files
   Test:
@@ -68,10 +68,10 @@ jobs:
           mkdir dist && mv artifact/dist/* ./dist
           mkdir dist-esm && mv artifact/dist-esm/* ./dist-esm
           mkdir bundle && mv artifact/bundle/* ./bundle
-          mkdir -p test-dev/webpack/dist/ && mv artifact/test-dev/webpack/dist/* ./test-dev/webpack/dist/
+          mkdir -p test-tooling/webpack/dist/ && mv artifact/test-tooling/webpack/dist/* ./test-tooling/webpack/dist/
 
       - name: run the tests
-        run: npm run test:ava && npm run test:puppeteer:basic && npm run test:puppeteer:webpack
+        run: npm run test:library && npm run test:puppeteer:basic && npm run test:puppeteer:webpack
 
   Skip:
     if: contains(github.event.head_commit.message, '[skip ci]')
