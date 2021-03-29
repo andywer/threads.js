@@ -6,8 +6,8 @@ docs/vendor
 dist/*
 dist-*/*
 node_modules/
-test/rollup/dist/
-test/webpack/dist/
+test-tooling/rollup/dist/
+test-tooling/webpack/dist/
 test/workers/*.js
 .DS_Store
 Thumbs.db

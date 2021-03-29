@@ -13,10 +13,11 @@
     "build:es": "tsc -p tsconfig-esm.json",
     "postbuild": "npm run bundle",
     "bundle": "rollup -c -f umd --file=bundle/worker.js --name=threads --silent -- dist-esm/worker/bundle-entry.js",
-    "test": "npm run test:ava && npm run test:puppeteer:basic && npm run test:puppeteer:webpack",
-    "test:ava": "cross-env TS_NODE_FILES=true ava",
+    "test": "npm run test:library && npm run test:tooling && npm run test:puppeteer:basic && npm run test:puppeteer:webpack",
+    "test:library": "cross-env TS_NODE_FILES=true ava ./test/**/*.test.ts",
+    "test:tooling": "cross-env TS_NODE_FILES=true ava ./test-tooling/**/*.test.ts",
     "test:puppeteer:basic": "puppet-run --plugin=mocha --bundle=./test/workers/:workers/ --serve=./bundle/worker.js:/worker.js ./test/*.chromium*.ts",
-    "test:puppeteer:webpack": "puppet-run --serve ./test/webpack/dist/app.web/0.worker.js --serve ./test/webpack/dist/app.web/1.worker.js --plugin=mocha ./test/webpack/webpack.chromium.mocha.ts",
+    "test:puppeteer:webpack": "puppet-run --serve ./test-tooling/webpack/dist/app.web/0.worker.js --serve ./test-tooling/webpack/dist/app.web/1.worker.js --plugin=mocha ./test-tooling/webpack/webpack.chromium.mocha.ts",
     "posttest": "tslint --project .",
     "prepare": "npm run build"
   },
@@ -108,7 +109,8 @@
       "ts"
     ],
     "files": [
-      "./test/**/*.test.ts"
+      "./test/**/*.test.ts",
+      "./test-tooling/**/*.test.ts"
     ],
     "require": [
       "ts-node/register"
