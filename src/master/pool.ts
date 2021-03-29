@@ -266,7 +266,7 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
       return taskFailures
     }
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const subscription = this.eventObservable.subscribe({
         next(event) {
           if (event.type === PoolEventType.taskQueueDrained) {
