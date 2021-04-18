@@ -6,6 +6,7 @@
 import { Observable } from "observable-fns"
 import { ObservablePromise } from "../observable-promise"
 import { $errors, $events, $terminate, $worker } from "../symbols"
+import { TransferDescriptor } from "../transferable"
 
 interface ObservableLikeSubscription {
   unsubscribe(): any
@@ -26,12 +27,21 @@ export type StripAsync<Type> =
   ? ObservableBaseType
   : Type
 
+export type StripTransfer<Type> =
+  Type extends TransferDescriptor<infer BaseType>
+  ? BaseType
+  : Type
+
 export type ModuleMethods = { [methodName: string]: (...args: any) => any }
+
+export type ProxyableArgs<Args extends any[]> = Args extends [arg0: infer Arg0, ...rest: infer RestArgs]
+  ? [Arg0 extends Transferable ? Arg0 | TransferDescriptor<Arg0> : Arg0, ...RestArgs]
+  : Args
 
 export type ProxyableFunction<Args extends any[], ReturnType> =
   Args extends []
-    ? () => ObservablePromise<StripAsync<ReturnType>>
-  : (...args: Args) => ObservablePromise<StripAsync<ReturnType>>
+    ? () => ObservablePromise<StripTransfer<StripAsync<ReturnType>>>
+  : (...args: ProxyableArgs<Args>) => ObservablePromise<StripTransfer<StripAsync<ReturnType>>>
 
 export type ModuleProxy<Methods extends ModuleMethods> = {
   [method in keyof Methods]: ProxyableFunction<Parameters<Methods[method]>, ReturnType<Methods[method]>>
