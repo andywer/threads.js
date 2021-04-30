@@ -1,28 +1,12 @@
+// TODO this file isn't used!
+
 // Webpack hack
-// tslint:disable no-eval
+import { requireFunction } from './webpack-hack'
 
-declare function __non_webpack_require__(module: string): any
-
-// FIXME
-type MessagePort = any
-
-interface WorkerThreadsModule {
-  MessagePort: typeof MessagePort
-  isMainThread: boolean
-  parentPort: MessagePort
-}
-
-let implementation: WorkerThreadsModule | undefined
-
-function selectImplementation(): WorkerThreadsModule {
-  return typeof __non_webpack_require__ === "function"
-    ? __non_webpack_require__("worker_threads")
-    : eval("require")("worker_threads")
-}
-
-export default function getImplementation(): WorkerThreadsModule {
+let implementation: typeof import("worker_threads") | undefined
+export default function getImplementation() {
   if (!implementation) {
-    implementation = selectImplementation()
+    implementation = (requireFunction("worker_threads") as typeof import("worker_threads"))
   }
   return implementation
 }
