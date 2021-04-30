@@ -1,5 +1,6 @@
 import test from "ava"
 import { spawn, Thread, Transfer, TransferDescriptor, Worker } from "../src/index"
+import { XorBuffer } from "./workers/arraybuffer-xor"
 
 type SpyInit<Args extends any[], OriginalReturn, NewReturn> =
   (originalFn: (...args: Args) => OriginalReturn) =>
@@ -43,8 +44,10 @@ test("can pass transferable objects on thread call", async t => {
     return postMessage(...args)
   })
 
-  const xorBuffer = await spawn<(buffer: ArrayBuffer | TransferDescriptor<ArrayBuffer>, value: number) => ArrayBuffer>(worker)
-  await xorBuffer(Transfer(testData), 15)
+  const xorBuffer = await spawn<XorBuffer>(worker)
+  const returnedBuffer = await xorBuffer(Transfer(testData), 15)
+
+  t.is(returnedBuffer.byteLength, 64)
 
   t.is(postMessageCalls.length, 1)
   t.is(postMessageCalls[0].length, 2)

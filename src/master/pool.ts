@@ -271,7 +271,7 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
         next(event) {
           if (event.type === PoolEventType.taskQueueDrained) {
             subscription.unsubscribe()
-            resolve()
+            resolve(void 0)
           }
         },
         error: reject     // make a pool-wide error reject the completed() result promise
