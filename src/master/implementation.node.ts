@@ -17,7 +17,12 @@ interface WorkerGlobalScope {
   removeEventListener(eventName: string, listener: (event: Event) => void): void
 }
 
-declare const __non_webpack_require__: typeof require
+// TODO remove webpack hacks. These hurt the performance for non-web-pack situations
+// Webpack hack
+declare let __non_webpack_require__: typeof require
+const isWebpack = typeof __non_webpack_require__ === "function"
+const requireFunction: typeof require = isWebpack ? __non_webpack_require__ : eval("require")
+
 declare const self: WorkerGlobalScope
 
 type WorkerEventName = "error" | "message"
