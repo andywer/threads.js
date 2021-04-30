@@ -96,11 +96,9 @@ function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
 
 function initWorkerThreadsWorker(): ImplementationExport {
   // Webpack hack
-  const NativeWorker = typeof __non_webpack_require__ === "function"
-    ? __non_webpack_require__("worker_threads").Worker
-    : eval("require")("worker_threads").Worker
+  const NativeWorker = (requireFunction("worker_threads") as typeof import("worker_threads")).Worker
 
-  let allWorkers: Array<typeof NativeWorker> = []
+  let allWorkers: Array<Worker> = []
 
   class Worker extends NativeWorker {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
@@ -278,9 +276,7 @@ export function isWorkerRuntime() {
     return typeof self !== "undefined" && self.postMessage ? true : false
   } else {
     // Webpack hack
-    const isMainThread = typeof __non_webpack_require__ === "function"
-      ? __non_webpack_require__("worker_threads").isMainThread
-      : eval("require")("worker_threads").isMainThread
+    const isMainThread = (requireFunction("worker_threads") as typeof import("worker_threads")).isMainThread
     return !isMainThread
   }
 }
