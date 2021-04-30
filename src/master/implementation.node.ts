@@ -32,7 +32,7 @@ let tsNodeAvailable: boolean | undefined
 export const defaultPoolSize = cpus().length
 
 function detectTsNode() {
-  if (typeof __non_webpack_require__ === "function") {
+  if (isWebpack) {
     // Webpack build: => No ts-node required or possible
     return false
   }
@@ -86,7 +86,8 @@ function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
     return path.isAbsolute(filePath) ? filePath : path.join(baseURL || eval("__dirname"), filePath)
   }
 
-  const workerFilePath = typeof __non_webpack_require__ === "function"
+  // Webpack hack
+  const workerFilePath = isWebpack
     ? __non_webpack_require__.resolve(makeRelative(scriptPath))
     : eval("require").resolve(makeRelative(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/)))
 
