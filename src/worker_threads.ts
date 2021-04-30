@@ -1,5 +1,3 @@
-// TODO this file isn't used!
-
 // Webpack hack
 import { requireFunction } from './webpack-hack'
 

@@ -10,7 +10,8 @@ import {
   ThreadsWorkerOptions,
   WorkerImplementation
 } from "../types/master"
-import { isWebpack, requireFunction, __non_webpack_require__ } from '../webpack-hack'
+import { isWebpack, requireFunction } from "../webpack-hack"
+export declare const __non_webpack_require__: typeof require
 
 interface WorkerGlobalScope {
   addEventListener(eventName: string, listener: (event: Event) => void): void
