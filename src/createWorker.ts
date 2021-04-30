@@ -9,8 +9,9 @@ import {
  * @param workerPath the path or Blob to the worker code
  * @param backend backend for the threads
  * @param {CreateWorkerOptions} options an object that can be used to specify `blob: boolean` or other {WorkerOptions}. Defaults to `{}`.
+ * @returns A web worker, a node.js worker, or a tiny worker class.
  */
-export async function createWorker(workerPath: string & Blob, backend: "web" | "node" | "tiny", options: CreateWorkerOptions = {}) {
+export async function createWorker(workerPath: string | Blob, backend: "web" | "node" | "tiny", options: CreateWorkerOptions = {}) {
   let WorkerConstructor: typeof WorkerImplementation | typeof BlobWorker
   if (backend === "web") {
     const { getWorkerImplementation } = await import("./master/implementation.browser")
@@ -30,5 +31,5 @@ export async function createWorker(workerPath: string & Blob, backend: "web" | "
   } else {
     throw new Error("The worker backend is not supported.")
   }
-  return new WorkerConstructor(workerPath, options)
+  return new WorkerConstructor(workerPath as string & Blob, options)
 }
