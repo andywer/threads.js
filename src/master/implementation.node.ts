@@ -10,6 +10,7 @@ import {
   ThreadsWorkerOptions,
   WorkerImplementation
 } from "../types/master"
+import { isWebpack, requireFunction, __non_webpack_require__ } from '../webpack-hack'
 
 interface WorkerGlobalScope {
   addEventListener(eventName: string, listener: (event: Event) => void): void
@@ -17,11 +18,6 @@ interface WorkerGlobalScope {
   removeEventListener(eventName: string, listener: (event: Event) => void): void
 }
 
-// TODO remove webpack hacks. These hurt the performance for non-web-pack situations
-// Webpack hack
-declare let __non_webpack_require__: typeof require
-const isWebpack = typeof __non_webpack_require__ === "function"
-const requireFunction: typeof require = isWebpack ? __non_webpack_require__ : eval("require")
 
 declare const self: WorkerGlobalScope
 
