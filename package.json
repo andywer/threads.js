@@ -85,7 +85,7 @@
     "cross-env": "^7.0.2",
     "execa": "^4.0.3",
     "mocha": "^8.2.0",
-    "puppet-run": "^0.11.3",
+    "puppet-run": "^0.11.4",
     "puppet-run-plugin-mocha": "^0.10.0-alpha",
     "raw-loader": "^4.0.2",
     "rimraf": "^3.0.2",
