@@ -145,33 +145,41 @@ Everything else should work out of the box.
 
 ### Basics
 
+This is how to spawn a simple worker managed using threads.js. The worker will hash the contents of a file, lifting the main CPU load off the master thread.
+
 ```js
 // master.js
 import { spawn, Thread, Worker } from "threads"
 
-const auth = await spawn(new Worker("./workers/auth"))
-const hashed = await auth.hashPassword("Super secret password", "1234")
+var testString = "test contents"
 
-console.log("Hashed password:", hashed)
+async function main() {
+  const auth = await spawn(new Worker("./workers/hash"))
+  const hashed = await hash.hashFileContents(testString)
 
-await Thread.terminate(auth)
+  console.log("SHA-256 hash: ", hashed)
+
+  await Thread.terminate(hash)
+}
+
+main().catch(console.error)
 ```
 
 ```js
-// workers/auth.js
+// workers/hash.js - will be run in worker thread
 import sha256 from "js-sha256"
 import { expose } from "threads/worker"
 
 expose({
-  hashPassword(password, salt) {
-    return sha256(password + salt)
+  hashFileContents(contents) {
+    return sha256(contents)
   }
 })
 ```
 
 ### spawn()
 
-The `hashPassword()` function of the `auth` object in the master code proxies the call to the `hashPassword()` function in the worker:
+The `hashFileContents()` function of the `hash` object in the master code proxies the call to the `hashFileContents()` function in the worker:
 
 If the worker's function returns a promise or an observable then you can just use the return value as such in the master code. If the function returns a primitive value, expect the master function to return a promise resolving to that value.
 
