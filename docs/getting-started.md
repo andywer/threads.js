@@ -9,32 +9,34 @@ aside:
 
 ## Quick start
 
-This is how to spawn a simple worker managed using threads.js. The worker will hash passwords, lifting the main CPU load off the master thread.
+This is how to spawn a simple worker managed using threads.js. The worker will hash the contents of a file, lifting the main CPU load off the master thread.
 
 ```js
 // master.js
 import { spawn, Thread, Worker } from "threads"
 
+var testString = "test contents"
+
 async function main() {
-  const auth = await spawn(new Worker("./workers/auth"))
-  const hashed = await auth.hashPassword("Super secret password", "1234")
+  const auth = await spawn(new Worker("./workers/hash"))
+  const hashed = await hash.hashFileContents(testString)
 
-  console.log("Hashed password:", hashed)
+  console.log("SHA-256 hash: ", hashed)
 
-  await Thread.terminate(auth)
+  await Thread.terminate(hash)
 }
 
 main().catch(console.error)
 ```
 
 ```js
-// workers/auth.js - will be run in worker thread
+// workers/hash.js - will be run in worker thread
 import sha256 from "js-sha256"
 import { expose } from "threads/worker"
 
 expose({
-  hashPassword(password, salt) {
-    return sha256(password + salt)
+  hashFileContents(contents) {
+    return sha256(contents)
   }
 })
 ```
