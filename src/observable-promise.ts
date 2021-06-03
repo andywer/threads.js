@@ -47,10 +47,10 @@ export class ObservablePromise<T> extends Observable<T> implements Promise<T> {
   public readonly [Symbol.toStringTag]: "[object ObservablePromise]"
 
   constructor(init: Initializer<T>) {
-    super(originalObserver => {
+    super((originalObserver: SubscriptionObserver<T>) => {
       // tslint:disable-next-line no-this-assignment
       const self = this
-      const observer = {
+      const observer: SubscriptionObserver<T> = {
         ...originalObserver,
         complete() {
           originalObserver.complete()
