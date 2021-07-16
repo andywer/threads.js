@@ -88,7 +88,8 @@ function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
   return workerFilePath
 }
 
-function initWorkerThreadsWorker(): ImplementationExport {
+export function initWorkerThreadsWorker(): ImplementationExport {
+  isTinyWorker = false
   // Webpack hack
   const NativeWorker = typeof __non_webpack_require__ === "function"
     ? __non_webpack_require__("worker_threads").Worker
@@ -164,7 +165,8 @@ function initWorkerThreadsWorker(): ImplementationExport {
   }
 }
 
-function initTinyWorker(): ImplementationExport {
+export function initTinyWorker(): ImplementationExport {
+  isTinyWorker = true
   const TinyWorker = require("tiny-worker")
 
   let allWorkers: Array<typeof TinyWorker> = []
@@ -248,21 +250,31 @@ function initTinyWorker(): ImplementationExport {
 let implementation: ImplementationExport
 let isTinyWorker: boolean
 
-function selectWorkerImplementation(): ImplementationExport {
-  try {
-    isTinyWorker = false
+function selectWorkerImplementation(selection?: string): ImplementationExport {
+  if (!selection) {
+
+    // automatic version based selection
+    try {
+      return initWorkerThreadsWorker()
+    } catch(error) {
+      // tslint:disable-next-line no-console
+      console.debug("Node worker_threads not available. Trying to fall back to tiny-worker polyfill...")
+      return initTinyWorker()
+    }
+
+    // manual selection
+  } else if (selection === "node") {
     return initWorkerThreadsWorker()
-  } catch(error) {
-    // tslint:disable-next-line no-console
-    console.debug("Node worker_threads not available. Trying to fall back to tiny-worker polyfill...")
-    isTinyWorker = true
+  } else if (selection === "tiny") {
     return initTinyWorker()
+  } else {
+    throw new Error("selection is not supported" + selection)
   }
 }
 
-export function getWorkerImplementation(): ImplementationExport {
+export function getWorkerImplementation(selection?: string): ImplementationExport {
   if (!implementation) {
-    implementation = selectWorkerImplementation()
+    implementation = selectWorkerImplementation(selection)
   }
   return implementation
 }
