@@ -5,6 +5,7 @@ import getCallsites, { CallSite } from "callsites"
 import { EventEmitter } from "events"
 import { cpus } from 'os'
 import * as path from "path"
+import { fileURLToPath } from "url";
 import {
   ImplementationExport,
   ThreadsWorkerOptions,
@@ -69,7 +70,10 @@ function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   })
 
   const rawCallerPath = parentCallSite ? parentCallSite.getFileName() : null
-  const callerPath = rawCallerPath ? rawCallerPath.replace(/^file:\//, "") : null
+  let callerPath = rawCallerPath ? rawCallerPath : null;
+  if (callerPath && callerPath.startsWith('file:')) {
+    callerPath = fileURLToPath(callerPath);
+  }
   const rebasedScriptPath = callerPath ? path.join(path.dirname(callerPath), scriptPath) : scriptPath
 
   return rebasedScriptPath
