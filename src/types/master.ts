@@ -76,9 +76,9 @@ export type TransferList = Transferable[]
 /** Worker instance. Either a web worker or a node.js Worker provided by `worker_threads` or `tiny-worker`. */
 export interface Worker extends EventTarget {
   postMessage(value: any, transferList?: TransferList): void
-  terminate(callback?: (error?: Error, exitCode?: number) => void): void
+    /** In nodejs 10+ return type is Promise while with tiny-worker and in browser return type is void */
+  terminate(callback?: (error?: Error, exitCode?: number) => void): void | Promise<number>
 }
-
 export interface ThreadsWorkerOptions extends WorkerOptions {
   /** Prefix for the path passed to the Worker constructor. Web worker only. */
   _baseURL?: string
@@ -102,7 +102,7 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
 export declare class WorkerImplementation extends EventTarget implements Worker {
   constructor(path: string, options?: ThreadsWorkerOptions)
   public postMessage(value: any, transferList?: TransferList): void
-  public terminate(): void
+  public terminate(): void | Promise<number>
 }
 
 /** Class to spawn workers from a blob or source string. */
