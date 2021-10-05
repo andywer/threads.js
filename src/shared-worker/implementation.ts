@@ -1,16 +1,19 @@
 /// <reference lib="dom" />
 // tslint:disable no-shadowed-variable
 
-// TODO: Adapt this module to use a shared worker
 import { AbstractedWorkerAPI } from "../types/worker";
 
+// https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker
 interface WorkerGlobalScope {
-  addEventListener(eventName: string, listener: (event: Event) => void): void;
-  postMessage(message: any, transferables?: any[]): void;
-  removeEventListener(
-    eventName: string,
-    listener: (event: Event) => void
-  ): void;
+  port: {
+    addEventListener(eventName: string, listener: (event: Event) => void): void;
+    removeEventListener(
+      eventName: string,
+      listener: (event: Event) => void
+    ): void;
+    postMessage(message: any, transferables?: any[]): void;
+    start(): void;
+  };
 }
 
 declare const self: WorkerGlobalScope;
@@ -21,14 +24,16 @@ const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] =
       typeof self !== "undefined" &&
       typeof Window !== "undefined" &&
       self instanceof Window;
-    return typeof self !== "undefined" && self.postMessage && !isWindowContext
+    return typeof self !== "undefined" &&
+      self.port.postMessage &&
+      !isWindowContext
       ? true
       : false;
   };
 
 const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] =
   function postMessageToMaster(data, transferList?) {
-    self.postMessage(data, transferList);
+    self.port.postMessage(data, transferList);
   };
 
 const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] =
@@ -37,9 +42,10 @@ const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"
       onMessage(messageEvent.data);
     };
     const unsubscribe = () => {
-      self.removeEventListener("message", messageHandler as EventListener);
+      self.port.removeEventListener("message", messageHandler as EventListener);
     };
-    self.addEventListener("message", messageHandler as EventListener);
+    self.port.addEventListener("message", messageHandler as EventListener);
+    self.port.start();
     return unsubscribe;
   };
 
