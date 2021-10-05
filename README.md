@@ -15,11 +15,11 @@ Uses web workers in the browser, `worker_threads` in node 12+ and [`tiny-worker`
 
 ### Features
 
-* First-class support for **async functions** & **observables**
-* Write code once, run it **on all platforms**
-* Manage bulk task executions with **thread pools**
-* Use **require()** and **import**/**export** in workers
-* Works great with **webpack**
+- First-class support for **async functions** & **observables**
+- Write code once, run it **on all platforms**
+- Manage bulk task executions with **thread pools**
+- Use **require()** and **import**/**export** in workers
+- Works great with **webpack**
 
 ### Version 0.x
 
@@ -31,7 +31,7 @@ You can find the old version 0.12 of threads.js on the [`v0` branch](https://git
 npm install threads tiny-worker
 ```
 
-*You only need to install the `tiny-worker` package to support node.js < 12. It's an optional dependency and used as a fallback if `worker_threads` are not available.*
+_You only need to install the `tiny-worker` package to support node.js < 12. It's an optional dependency and used as a fallback if `worker_threads` are not available._
 
 ## Platform support
 
@@ -147,26 +147,26 @@ Everything else should work out of the box.
 
 ```js
 // master.js
-import { spawn, Thread, Worker } from "threads"
+import { spawn, Thread, Worker } from "threads";
 
-const auth = await spawn(new Worker("./workers/auth"))
-const hashed = await auth.hashPassword("Super secret password", "1234")
+const auth = await spawn(new Worker("./workers/auth"));
+const hashed = await auth.hashPassword("Super secret password", "1234");
 
-console.log("Hashed password:", hashed)
+console.log("Hashed password:", hashed);
 
-await Thread.terminate(auth)
+await Thread.terminate(auth);
 ```
 
 ```js
 // workers/auth.js
-import sha256 from "js-sha256"
-import { expose } from "threads/worker"
+import sha256 from "js-sha256";
+import { expose } from "threads/worker";
 
 expose({
   hashPassword(password, salt) {
-    return sha256(password + salt)
-  }
-})
+    return sha256(password + salt);
+  },
+});
 ```
 
 ### spawn()
@@ -180,6 +180,40 @@ If the worker's function returns a promise or an observable then you can just us
 Use `expose()` to make a function or an object containing methods callable from the master thread.
 
 In case of exposing an object, `spawn()` will asynchronously return an object exposing all the object's functions. If you `expose()` a function, `spawn` will also return a callable function, not an object.
+
+## Shared Workers
+
+[Shared Workers](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker) can be accessed from multiple browsing contexts (windows, iframes, other workers) making them useful for sharing tasks such as synchronization and avoiding redundant work.
+
+In threads.js, the functionality is exposed as follows:
+
+```js
+// master.js
+import { spawn, Thread, SharedWorker } from "threads";
+
+const auth = await spawn(new SharedWorker("./workers/auth"));
+const hashed = await auth.hashPassword("Super secret password", "1234");
+
+console.log("Hashed password:", hashed);
+
+await Thread.terminate(auth);
+```
+
+```js
+// workers/auth.js
+import sha256 from "js-sha256";
+import { expose } from "threads/shared-worker";
+
+exposeShared({
+  hashPassword(password, salt) {
+    return sha256(password + salt);
+  },
+});
+```
+
+As you might notice, compared to the original example, only the imports (`Worker` -> `SharedWorker` and `expose` path) have changed.
+
+Note that as the functionality makes sense only in the browser, it's available only there. Based on [caniuse](https://caniuse.com/sharedworkers), the functionality is widely supported [Safari being a notable exception](https://bugs.webkit.org/show_bug.cgi?id=149850).
 
 ## Usage
 
