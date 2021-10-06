@@ -13,7 +13,6 @@ import { spawn, Thread } from "../";
 describe("threads in browser", function () {
   it("can spawn and terminate a thread", async function () {
     const helloWorld = await spawn<() => string>(
-      // @ts-ignore TODO: Figure out how to type this
       new SharedWorker("./shared-workers/hello-world.js")
     );
     expect(await helloWorld()).to.equal("Hello World");
@@ -22,7 +21,6 @@ describe("threads in browser", function () {
 
   it("can call a function thread more than once", async function () {
     const increment = await spawn<() => number>(
-      // @ts-ignore TODO: Figure out how to type this
       new SharedWorker("./shared-workers/increment.js")
     );
     expect(await increment()).to.equal(1);

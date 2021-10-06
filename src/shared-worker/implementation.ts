@@ -3,20 +3,7 @@
 
 import { AbstractedWorkerAPI } from "../types/worker";
 
-// https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker
-interface WorkerGlobalScope {
-  port: {
-    addEventListener(eventName: string, listener: (event: Event) => void): void;
-    removeEventListener(
-      eventName: string,
-      listener: (event: Event) => void
-    ): void;
-    postMessage(message: any, transferables?: any[]): void;
-    start(): void;
-  };
-}
-
-declare const self: WorkerGlobalScope;
+declare const self: SharedWorker;
 
 const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] =
   function isWorkerRuntime() {
@@ -33,7 +20,8 @@ const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] =
 
 const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] =
   function postMessageToMaster(data, transferList?) {
-    self.port.postMessage(data, transferList);
+    // TODO: Check if this cast is true for shared workers
+    self.port.postMessage(data, transferList as PostMessageOptions);
   };
 
 const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] =

@@ -80,6 +80,7 @@
     "@types/execa": "^2.0.0",
     "@types/mocha": "^8.0.3",
     "@types/node": "^14.14.5",
+    "@types/sharedworker": "0.0.54",
     "@types/webpack": "^4.41.23",
     "ava": "^3.13.0",
     "chai": "^4.2.0",
