@@ -83,6 +83,10 @@ function createObservableForJob<ResultType>(
 
     worker.addEventListener("message", messageHandler);
 
+    if (worker instanceof SharedWorker) {
+      worker.port.start();
+    }
+
     return () => {
       if (asyncType === "observable" || !asyncType) {
         const cancelMessage: MasterJobCancelMessage = {
