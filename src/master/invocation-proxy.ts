@@ -90,8 +90,7 @@ function createObservableForJob<ResultType>(
           uid: jobUID,
         };
 
-        // TODO: How to check which type of worker we have?
-        if (worker.port) {
+        if (worker.constructor.name === "SharedWorker") {
           worker.port.postMessage(cancelMessage);
         } else {
           worker.postMessage(cancelMessage);
@@ -150,8 +149,8 @@ export function createProxyFunction<Args extends any[], ReturnType>(
     debugMessages("Sending command to run function to worker:", runMessage);
 
     try {
-      // TODO: How to check which type of worker we have?
-      if (worker.port) {
+      // TODO: How to check which type of worker we have so that TS understands it?
+      if (worker.constructor.name === "SharedWorker") {
         worker.port.postMessage(runMessage, transferables);
       } else {
         worker.postMessage(runMessage, transferables);
