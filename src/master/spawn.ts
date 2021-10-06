@@ -166,7 +166,7 @@ function setPrivateThreadProps<T>(
  * abstraction layer to provide the transparent API and verifies that
  * the worker has initialized successfully.
  *
- * @param worker Instance of `Worker`. Either a web worker, `worker_threads` worker or `tiny-worker` worker.
+ * @param worker Instance of `Worker` or `SharedWorker`. Either a web worker, `worker_threads` worker or `tiny-worker` worker.
  * @param [options]
  * @param [options.timeout] Init message timeout. Default: 10000 or set by environment variable.
  */
@@ -187,7 +187,12 @@ export async function spawn<
   );
   const exposed = initMessage.exposed;
 
-  // TODO: Shared workers don't have terminate!
+  if (worker instanceof SharedWorker) {
+    // @ts-ignore TODO: What to do in this case? Shared workers don't have
+    // terminate for example.
+    return Promise.resolve(worker);
+  }
+
   const { termination, terminate } = createTerminator(worker);
   const events = createEventObservable(worker, termination);
 
