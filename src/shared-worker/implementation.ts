@@ -12,7 +12,7 @@ const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] =
       typeof Window !== "undefined" &&
       self instanceof Window;
     return typeof self !== "undefined" &&
-      self.port.postMessage &&
+      self.port?.postMessage &&
       !isWindowContext
       ? true
       : false;
