@@ -139,7 +139,7 @@ export declare class BlobWorker extends WorkerImplementation {
 
 export interface ImplementationExport {
   blob: typeof BlobWorker;
-  shared: typeof SharedWorker;
+  shared?: typeof SharedWorker;
   default: typeof WorkerImplementation;
 }
 
