@@ -142,6 +142,19 @@ function createTerminator(worker: TWorker): {
   return { terminate, termination };
 }
 
+function createSharedWorkerTerminator(worker: SharedWorker): {
+  termination: Promise<void>;
+  terminate: () => Promise<void>;
+} {
+  const [termination, resolver] = createPromiseWithResolver<void>();
+  const terminate = async () => {
+    debugThreadUtils("Terminating shared worker");
+    await worker.port.close();
+    resolver();
+  };
+  return { terminate, termination };
+}
+
 function setPrivateThreadProps<T>(
   raw: T,
   worker: TWorker,
@@ -186,20 +199,26 @@ export async function spawn<
     `Timeout: Did not receive an init message from worker after ${timeout}ms. Make sure the worker calls expose().`
   );
   const exposed = initMessage.exposed;
+  let termination, terminate;
 
   if (worker instanceof SharedWorker) {
-    // @ts-ignore TODO: What to do in this case? Shared workers don't have
-    // terminate for example.
-    return Promise.resolve(worker);
+    const o = createSharedWorkerTerminator(worker);
+
+    termination = o.termination;
+    terminate = o.terminate;
+  } else {
+    const o = createTerminator(worker);
+    termination = o.termination;
+    terminate = o.terminate;
   }
 
-  const { termination, terminate } = createTerminator(worker);
   const events = createEventObservable(worker, termination);
 
   if (exposed.type === "function") {
     const proxy = createProxyFunction(worker);
     return setPrivateThreadProps(
       proxy,
+      // @ts-ignore TODO: How to handle this for shared workers?
       worker,
       events,
       terminate
@@ -208,6 +227,7 @@ export async function spawn<
     const proxy = createProxyModule(worker, exposed.methods);
     return setPrivateThreadProps(
       proxy,
+      // @ts-ignore TODO: How to handle this for shared workers?
       worker,
       events,
       terminate
