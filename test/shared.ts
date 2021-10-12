@@ -13,7 +13,7 @@ import { spawn, Thread } from "../";
 describe("threads in browser", function () {
   it("can spawn and terminate a thread", async function () {
     const helloWorld = await spawn<() => string>(
-      new SharedWorker("./shared-workers/hello-world.js")
+      new SharedWorker("./shared-workers/hello.js")
     );
     expect(await helloWorld()).to.equal("Hello World");
     await Thread.terminate(helloWorld);
