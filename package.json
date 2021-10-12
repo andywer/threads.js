@@ -130,6 +130,7 @@
     "./dist/worker/implementation.js": "./dist/worker/implementation.browser.js",
     "./dist/worker/implementation.tiny-worker.js": false,
     "./dist/worker/implementation.worker_threads.js": false,
+    "./dist/shared-worker/implementation.js": "./dist/shared-worker/implementation.js",
     "./dist-esm/master/implementation.js": "./dist-esm/master/implementation.browser.js",
     "./dist-esm/master/implementation.node.js": false,
     "./dist-esm/worker/implementation.js": "./dist-esm/worker/implementation.browser.js",
