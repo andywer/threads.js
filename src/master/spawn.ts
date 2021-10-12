@@ -208,6 +208,7 @@ export async function spawn<
     terminate = o.terminate;
   } else {
     const o = createTerminator(worker);
+
     termination = o.termination;
     terminate = o.terminate;
   }
