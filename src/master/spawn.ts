@@ -1,8 +1,8 @@
-import DebugLogger from "debug";
-import { Observable } from "observable-fns";
-import { deserialize } from "../common";
-import { createPromiseWithResolver } from "../promise";
-import { $errors, $events, $terminate, $worker } from "../symbols";
+import DebugLogger from "debug"
+import { Observable } from "observable-fns"
+import { deserialize } from "../common"
+import { createPromiseWithResolver } from "../promise"
+import { $errors, $events, $terminate, $worker } from "../symbols"
 import {
   FunctionThread,
   ModuleThread,
@@ -14,21 +14,21 @@ import {
   WorkerInternalErrorEvent,
   WorkerMessageEvent,
   WorkerTerminationEvent,
-} from "../types/master";
+} from "../types/master"
 import {
   WorkerInitMessage,
   WorkerUncaughtErrorMessage,
-} from "../types/messages";
-import { WorkerFunction, WorkerModule } from "../types/worker";
-import { createProxyFunction, createProxyModule } from "./invocation-proxy";
+} from "../types/messages"
+import { WorkerFunction, WorkerModule } from "../types/worker"
+import { createProxyFunction, createProxyModule } from "./invocation-proxy"
 
-type WorkerType = SharedWorker | TWorker;
+type WorkerType = SharedWorker | TWorker
 
 type ArbitraryWorkerInterface = WorkerFunction &
   WorkerModule<string> & {
-    somekeythatisneverusedinproductioncode123: "magicmarker123";
-  };
-type ArbitraryThreadType = FunctionThread<any, any> & ModuleThread<any>;
+    somekeythatisneverusedinproductioncode123: "magicmarker123"
+  }
+type ArbitraryThreadType = FunctionThread<any, any> & ModuleThread<any>
 
 type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
   Exposed extends ArbitraryWorkerInterface
@@ -37,38 +37,38 @@ type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
     ? FunctionThread<Parameters<Exposed>, StripAsync<ReturnType<Exposed>>>
     : Exposed extends WorkerModule<any>
     ? ModuleThread<Exposed>
-    : never;
+    : never
 
-const debugMessages = DebugLogger("threads:master:messages");
-const debugSpawn = DebugLogger("threads:master:spawn");
-const debugThreadUtils = DebugLogger("threads:master:thread-utils");
+const debugMessages = DebugLogger("threads:master:messages")
+const debugSpawn = DebugLogger("threads:master:spawn")
+const debugThreadUtils = DebugLogger("threads:master:thread-utils")
 
 const isInitMessage = (data: any): data is WorkerInitMessage =>
-  data && data.type === ("init" as const);
+  data && data.type === ("init" as const)
 const isUncaughtErrorMessage = (
   data: any
 ): data is WorkerUncaughtErrorMessage =>
-  data && data.type === ("uncaughtError" as const);
+  data && data.type === ("uncaughtError" as const)
 
 const initMessageTimeout =
   typeof process !== "undefined" && process.env.THREADS_WORKER_INIT_TIMEOUT
     ? Number.parseInt(process.env.THREADS_WORKER_INIT_TIMEOUT, 10)
-    : 10000;
+    : 10000
 
 async function withTimeout<T>(
   promise: Promise<T>,
   timeoutInMs: number,
   errorMessage: string
 ): Promise<T> {
-  let timeoutHandle: any;
+  let timeoutHandle: any
 
   const timeout = new Promise<never>((resolve, reject) => {
-    timeoutHandle = setTimeout(() => reject(Error(errorMessage)), timeoutInMs);
-  });
-  const result = await Promise.race([promise, timeout]);
+    timeoutHandle = setTimeout(() => reject(Error(errorMessage)), timeoutInMs)
+  })
+  const result = await Promise.race([promise, timeout])
 
-  clearTimeout(timeoutHandle);
-  return result;
+  clearTimeout(timeoutHandle)
+  return result
 }
 
 function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
@@ -77,17 +77,17 @@ function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
       debugMessages(
         "Message from worker before finishing initialization:",
         event.data
-      );
+      )
       if (isInitMessage(event.data)) {
-        worker.removeEventListener("message", messageHandler);
-        resolve(event.data);
+        worker.removeEventListener("message", messageHandler)
+        resolve(event.data)
       } else if (isUncaughtErrorMessage(event.data)) {
-        worker.removeEventListener("message", messageHandler);
-        reject(deserialize(event.data.error));
+        worker.removeEventListener("message", messageHandler)
+        reject(deserialize(event.data.error))
       }
-    }) as EventListener;
-    worker.addEventListener("message", messageHandler);
-  });
+    }) as EventListener
+    worker.addEventListener("message", messageHandler)
+  })
 }
 
 function createEventObservable(
@@ -99,60 +99,60 @@ function createEventObservable(
       const workerEvent: WorkerMessageEvent<any> = {
         type: WorkerEventType.message,
         data: messageEvent.data,
-      };
-      observer.next(workerEvent);
-    }) as EventListener;
+      }
+      observer.next(workerEvent)
+    }) as EventListener
     const rejectionHandler = ((errorEvent: PromiseRejectionEvent) => {
       debugThreadUtils(
         "Unhandled promise rejection event in thread:",
         errorEvent
-      );
+      )
       const workerEvent: WorkerInternalErrorEvent = {
         type: WorkerEventType.internalError,
         error: Error(errorEvent.reason),
-      };
-      observer.next(workerEvent);
-    }) as EventListener;
-    worker.addEventListener("message", messageHandler);
-    worker.addEventListener("unhandledrejection", rejectionHandler);
+      }
+      observer.next(workerEvent)
+    }) as EventListener
+    worker.addEventListener("message", messageHandler)
+    worker.addEventListener("unhandledrejection", rejectionHandler)
 
     workerTermination.then(() => {
       const terminationEvent: WorkerTerminationEvent = {
         type: WorkerEventType.termination,
-      };
-      worker.removeEventListener("message", messageHandler);
-      worker.removeEventListener("unhandledrejection", rejectionHandler);
-      observer.next(terminationEvent);
-      observer.complete();
-    });
-  });
+      }
+      worker.removeEventListener("message", messageHandler)
+      worker.removeEventListener("unhandledrejection", rejectionHandler)
+      observer.next(terminationEvent)
+      observer.complete()
+    })
+  })
 }
 
 function createTerminator(worker: TWorker): {
-  termination: Promise<void>;
-  terminate: () => Promise<void>;
+  termination: Promise<void>
+  terminate: () => Promise<void>
 } {
-  const [termination, resolver] = createPromiseWithResolver<void>();
+  const [termination, resolver] = createPromiseWithResolver<void>()
   const terminate = async () => {
-    debugThreadUtils("Terminating worker");
+    debugThreadUtils("Terminating worker")
     // Newer versions of worker_threads workers return a promise
-    await worker.terminate();
-    resolver();
-  };
-  return { terminate, termination };
+    await worker.terminate()
+    resolver()
+  }
+  return { terminate, termination }
 }
 
 function createSharedWorkerTerminator(worker: SharedWorker): {
-  termination: Promise<void>;
-  terminate: () => Promise<void>;
+  termination: Promise<void>
+  terminate: () => Promise<void>
 } {
-  const [termination, resolver] = createPromiseWithResolver<void>();
+  const [termination, resolver] = createPromiseWithResolver<void>()
   const terminate = async () => {
-    debugThreadUtils("Terminating shared worker");
-    await worker.port.close();
-    resolver();
-  };
-  return { terminate, termination };
+    debugThreadUtils("Terminating shared worker")
+    await worker.port.close()
+    resolver()
+  }
+  return { terminate, termination }
 }
 
 function setPrivateThreadProps<T>(
@@ -163,7 +163,7 @@ function setPrivateThreadProps<T>(
 ): T & PrivateThreadProps {
   const workerErrors = workerEvents
     .filter((event) => event.type === WorkerEventType.internalError)
-    .map((errorEvent) => (errorEvent as WorkerInternalErrorEvent).error);
+    .map((errorEvent) => (errorEvent as WorkerInternalErrorEvent).error)
 
   // tslint:disable-next-line prefer-object-spread
   return Object.assign(raw, {
@@ -171,7 +171,7 @@ function setPrivateThreadProps<T>(
     [$events]: workerEvents,
     [$terminate]: terminate,
     [$worker]: worker,
-  });
+  })
 }
 
 /**
@@ -189,54 +189,54 @@ export async function spawn<
   worker: WorkerType,
   options?: { timeout?: number }
 ): Promise<ExposedToThreadType<Exposed>> {
-  debugSpawn("Initializing new thread");
+  debugSpawn("Initializing new thread")
 
   const timeout =
-    options && options.timeout ? options.timeout : initMessageTimeout;
+    options && options.timeout ? options.timeout : initMessageTimeout
   const initMessage = await withTimeout(
     receiveInitMessage(worker),
     timeout,
     `Timeout: Did not receive an init message from worker after ${timeout}ms. Make sure the worker calls expose().`
-  );
-  const exposed = initMessage.exposed;
-  let termination, terminate;
+  )
+  const exposed = initMessage.exposed
+  let termination, terminate
 
   if (worker instanceof SharedWorker) {
-    const o = createSharedWorkerTerminator(worker);
+    const o = createSharedWorkerTerminator(worker)
 
-    termination = o.termination;
-    terminate = o.terminate;
+    termination = o.termination
+    terminate = o.terminate
   } else {
-    const o = createTerminator(worker);
+    const o = createTerminator(worker)
 
-    termination = o.termination;
-    terminate = o.terminate;
+    termination = o.termination
+    terminate = o.terminate
   }
 
-  const events = createEventObservable(worker, termination);
+  const events = createEventObservable(worker, termination)
 
   if (exposed.type === "function") {
-    const proxy = createProxyFunction(worker);
+    const proxy = createProxyFunction(worker)
     return setPrivateThreadProps(
       proxy,
       // @ts-ignore TODO: How to handle this for shared workers?
       worker,
       events,
       terminate
-    ) as ExposedToThreadType<Exposed>;
+    ) as ExposedToThreadType<Exposed>
   } else if (exposed.type === "module") {
-    const proxy = createProxyModule(worker, exposed.methods);
+    const proxy = createProxyModule(worker, exposed.methods)
     return setPrivateThreadProps(
       proxy,
       // @ts-ignore TODO: How to handle this for shared workers?
       worker,
       events,
       terminate
-    ) as ExposedToThreadType<Exposed>;
+    ) as ExposedToThreadType<Exposed>
   } else {
-    const type = (exposed as WorkerInitMessage["exposed"]).type;
+    const type = (exposed as WorkerInitMessage["exposed"]).type
     throw Error(
       `Worker init message states unexpected type of expose(): ${type}`
-    );
+    )
   }
 }
