@@ -1,7 +1,7 @@
-import isSomeObservable from "is-observable";
-import { Observable, Subscription } from "observable-fns";
-import { deserialize, serialize } from "./common";
-import { isTransferDescriptor, TransferDescriptor } from "./transferable";
+import isSomeObservable from "is-observable"
+import { Observable, Subscription } from "observable-fns"
+import { deserialize, serialize } from "./common"
+import { isTransferDescriptor, TransferDescriptor } from "./transferable"
 import {
   MasterJobCancelMessage,
   MasterJobRunMessage,
@@ -13,44 +13,44 @@ import {
   WorkerJobStartMessage,
   WorkerMessageType,
   WorkerUncaughtErrorMessage,
-} from "./types/messages";
+} from "./types/messages"
 import {
   AbstractedWorkerAPI,
   WorkerFunction,
   WorkerModule,
-} from "./types/worker";
+} from "./types/worker"
 
 function getExpose(Implementation: AbstractedWorkerAPI) {
-  let exposeCalled = false;
+  let exposeCalled = false
 
-  const activeSubscriptions = new Map<number, Subscription<any>>();
+  const activeSubscriptions = new Map<number, Subscription<any>>()
 
   const isMasterJobCancelMessage = (
     thing: any
   ): thing is MasterJobCancelMessage =>
-    thing && thing.type === MasterMessageType.cancel;
+    thing && thing.type === MasterMessageType.cancel
   const isMasterJobRunMessage = (thing: any): thing is MasterJobRunMessage =>
-    thing && thing.type === MasterMessageType.run;
+    thing && thing.type === MasterMessageType.run
 
   /**
    * There are issues with `is-observable` not recognizing zen-observable's instances.
    * We are using `observable-fns`, but it's based on zen-observable, too.
    */
   const isObservable = (thing: any): thing is Observable<any> =>
-    isSomeObservable(thing) || isZenObservable(thing);
+    isSomeObservable(thing) || isZenObservable(thing)
 
   function isZenObservable(thing: any): thing is Observable<any> {
     return (
       thing &&
       typeof thing === "object" &&
       typeof thing.subscribe === "function"
-    );
+    )
   }
 
   function deconstructTransfer(thing: any) {
     return isTransferDescriptor(thing)
       ? { payload: thing.send, transferables: thing.transferables }
-      : { payload: thing, transferables: undefined };
+      : { payload: thing, transferables: undefined }
   }
 
   function postFunctionInitMessage() {
@@ -59,8 +59,8 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
       exposed: {
         type: "function",
       },
-    };
-    Implementation.postMessageToMaster(initMessage);
+    }
+    Implementation.postMessageToMaster(initMessage)
   }
 
   function postModuleInitMessage(methodNames: string[]) {
@@ -70,21 +70,21 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
         type: "module",
         methods: methodNames,
       },
-    };
-    Implementation.postMessageToMaster(initMessage);
+    }
+    Implementation.postMessageToMaster(initMessage)
   }
 
   function postJobErrorMessage(
     uid: number,
     rawError: Error | TransferDescriptor<Error>
   ) {
-    const { payload: error, transferables } = deconstructTransfer(rawError);
+    const { payload: error, transferables } = deconstructTransfer(rawError)
     const errorMessage: WorkerJobErrorMessage = {
       type: WorkerMessageType.error,
       uid,
       error: serialize(error) as any as SerializedError,
-    };
-    Implementation.postMessageToMaster(errorMessage, transferables);
+    }
+    Implementation.postMessageToMaster(errorMessage, transferables)
   }
 
   function postJobResultMessage(
@@ -92,14 +92,14 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
     completed: boolean,
     resultValue?: any
   ) {
-    const { payload, transferables } = deconstructTransfer(resultValue);
+    const { payload, transferables } = deconstructTransfer(resultValue)
     const resultMessage: WorkerJobResultMessage = {
       type: WorkerMessageType.result,
       uid,
       complete: completed ? true : undefined,
       payload,
-    };
-    Implementation.postMessageToMaster(resultMessage, transferables);
+    }
+    Implementation.postMessageToMaster(resultMessage, transferables)
   }
 
   function postJobStartMessage(
@@ -110,8 +110,8 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
       type: WorkerMessageType.running,
       uid,
       resultType,
-    };
-    Implementation.postMessageToMaster(startMessage);
+    }
+    Implementation.postMessageToMaster(startMessage)
   }
 
   function postUncaughtErrorMessage(error: Error) {
@@ -119,8 +119,8 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
       const errorMessage: WorkerUncaughtErrorMessage = {
         type: WorkerMessageType.uncaughtError,
         error: serialize(error) as any as SerializedError,
-      };
-      Implementation.postMessageToMaster(errorMessage);
+      }
+      Implementation.postMessageToMaster(errorMessage)
     } catch (subError) {
       // tslint:disable-next-line no-console
       console.error(
@@ -130,41 +130,41 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
         subError,
         "\nOriginal error:",
         error
-      );
+      )
     }
   }
 
   async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
-    let syncResult: any;
+    let syncResult: any
 
     try {
-      syncResult = fn(...args);
+      syncResult = fn(...args)
     } catch (error) {
-      return postJobErrorMessage(jobUID, error);
+      return postJobErrorMessage(jobUID, error)
     }
 
-    const resultType = isObservable(syncResult) ? "observable" : "promise";
-    postJobStartMessage(jobUID, resultType);
+    const resultType = isObservable(syncResult) ? "observable" : "promise"
+    postJobStartMessage(jobUID, resultType)
 
     if (isObservable(syncResult)) {
       const subscription = syncResult.subscribe(
         (value) => postJobResultMessage(jobUID, false, serialize(value)),
         (error) => {
-          postJobErrorMessage(jobUID, serialize(error) as any);
-          activeSubscriptions.delete(jobUID);
+          postJobErrorMessage(jobUID, serialize(error) as any)
+          activeSubscriptions.delete(jobUID)
         },
         () => {
-          postJobResultMessage(jobUID, true);
-          activeSubscriptions.delete(jobUID);
+          postJobResultMessage(jobUID, true)
+          activeSubscriptions.delete(jobUID)
         }
-      );
-      activeSubscriptions.set(jobUID, subscription);
+      )
+      activeSubscriptions.set(jobUID, subscription)
     } else {
       try {
-        const result = await syncResult;
-        postJobResultMessage(jobUID, true, serialize(result));
+        const result = await syncResult
+        postJobResultMessage(jobUID, true, serialize(result))
       } catch (error) {
-        postJobErrorMessage(jobUID, serialize(error) as any);
+        postJobErrorMessage(jobUID, serialize(error) as any)
       }
     }
   }
@@ -178,14 +178,14 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
    */
   function expose(exposed: WorkerFunction | WorkerModule<any>) {
     if (!Implementation.isWorkerRuntime()) {
-      throw Error("expose() called in the master thread.");
+      throw Error("expose() called in the master thread.")
     }
     if (exposeCalled) {
       throw Error(
         "expose() called more than once. This is not possible. Pass an object to expose() if you want to expose multiple functions."
-      );
+      )
     }
-    exposeCalled = true;
+    exposeCalled = true
 
     if (typeof exposed === "function") {
       Implementation.subscribeToMasterMessages((messageData) => {
@@ -194,10 +194,10 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
             messageData.uid,
             exposed,
             messageData.args.map(deserialize)
-          );
+          )
         }
-      });
-      postFunctionInitMessage();
+      })
+      postFunctionInitMessage()
     } else if (typeof exposed === "object" && exposed) {
       Implementation.subscribeToMasterMessages((messageData) => {
         if (isMasterJobRunMessage(messageData) && messageData.method) {
@@ -205,31 +205,31 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
             messageData.uid,
             exposed[messageData.method],
             messageData.args.map(deserialize)
-          );
+          )
         }
-      });
+      })
 
       const methodNames = Object.keys(exposed).filter(
         (key) => typeof exposed[key] === "function"
-      );
-      postModuleInitMessage(methodNames);
+      )
+      postModuleInitMessage(methodNames)
     } else {
       throw Error(
         `Invalid argument passed to expose(). Expected a function or an object, got: ${exposed}`
-      );
+      )
     }
 
     Implementation.subscribeToMasterMessages((messageData) => {
       if (isMasterJobCancelMessage(messageData)) {
-        const jobUID = messageData.uid;
-        const subscription = activeSubscriptions.get(jobUID);
+        const jobUID = messageData.uid
+        const subscription = activeSubscriptions.get(jobUID)
 
         if (subscription) {
-          subscription.unsubscribe();
-          activeSubscriptions.delete(jobUID);
+          subscription.unsubscribe()
+          activeSubscriptions.delete(jobUID)
         }
       }
-    });
+    })
   }
 
   if (
@@ -239,15 +239,15 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
   ) {
     self.addEventListener("error", (event) => {
       // Post with some delay, so the master had some time to subscribe to messages
-      setTimeout(() => postUncaughtErrorMessage(event.error || event), 250);
-    });
+      setTimeout(() => postUncaughtErrorMessage(event.error || event), 250)
+    })
     self.addEventListener("unhandledrejection", (event) => {
-      const error = (event as any).reason;
+      const error = (event as any).reason
       if (error && typeof (error as any).message === "string") {
         // Post with some delay, so the master had some time to subscribe to messages
-        setTimeout(() => postUncaughtErrorMessage(error), 250);
+        setTimeout(() => postUncaughtErrorMessage(error), 250)
       }
-    });
+    })
   }
 
   if (
@@ -257,17 +257,17 @@ function getExpose(Implementation: AbstractedWorkerAPI) {
   ) {
     process.on("uncaughtException", (error) => {
       // Post with some delay, so the master had some time to subscribe to messages
-      setTimeout(() => postUncaughtErrorMessage(error), 250);
-    });
+      setTimeout(() => postUncaughtErrorMessage(error), 250)
+    })
     process.on("unhandledRejection", (error) => {
       if (error && typeof (error as any).message === "string") {
         // Post with some delay, so the master had some time to subscribe to messages
-        setTimeout(() => postUncaughtErrorMessage(error as any), 250);
+        setTimeout(() => postUncaughtErrorMessage(error as any), 250)
       }
-    });
+    })
   }
 
-  return expose;
+  return expose
 }
 
-export default getExpose;
+export default getExpose
