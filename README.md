@@ -15,11 +15,11 @@ Uses web workers in the browser, `worker_threads` in node 12+ and [`tiny-worker`
 
 ### Features
 
-- First-class support for **async functions** & **observables**
-- Write code once, run it **on all platforms**
-- Manage bulk task executions with **thread pools**
-- Use **require()** and **import**/**export** in workers
-- Works great with **webpack**
+* First-class support for **async functions** & **observables**
+* Write code once, run it **on all platforms**
+* Manage bulk task executions with **thread pools**
+* Use **require()** and **import**/**export** in workers
+* Works great with **webpack**
 
 ### Version 0.x
 
@@ -31,7 +31,7 @@ You can find the old version 0.12 of threads.js on the [`v0` branch](https://git
 npm install threads tiny-worker
 ```
 
-_You only need to install the `tiny-worker` package to support node.js < 12. It's an optional dependency and used as a fallback if `worker_threads` are not available._
+*You only need to install the `tiny-worker` package to support node.js < 12. It's an optional dependency and used as a fallback if `worker_threads` are not available.*
 
 ## Platform support
 
@@ -62,7 +62,7 @@ Use with the [`threads-plugin`](https://github.com/andywer/threads-plugin). It w
 Then add it to your `webpack.config.js`:
 
 ```diff
-+ const ThreadsPlugin = require('threads-plugin');
++ const ThreadsPlugin = require('threads-plugin')
 
   module.exports = {
     // ...
@@ -147,26 +147,26 @@ Everything else should work out of the box.
 
 ```js
 // master.js
-import { spawn, Thread, Worker } from "threads";
+import { spawn, Thread, Worker } from "threads"
 
-const auth = await spawn(new Worker("./workers/auth"));
-const hashed = await auth.hashPassword("Super secret password", "1234");
+const auth = await spawn(new Worker("./workers/auth"))
+const hashed = await auth.hashPassword("Super secret password", "1234")
 
-console.log("Hashed password:", hashed);
+console.log("Hashed password:", hashed)
 
-await Thread.terminate(auth);
+await Thread.terminate(auth)
 ```
 
 ```js
 // workers/auth.js
-import sha256 from "js-sha256";
-import { expose } from "threads/worker";
+import sha256 from "js-sha256"
+import { expose } from "threads/worker"
 
 expose({
   hashPassword(password, salt) {
-    return sha256(password + salt);
+    return sha256(password + salt)
   },
-});
+})
 ```
 
 ### spawn()
@@ -189,26 +189,26 @@ In threads.js, the functionality is exposed as follows:
 
 ```js
 // master.js
-import { spawn, Thread, SharedWorker } from "threads";
+import { spawn, Thread, SharedWorker } from "threads"
 
-const auth = await spawn(new SharedWorker("./workers/auth"));
-const hashed = await auth.hashPassword("Super secret password", "1234");
+const auth = await spawn(new SharedWorker("./workers/auth"))
+const hashed = await auth.hashPassword("Super secret password", "1234")
 
-console.log("Hashed password:", hashed);
+console.log("Hashed password:", hashed)
 
-await Thread.terminate(auth);
+await Thread.terminate(auth)
 ```
 
 ```js
 // workers/auth.js
-import sha256 from "js-sha256";
-import { expose } from "threads/shared-worker";
+import sha256 from "js-sha256"
+import { expose } from "threads/shared-worker"
 
 exposeShared({
   hashPassword(password, salt) {
-    return sha256(password + salt);
+    return sha256(password + salt)
   },
-});
+})
 ```
 
 As you might notice, compared to the original example, only the imports (`Worker` -> `SharedWorker` and `expose` path) have changed.
