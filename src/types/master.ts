@@ -18,47 +18,36 @@ interface ObservableLike<T> {
     onComplete?: () => any
   ): ObservableLikeSubscription
   subscribe(listeners: {
-    next?(value: T): any
-    error?(error: any): any
-    complete?(): any
+    next?(value: T): any,
+    error?(error: any): any,
+    complete?(): any,
   }): ObservableLikeSubscription
 }
 
-export type StripAsync<Type> = Type extends Promise<infer PromiseBaseType>
+export type StripAsync<Type> =
+  Type extends Promise<infer PromiseBaseType>
   ? PromiseBaseType
   : Type extends ObservableLike<infer ObservableBaseType>
   ? ObservableBaseType
   : Type
 
-export type StripTransfer<Type> = Type extends TransferDescriptor<
-  infer BaseType
->
+export type StripTransfer<Type> = Type extends TransferDescriptor<infer BaseType>
   ? BaseType
   : Type
 
 export type ModuleMethods = { [methodName: string]: (...args: any) => any }
 
-export type ProxyableArgs<Args extends any[]> = Args extends [
-  arg0: infer Arg0,
-  ...rest: infer RestArgs
-]
-  ? [
-      Arg0 extends Transferable ? Arg0 | TransferDescriptor<Arg0> : Arg0,
-      ...RestArgs
-    ]
+export type ProxyableArgs<Args extends any[]> = Args extends [arg0: infer Arg0, ...rest: infer RestArgs]
+  ? [Arg0 extends Transferable ? Arg0 | TransferDescriptor<Arg0> : Arg0, ...RestArgs]
   : Args
 
-export type ProxyableFunction<Args extends any[], ReturnType> = Args extends []
-  ? () => ObservablePromise<StripTransfer<StripAsync<ReturnType>>>
-  : (
-      ...args: ProxyableArgs<Args>
-    ) => ObservablePromise<StripTransfer<StripAsync<ReturnType>>>
+export type ProxyableFunction<Args extends any[], ReturnType> =
+  Args extends []
+    ? () => ObservablePromise<StripTransfer<StripAsync<ReturnType>>>
+  : (...args: ProxyableArgs<Args>) => ObservablePromise<StripTransfer<StripAsync<ReturnType>>>
 
 export type ModuleProxy<Methods extends ModuleMethods> = {
-  [method in keyof Methods]: ProxyableFunction<
-    Parameters<Methods[method]>,
-    ReturnType<Methods[method]>
-  >
+  [method in keyof Methods]: ProxyableFunction<Parameters<Methods[method]>, ReturnType<Methods[method]>>
 }
 
 export interface PrivateThreadProps {
@@ -68,12 +57,8 @@ export interface PrivateThreadProps {
   [$worker]: Worker
 }
 
-export type FunctionThread<
-  Args extends any[] = any[],
-  ReturnType = any
-> = ProxyableFunction<Args, ReturnType> & PrivateThreadProps
-export type ModuleThread<Methods extends ModuleMethods = any> =
-  ModuleProxy<Methods> & PrivateThreadProps
+export type FunctionThread<Args extends any[] = any[], ReturnType = any> = ProxyableFunction<Args, ReturnType> & PrivateThreadProps
+export type ModuleThread<Methods extends ModuleMethods = any> = ModuleProxy<Methods> & PrivateThreadProps
 
 // We have those extra interfaces to keep the general non-specific `Thread` type
 // as an interface, so it's displayed concisely in any TypeScript compiler output.
@@ -95,9 +80,7 @@ export type TransferList = Transferable[]
 export interface Worker extends EventTarget {
   postMessage(value: any, transferList?: TransferList): void
   /** In nodejs 10+ return type is Promise while with tiny-worker and in browser return type is void */
-  terminate(
-    callback?: (error?: Error, exitCode?: number) => void
-  ): void | Promise<number>
+  terminate(callback?: (error?: Error, exitCode?: number) => void): void | Promise<number>
 }
 export interface ThreadsWorkerOptions extends WorkerOptions {
   /** Prefix for the path passed to the Worker constructor. Web worker only. */
@@ -119,10 +102,7 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
 }
 
 /** Worker implementation. Either web worker or a node.js Worker class. */
-export declare class WorkerImplementation
-  extends EventTarget
-  implements Worker
-{
+export declare class WorkerImplementation extends EventTarget implements Worker {
   constructor(path: string, options?: ThreadsWorkerOptions)
   public postMessage(value: any, transferList?: TransferList): void
   public terminate(): void | Promise<number>
@@ -131,10 +111,7 @@ export declare class WorkerImplementation
 /** Class to spawn workers from a blob or source string. */
 export declare class BlobWorker extends WorkerImplementation {
   constructor(blob: Blob, options?: ThreadsWorkerOptions)
-  public static fromText(
-    source: string,
-    options?: ThreadsWorkerOptions
-  ): WorkerImplementation
+  public static fromText(source: string, options?: ThreadsWorkerOptions): WorkerImplementation
 }
 
 export interface ImplementationExport {
@@ -164,7 +141,4 @@ export interface WorkerTerminationEvent {
   type: WorkerEventType.termination
 }
 
-export type WorkerEvent =
-  | WorkerInternalErrorEvent
-  | WorkerMessageEvent<any>
-  | WorkerTerminationEvent
+export type WorkerEvent = WorkerInternalErrorEvent | WorkerMessageEvent<any> | WorkerTerminationEvent
