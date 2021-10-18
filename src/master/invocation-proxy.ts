@@ -34,17 +34,11 @@ let nextJobUID = 1
 
 const dedupe = <T>(array: T[]): T[] => Array.from(new Set(array))
 
-const isJobErrorMessage = (data: any): data is WorkerJobErrorMessage =>
-  data && data.type === WorkerMessageType.error
-const isJobResultMessage = (data: any): data is WorkerJobResultMessage =>
-  data && data.type === WorkerMessageType.result
-const isJobStartMessage = (data: any): data is WorkerJobStartMessage =>
-  data && data.type === WorkerMessageType.running
+const isJobErrorMessage = (data: any): data is WorkerJobErrorMessage => data && data.type === WorkerMessageType.error
+const isJobResultMessage = (data: any): data is WorkerJobResultMessage => data && data.type === WorkerMessageType.result
+const isJobStartMessage = (data: any): data is WorkerJobStartMessage => data && data.type === WorkerMessageType.running
 
-function createObservableForJob<ResultType>(
-  worker: WorkerType,
-  jobUID: number
-): Observable<ResultType> {
+function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number): Observable<ResultType> {
   return new Observable((observer) => {
     let asyncType: "observable" | "promise" | undefined
 
@@ -105,15 +99,12 @@ function createObservableForJob<ResultType>(
   })
 }
 
-function prepareArguments(rawArgs: any[]): {
-  args: any[]
-  transferables: Transferable[]
-} {
+function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transferable[] } {
   if (rawArgs.length === 0) {
     // Exit early if possible
     return {
       args: [],
-      transferables: [],
+      transferables: []
     }
   }
 
@@ -131,15 +122,11 @@ function prepareArguments(rawArgs: any[]): {
 
   return {
     args,
-    transferables:
-      transferables.length === 0 ? transferables : dedupe(transferables),
+    transferables: transferables.length === 0 ? transferables : dedupe(transferables)
   }
 }
 
-export function createProxyFunction<Args extends any[], ReturnType>(
-  worker: WorkerType,
-  method?: string
-) {
+export function createProxyFunction<Args extends any[], ReturnType>(worker: WorkerType, method?: string) {
   return ((...rawArgs: Args) => {
     const uid = nextJobUID++
     const { args, transferables } = prepareArguments(rawArgs)
@@ -162,9 +149,7 @@ export function createProxyFunction<Args extends any[], ReturnType>(
       return ObservablePromise.from(Promise.reject(error))
     }
 
-    return ObservablePromise.from(
-      multicast(createObservableForJob<ReturnType>(worker, uid))
-    )
+    return ObservablePromise.from(multicast(createObservableForJob<ReturnType>(worker, uid)))
   }) as any as ProxyableFunction<Args, ReturnType>
 }
 
