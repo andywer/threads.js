@@ -23,7 +23,7 @@ import {
   WorkerJobErrorMessage,
   WorkerJobResultMessage,
   WorkerJobStartMessage,
-  WorkerMessageType,
+  WorkerMessageType
 } from "../types/messages"
 
 type WorkerType = SharedWorker | TWorker
@@ -39,7 +39,7 @@ const isJobResultMessage = (data: any): data is WorkerJobResultMessage => data &
 const isJobStartMessage = (data: any): data is WorkerJobStartMessage => data && data.type === WorkerMessageType.running
 
 function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number): Observable<ResultType> {
-  return new Observable((observer) => {
+  return new Observable(observer => {
     let asyncType: "observable" | "promise" | undefined
 
     const messageHandler = ((event: MessageEvent) => {
@@ -134,7 +134,7 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
       type: MasterMessageType.run,
       uid,
       method,
-      args,
+      args
     }
 
     debugMessages("Sending command to run function to worker:", runMessage)
