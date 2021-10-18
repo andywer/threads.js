@@ -62,7 +62,7 @@ Use with the [`threads-plugin`](https://github.com/andywer/threads-plugin). It w
 Then add it to your `webpack.config.js`:
 
 ```diff
-+ const ThreadsPlugin = require('threads-plugin')
++ const ThreadsPlugin = require('threads-plugin');
 
   module.exports = {
     // ...
@@ -165,7 +165,7 @@ import { expose } from "threads/worker"
 expose({
   hashPassword(password, salt) {
     return sha256(password + salt)
-  },
+  }
 })
 ```
 
