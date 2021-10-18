@@ -98,7 +98,7 @@ function createEventObservable(
     const messageHandler = ((messageEvent: MessageEvent) => {
       const workerEvent: WorkerMessageEvent<any> = {
         type: WorkerEventType.message,
-        data: messageEvent.data,
+        data: messageEvent.data
       }
       observer.next(workerEvent)
     }) as EventListener
@@ -109,7 +109,7 @@ function createEventObservable(
       )
       const workerEvent: WorkerInternalErrorEvent = {
         type: WorkerEventType.internalError,
-        error: Error(errorEvent.reason),
+        error: Error(errorEvent.reason)
       }
       observer.next(workerEvent)
     }) as EventListener
@@ -118,7 +118,7 @@ function createEventObservable(
 
     workerTermination.then(() => {
       const terminationEvent: WorkerTerminationEvent = {
-        type: WorkerEventType.termination,
+        type: WorkerEventType.termination
       }
       worker.removeEventListener("message", messageHandler)
       worker.removeEventListener("unhandledrejection", rejectionHandler)
@@ -170,7 +170,7 @@ function setPrivateThreadProps<T>(
     [$errors]: workerErrors,
     [$events]: workerEvents,
     [$terminate]: terminate,
-    [$worker]: worker,
+    [$worker]: worker
   })
 }
 
