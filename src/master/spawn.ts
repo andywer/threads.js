@@ -32,28 +32,23 @@ type ArbitraryThreadType = FunctionThread<any, any> & ModuleThread<any>
 
 type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
   Exposed extends ArbitraryWorkerInterface
-    ? ArbitraryThreadType
-    : Exposed extends WorkerFunction
-    ? FunctionThread<Parameters<Exposed>, StripAsync<ReturnType<Exposed>>>
-    : Exposed extends WorkerModule<any>
-    ? ModuleThread<Exposed>
-    : never
+  ? ArbitraryThreadType
+  : Exposed extends WorkerFunction
+  ? FunctionThread<Parameters<Exposed>, StripAsync<ReturnType<Exposed>>>
+  : Exposed extends WorkerModule<any>
+  ? ModuleThread<Exposed>
+  : never
 
 const debugMessages = DebugLogger("threads:master:messages")
 const debugSpawn = DebugLogger("threads:master:spawn")
 const debugThreadUtils = DebugLogger("threads:master:thread-utils")
 
-const isInitMessage = (data: any): data is WorkerInitMessage =>
-  data && data.type === ("init" as const)
-const isUncaughtErrorMessage = (
-  data: any
-): data is WorkerUncaughtErrorMessage =>
-  data && data.type === ("uncaughtError" as const)
+const isInitMessage = (data: any): data is WorkerInitMessage => data && data.type === ("init" as const)
+const isUncaughtErrorMessage = (data: any): data is WorkerUncaughtErrorMessage => data && data.type === ("uncaughtError" as const)
 
-const initMessageTimeout =
-  typeof process !== "undefined" && process.env.THREADS_WORKER_INIT_TIMEOUT
-    ? Number.parseInt(process.env.THREADS_WORKER_INIT_TIMEOUT, 10)
-    : 10000
+const initMessageTimeout = typeof process !== "undefined" && process.env.THREADS_WORKER_INIT_TIMEOUT
+  ? Number.parseInt(process.env.THREADS_WORKER_INIT_TIMEOUT, 10)
+  : 10000
 
 async function withTimeout<T>(
   promise: Promise<T>,
@@ -65,7 +60,10 @@ async function withTimeout<T>(
   const timeout = new Promise<never>((resolve, reject) => {
     timeoutHandle = setTimeout(() => reject(Error(errorMessage)), timeoutInMs)
   })
-  const result = await Promise.race([promise, timeout])
+  const result = await Promise.race([
+    promise,
+    timeout
+  ])
 
   clearTimeout(timeoutHandle)
   return result
@@ -74,10 +72,7 @@ async function withTimeout<T>(
 function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
   return new Promise((resolve, reject) => {
     const messageHandler = ((event: MessageEvent) => {
-      debugMessages(
-        "Message from worker before finishing initialization:",
-        event.data
-      )
+      debugMessages("Message from worker before finishing initialization:", event.data)
       if (isInitMessage(event.data)) {
         worker.removeEventListener("message", messageHandler)
         resolve(event.data)
@@ -90,10 +85,7 @@ function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
   })
 }
 
-function createEventObservable(
-  worker: WorkerType,
-  workerTermination: Promise<any>
-): Observable<WorkerEvent> {
+function createEventObservable(worker: WorkerType, workerTermination: Promise<any>): Observable<WorkerEvent> {
   return new Observable<WorkerEvent>((observer) => {
     const messageHandler = ((messageEvent: MessageEvent) => {
       const workerEvent: WorkerMessageEvent<any> = {
@@ -128,10 +120,7 @@ function createEventObservable(
   })
 }
 
-function createTerminator(worker: TWorker): {
-  termination: Promise<void>
-  terminate: () => Promise<void>
-} {
+function createTerminator(worker: TWorker):  {termination: Promise<void>, terminate: () => Promise<void> } {
   const [termination, resolver] = createPromiseWithResolver<void>()
   const terminate = async () => {
     debugThreadUtils("Terminating worker")
