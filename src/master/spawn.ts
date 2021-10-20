@@ -13,7 +13,7 @@ import {
   WorkerEventType,
   WorkerInternalErrorEvent,
   WorkerMessageEvent,
-  WorkerTerminationEvent,
+  WorkerTerminationEvent
 } from "../types/master"
 import { WorkerInitMessage, WorkerUncaughtErrorMessage } from "../types/messages"
 import { WorkerFunction, WorkerModule } from "../types/worker"
