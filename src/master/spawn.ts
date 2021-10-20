@@ -134,7 +134,7 @@ function createSharedWorkerTerminator(worker: SharedWorker): {
 
 function setPrivateThreadProps<T>(
   raw: T,
-  worker: TWorker,
+  worker: WorkerType,
   workerEvents: Observable<WorkerEvent>,
   terminate: () => Promise<void>
 ): T & PrivateThreadProps {
@@ -142,6 +142,7 @@ function setPrivateThreadProps<T>(
     .filter(event => event.type === WorkerEventType.internalError)
     .map(errorEvent => (errorEvent as WorkerInternalErrorEvent).error)
 
+  // TODO: See here, how to make a SharedWorker proxy as expected?
   // tslint:disable-next-line prefer-object-spread
   return Object.assign(raw, {
     [$errors]: workerErrors,
@@ -189,7 +190,6 @@ export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> =
     const proxy = createProxyFunction(worker)
     return setPrivateThreadProps(
       proxy,
-      // @ts-ignore TODO: How to handle this for shared workers?
       worker,
       events,
       terminate
@@ -198,7 +198,6 @@ export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> =
     const proxy = createProxyModule(worker, exposed.methods)
     return setPrivateThreadProps(
       proxy,
-      // @ts-ignore TODO: How to handle this for shared workers?
       worker,
       events,
       terminate
