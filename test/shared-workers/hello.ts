@@ -1,5 +1,5 @@
-import { expose } from "../../src/shared-worker";
+import { expose } from "../../src/shared-worker"
 
 expose(function helloWorld() {
-  return "Hello World";
+  return "Hello World"
 });
