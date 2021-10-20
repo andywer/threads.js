@@ -139,8 +139,8 @@ function setPrivateThreadProps<T>(
   terminate: () => Promise<void>
 ): T & PrivateThreadProps {
   const workerErrors = workerEvents
-    .filter((event) => event.type === WorkerEventType.internalError)
-    .map((errorEvent) => (errorEvent as WorkerInternalErrorEvent).error)
+    .filter(event => event.type === WorkerEventType.internalError)
+    .map(errorEvent => (errorEvent as WorkerInternalErrorEvent).error)
 
   // tslint:disable-next-line prefer-object-spread
   return Object.assign(raw, {
@@ -160,21 +160,14 @@ function setPrivateThreadProps<T>(
  * @param [options]
  * @param [options.timeout] Init message timeout. Default: 10000 or set by environment variable.
  */
-export async function spawn<
-  Exposed extends WorkerFunction | WorkerModule<any> = ArbitraryWorkerInterface
->(
+export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> = ArbitraryWorkerInterface>(
   worker: WorkerType,
   options?: { timeout?: number }
 ): Promise<ExposedToThreadType<Exposed>> {
   debugSpawn("Initializing new thread")
 
-  const timeout =
-    options && options.timeout ? options.timeout : initMessageTimeout
-  const initMessage = await withTimeout(
-    receiveInitMessage(worker),
-    timeout,
-    `Timeout: Did not receive an init message from worker after ${timeout}ms. Make sure the worker calls expose().`
-  )
+  const timeout = options && options.timeout ? options.timeout : initMessageTimeout
+  const initMessage = await withTimeout(receiveInitMessage(worker), timeout, `Timeout: Did not receive an init message from worker after ${timeout}ms. Make sure the worker calls expose().`)
   const exposed = initMessage.exposed
   let termination, terminate
 
