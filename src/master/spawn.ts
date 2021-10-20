@@ -86,10 +86,7 @@ function createEventObservable(worker: WorkerType, workerTermination: Promise<an
       observer.next(workerEvent)
     }) as EventListener
     const rejectionHandler = ((errorEvent: PromiseRejectionEvent) => {
-      debugThreadUtils(
-        "Unhandled promise rejection event in thread:",
-        errorEvent
-      )
+      debugThreadUtils("Unhandled promise rejection event in thread:", errorEvent)
       const workerEvent: WorkerInternalErrorEvent = {
         type: WorkerEventType.internalError,
         error: Error(errorEvent.reason)
