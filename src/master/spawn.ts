@@ -15,10 +15,7 @@ import {
   WorkerMessageEvent,
   WorkerTerminationEvent,
 } from "../types/master"
-import {
-  WorkerInitMessage,
-  WorkerUncaughtErrorMessage,
-} from "../types/messages"
+import { WorkerInitMessage, WorkerUncaughtErrorMessage } from "../types/messages"
 import { WorkerFunction, WorkerModule } from "../types/worker"
 import { createProxyFunction, createProxyModule } from "./invocation-proxy"
 
