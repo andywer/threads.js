@@ -13,7 +13,6 @@
   },
   "include": [
     "./src/index.ts",
-    "./src/get-expose.ts",
     "./src/observable.ts",
     "./src/master/*",
     "./src/worker/*",
