@@ -87,12 +87,9 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
           type: MasterMessageType.cancel,
           uid: jobUID,
         }
+        const port = worker instanceof SharedWorker ? worker.port : worker;
 
-        if (worker instanceof SharedWorker) {
-          worker.port.postMessage(cancelMessage)
-        } else {
-          worker.postMessage(cancelMessage)
-        }
+        port.postMessage(cancelMessage, []);
       }
       worker.removeEventListener("message", messageHandler)
     }
@@ -136,15 +133,12 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
       method,
       args
     }
+    const port = worker instanceof SharedWorker ? worker.port : worker;
 
     debugMessages("Sending command to run function to worker:", runMessage)
 
     try {
-      if (worker instanceof SharedWorker) {
-        worker.port.postMessage(runMessage, transferables)
-      } else {
-        worker.postMessage(runMessage, transferables)
-      }
+      port.postMessage(runMessage, transferables)
     } catch (error) {
       return ObservablePromise.from(Promise.reject(error))
     }
