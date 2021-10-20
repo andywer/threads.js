@@ -24,10 +24,7 @@ import { createProxyFunction, createProxyModule } from "./invocation-proxy"
 
 type WorkerType = SharedWorker | TWorker
 
-type ArbitraryWorkerInterface = WorkerFunction &
-  WorkerModule<string> & {
-    somekeythatisneverusedinproductioncode123: "magicmarker123"
-  }
+type ArbitraryWorkerInterface = WorkerFunction & WorkerModule<string> & { somekeythatisneverusedinproductioncode123: "magicmarker123" }
 type ArbitraryThreadType = FunctionThread<any, any> & ModuleThread<any>
 
 type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
