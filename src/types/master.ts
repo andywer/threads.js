@@ -28,7 +28,9 @@ export type StripAsync<Type> =
   : Type
 
 export type StripTransfer<Type> =
-  Type extends TransferDescriptor<infer BaseType> ? BaseType : Type
+  Type extends TransferDescriptor<infer BaseType>
+  ? BaseType
+  : Type
 
 export type ModuleMethods = { [methodName: string]: (...args: any) => any }
 
