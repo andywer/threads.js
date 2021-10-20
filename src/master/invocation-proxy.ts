@@ -85,7 +85,7 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
       if (asyncType === "observable" || !asyncType) {
         const cancelMessage: MasterJobCancelMessage = {
           type: MasterMessageType.cancel,
-          uid: jobUID,
+          uid: jobUID
         }
         const port = worker instanceof SharedWorker ? worker.port : worker;
 
