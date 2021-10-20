@@ -12,11 +12,7 @@ interface ObservableLikeSubscription {
   unsubscribe(): any
 }
 interface ObservableLike<T> {
-  subscribe(
-    onNext: (value: T) => any,
-    onError?: (error: any) => any,
-    onComplete?: () => any
-  ): ObservableLikeSubscription
+  subscribe(onNext: (value: T) => any, onError?: (error: any) => any, onComplete?: () => any): ObservableLikeSubscription
   subscribe(listeners: {
     next?(value: T): any,
     error?(error: any): any,
@@ -31,9 +27,8 @@ export type StripAsync<Type> =
   ? ObservableBaseType
   : Type
 
-export type StripTransfer<Type> = Type extends TransferDescriptor<infer BaseType>
-  ? BaseType
-  : Type
+export type StripTransfer<Type> =
+  Type extends TransferDescriptor<infer BaseType> ? BaseType : Type
 
 export type ModuleMethods = { [methodName: string]: (...args: any) => any }
 
@@ -79,7 +74,7 @@ export type TransferList = Transferable[]
 /** Worker instance. Either a web worker or a node.js Worker provided by `worker_threads` or `tiny-worker`. */
 export interface Worker extends EventTarget {
   postMessage(value: any, transferList?: TransferList): void
-  /** In nodejs 10+ return type is Promise while with tiny-worker and in browser return type is void */
+    /** In nodejs 10+ return type is Promise while with tiny-worker and in browser return type is void */
   terminate(callback?: (error?: Error, exitCode?: number) => void): void | Promise<number>
 }
 export interface ThreadsWorkerOptions extends WorkerOptions {
@@ -124,7 +119,7 @@ export interface ImplementationExport {
 export enum WorkerEventType {
   internalError = "internalError",
   message = "message",
-  termination = "termination",
+  termination = "termination"
 }
 
 export interface WorkerInternalErrorEvent {
@@ -133,7 +128,7 @@ export interface WorkerInternalErrorEvent {
 }
 
 export interface WorkerMessageEvent<Data> {
-  type: WorkerEventType.message
+  type: WorkerEventType.message,
   data: Data
 }
 

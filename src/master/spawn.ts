@@ -188,24 +188,12 @@ export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> =
 
   if (exposed.type === "function") {
     const proxy = createProxyFunction(worker)
-    return setPrivateThreadProps(
-      proxy,
-      worker,
-      events,
-      terminate
-    ) as ExposedToThreadType<Exposed>
+    return setPrivateThreadProps(proxy, worker, events, terminate) as ExposedToThreadType<Exposed>
   } else if (exposed.type === "module") {
     const proxy = createProxyModule(worker, exposed.methods)
-    return setPrivateThreadProps(
-      proxy,
-      worker,
-      events,
-      terminate
-    ) as ExposedToThreadType<Exposed>
+    return setPrivateThreadProps(proxy, worker, events, terminate) as ExposedToThreadType<Exposed>
   } else {
     const type = (exposed as WorkerInitMessage["exposed"]).type
-    throw Error(
-      `Worker init message states unexpected type of expose(): ${type}`
-    )
+    throw Error(`Worker init message states unexpected type of expose(): ${type}`)
   }
 }
