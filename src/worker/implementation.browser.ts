@@ -13,21 +13,32 @@ declare const self: WorkerGlobalScope
 
 const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorkerRuntime() {
   const isWindowContext = typeof self !== "undefined" && typeof Window !== "undefined" && self instanceof Window
-  return typeof self !== "undefined" && self.postMessage && !isWindowContext ? true : false
+  const port = self instanceof SharedWorker ? self.port : self;
+
+  return typeof self !== "undefined" && port.postMessage && !isWindowContext ? true : false
 }
 
 const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList?) {
-  self.postMessage(data, transferList)
+  const port = self instanceof SharedWorker ? self.port : self;
+
+  port.postMessage(data, transferList || [])
 }
 
 const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {
+  const isSharedWorker = self instanceof SharedWorker;
+  const port = isSharedWorker ? self.port : self;
   const messageHandler = (messageEvent: MessageEvent) => {
     onMessage(messageEvent.data)
   }
   const unsubscribe = () => {
-    self.removeEventListener("message", messageHandler as EventListener)
+    port.removeEventListener("message", messageHandler as EventListener)
   }
-  self.addEventListener("message", messageHandler as EventListener)
+  port.addEventListener("message", messageHandler as EventListener)
+
+  if (isSharedWorker) {
+    self.port.start();
+  }
+
   return unsubscribe
 }
 

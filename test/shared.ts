@@ -8,7 +8,7 @@ import { spawn, Thread } from "../";
 
 describe("threads in browser", function () {
   it("can spawn and terminate a thread", async function () {
-    const sharedWorker = new SharedWorker("./shared-workers/hello.js");
+    const sharedWorker = new SharedWorker("./workers/hello-world.js");
 
     // TODO: Why does not spawn complete for shared workers?
     const helloWorld = await spawn<() => string>(sharedWorker);
@@ -20,7 +20,7 @@ describe("threads in browser", function () {
   });
 
   it("can call a function thread more than once", async function () {
-    const sharedWorker = new SharedWorker("./shared-workers/increment.js");
+    const sharedWorker = new SharedWorker("./workers/increment.js");
 
     const increment = await spawn<() => number>(sharedWorker);
     expect(await increment()).to.equal(1);

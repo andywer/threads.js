@@ -202,9 +202,9 @@ await Thread.terminate(auth)
 ```js
 // workers/auth.js
 import sha256 from "js-sha256"
-import { expose } from "threads/shared-worker"
+import { expose } from "threads/worker"
 
-exposeShared({
+expose({
   hashPassword(password, salt) {
     return sha256(password + salt)
   },
