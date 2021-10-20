@@ -50,11 +50,7 @@ const initMessageTimeout = typeof process !== "undefined" && process.env.THREADS
   ? Number.parseInt(process.env.THREADS_WORKER_INIT_TIMEOUT, 10)
   : 10000
 
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutInMs: number,
-  errorMessage: string
-): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, timeoutInMs: number, errorMessage: string): Promise<T> {
   let timeoutHandle: any
 
   const timeout = new Promise<never>((resolve, reject) => {
@@ -86,7 +82,7 @@ function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
 }
 
 function createEventObservable(worker: WorkerType, workerTermination: Promise<any>): Observable<WorkerEvent> {
-  return new Observable<WorkerEvent>((observer) => {
+  return new Observable<WorkerEvent>(observer => {
     const messageHandler = ((messageEvent: MessageEvent) => {
       const workerEvent: WorkerMessageEvent<any> = {
         type: WorkerEventType.message,
