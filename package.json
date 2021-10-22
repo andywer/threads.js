@@ -17,7 +17,6 @@
     "test:library": "cross-env TS_NODE_FILES=true ava ./test/**/*.test.ts",
     "test:tooling": "cross-env TS_NODE_FILES=true ava ./test-tooling/**/*.test.ts",
     "test:puppeteer:basic": "puppet-run --plugin=mocha --bundle=./test/workers/:workers/ --serve=./bundle/worker.js:/worker.js ./test/*.chromium*.ts",
-    "test:puppeteer:shared": "puppet-run --plugin=mocha --bundle=./test/workers/:workers/ --serve=./bundle/worker.js:/worker.js ./test/shared.ts",
     "test:puppeteer:webpack": "puppet-run --serve ./test-tooling/webpack/dist/app.web/0.worker.js --serve ./test-tooling/webpack/dist/app.web/1.worker.js --plugin=mocha ./test-tooling/webpack/webpack.chromium.mocha.ts",
     "posttest": "tslint --project .",
     "prepare": "npm run build"

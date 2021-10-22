@@ -189,7 +189,7 @@ In threads.js, the functionality is exposed as follows:
 
 ```js
 // master.js
-import { spawn, Thread, SharedWorker } from "threads"
+import { spawn, SharedWorker, Thread } from "threads"
 
 const auth = await spawn(new SharedWorker("./workers/auth"))
 const hashed = await auth.hashPassword("Super secret password", "1234")
