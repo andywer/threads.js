@@ -51,7 +51,7 @@ export interface PrivateThreadProps {
   [$errors]: Observable<Error>
   [$events]: Observable<WorkerEvent>
   [$terminate]: () => Promise<void>
-  [$worker]: Worker
+  [$worker]: SharedWorker | Worker
 }
 
 export type FunctionThread<Args extends any[] = any[], ReturnType = any> = ProxyableFunction<Args, ReturnType> & PrivateThreadProps

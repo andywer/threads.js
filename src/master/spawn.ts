@@ -142,8 +142,6 @@ function setPrivateThreadProps<T>(
     .filter(event => event.type === WorkerEventType.internalError)
     .map(errorEvent => (errorEvent as WorkerInternalErrorEvent).error)
 
-  // TODO: See here, how to make a SharedWorker proxy as expected?
-  // tslint:disable-next-line prefer-object-spread
   return Object.assign(raw, {
     [$errors]: workerErrors,
     [$events]: workerEvents,
