@@ -47,7 +47,8 @@ describe("threads in browser", function() {
   it("can spawn and terminate a thread with a shared worker", async function () {
     const sharedWorker = new SharedWorker("./workers/hello-world.js");
 
-    // TODO: Why does not spawn complete for shared workers?
+    console.log('hello before spawn');
+
     const helloWorld = await spawn<() => string>(sharedWorker);
 
     console.log("hello world fn", helloWorld);
