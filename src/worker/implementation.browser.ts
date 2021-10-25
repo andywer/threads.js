@@ -7,26 +7,26 @@ interface WorkerGlobalScope {
   addEventListener(eventName: string, listener: (event: Event) => void): void
   postMessage(message: any, transferables?: any[]): void
   removeEventListener(eventName: string, listener: (event: Event) => void): void
+  port?: WorkerGlobalScope & { start: () => void }
 }
 
 declare const self: WorkerGlobalScope
 
 const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorkerRuntime() {
   const isWindowContext = typeof self !== "undefined" && typeof Window !== "undefined" && self instanceof Window
-  const port = self instanceof SharedWorker ? self.port : self;
+  const port = self.port || self;
 
   return typeof self !== "undefined" && port.postMessage && !isWindowContext ? true : false
 }
 
 const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList?) {
-  const port = self instanceof SharedWorker ? self.port : self;
+  const port = self.port || self;
 
   port.postMessage(data, transferList || [])
 }
 
 const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {
-  const isSharedWorker = self instanceof SharedWorker;
-  const port = isSharedWorker ? self.port : self;
+  const port = self.port || self;
   const messageHandler = (messageEvent: MessageEvent) => {
     onMessage(messageEvent.data)
   }
@@ -35,7 +35,7 @@ const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"
   }
   port.addEventListener("message", messageHandler as EventListener)
 
-  if (isSharedWorker) {
+  if (self.port) {
     self.port.start();
   }
 
