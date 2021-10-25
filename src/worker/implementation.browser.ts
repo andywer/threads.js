@@ -30,14 +30,30 @@ const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"
   const messageHandler = (messageEvent: MessageEvent) => {
     onMessage(messageEvent.data)
   }
+
+  // TODO: Handle onconnect here somehow!
+  if (self.port) {
+    // @ts-ignore TODO: Testing for now
+    const connectHandler = (e) => {
+      const port = e.ports[0];
+
+      port.addEventListener('message', (messageEvent: MessageEvent) => {
+        port.onMessage(messageEvent.data)
+      });
+
+      port.start();
+    }
+
+    self.port.addEventListener('connect', connectHandler)
+
+    // TODO: Does this need unsubscription too?
+    return () => {};
+  }
+
   const unsubscribe = () => {
     port.removeEventListener("message", messageHandler as EventListener)
   }
   port.addEventListener("message", messageHandler as EventListener)
-
-  if (self.port) {
-    self.port.start();
-  }
 
   return unsubscribe
 }

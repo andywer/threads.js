@@ -11,6 +11,7 @@ import { spawn, BlobWorker, SharedWorker, Thread } from "../"
 import "../src/master/register"
 
 describe("threads in browser", function() {
+/*
   it("can spawn and terminate a thread", async function() {
     const helloWorld = await spawn<() => string>(new Worker("./workers/hello-world.js"))
     expect(await helloWorld()).to.equal("Hello World")
@@ -43,6 +44,7 @@ describe("threads in browser", function() {
     expect(await increment()).to.equal(3)
     await Thread.terminate(increment)
   })
+*/
 
   it("can spawn and terminate a thread with a shared worker", async function () {
     const sharedWorker = new SharedWorker("./workers/hello-world.js");

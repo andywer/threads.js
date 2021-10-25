@@ -150,6 +150,8 @@ async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
   }
 }
 
+console.log('hello from worker index')
+
 /**
  * Expose a function or a module (an object whose values are functions)
  * to the main thread. Must be called exactly once in every worker thread
@@ -158,6 +160,8 @@ async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
  * @param exposed Function or object whose values are functions
  */
 export function expose(exposed: WorkerFunction | WorkerModule<any>) {
+  console.log('at expose', Implementation.isWorkerRuntime(), exposeCalled)
+
   if (!Implementation.isWorkerRuntime()) {
     throw Error("expose() called in the master thread.")
   }
@@ -165,6 +169,8 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
     throw Error("expose() called more than once. This is not possible. Pass an object to expose() if you want to expose multiple functions.")
   }
   exposeCalled = true
+
+  console.log('at expose, continuing', exposed)
 
   if (typeof exposed === "function") {
     Implementation.subscribeToMasterMessages(messageData => {

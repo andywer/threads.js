@@ -33,6 +33,7 @@ type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<any>> =
   ? ModuleThread<Exposed>
   : never
 
+console.log('hello from spawn')
 
 const debugMessages = DebugLogger("threads:master:messages")
 const debugSpawn = DebugLogger("threads:master:spawn")
@@ -165,13 +166,25 @@ export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> =
 ): Promise<ExposedToThreadType<Exposed>> {
   debugSpawn("Initializing new thread")
 
+console.log('0000');
+
   const timeout = options && options.timeout ? options.timeout : initMessageTimeout
+
+  console.log('000')
+
   const initMessage = await withTimeout(receiveInitMessage(worker), timeout, `Timeout: Did not receive an init message from worker after ${timeout}ms. Make sure the worker calls expose().`)
+
+  console.log('00')
+
   const exposed = initMessage.exposed
   let termination, terminate
 
+console.log('a')
+
   if (worker instanceof SharedWorker) {
     const o = createSharedWorkerTerminator(worker)
+
+console.log('b')
 
     termination = o.termination
     terminate = o.terminate
@@ -181,6 +194,8 @@ export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> =
     termination = o.termination
     terminate = o.terminate
   }
+
+console.log('c', exposed.type)
 
   const events = createEventObservable(worker, termination)
 
