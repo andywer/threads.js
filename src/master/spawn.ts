@@ -39,7 +39,7 @@ const debugThreadUtils = DebugLogger("threads:master:thread-utils")
 const isInitMessage = (data: any): data is WorkerInitMessage => data && data.type === ("init" as const)
 const isUncaughtErrorMessage = (data: any): data is WorkerUncaughtErrorMessage => data && data.type === ("uncaughtError" as const)
 
-const initMessageTimeout = typeof process !== "undefined" && process.env.THREADS_WORKER_INIT_TIMEOUT
+const initMessageTimeout = typeof process !== "undefined" && typeof process.env !== "undefined" && process.env.THREADS_WORKER_INIT_TIMEOUT
   ? Number.parseInt(process.env.THREADS_WORKER_INIT_TIMEOUT, 10)
   : 10000
 
