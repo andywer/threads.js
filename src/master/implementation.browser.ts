@@ -63,6 +63,7 @@ function selectWorkerImplementation(): ImplementationExport {
 
   return {
     blob: BlobWorker,
+    shared: SharedWorker,
     default: WebWorker
   }
 }

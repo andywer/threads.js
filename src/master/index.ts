@@ -17,3 +17,6 @@ export const BlobWorker = getWorkerImplementation().blob
 
 /** Worker implementation. Either web worker or a node.js Worker class. */
 export const Worker = getWorkerImplementation().default
+
+/** Shared Worker implementation. Available only in the web. */
+export const SharedWorker = getWorkerImplementation().shared

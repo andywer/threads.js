@@ -8,7 +8,7 @@ import {
   ModuleThread,
   PrivateThreadProps,
   StripAsync,
-  Worker as WorkerType,
+  Worker as TWorker,
   WorkerEvent,
   WorkerEventType,
   WorkerInternalErrorEvent,
@@ -18,6 +18,8 @@ import {
 import { WorkerInitMessage, WorkerUncaughtErrorMessage } from "../types/messages"
 import { WorkerFunction, WorkerModule } from "../types/worker"
 import { createProxyFunction, createProxyModule } from "./invocation-proxy"
+
+type WorkerType = SharedWorker | TWorker
 
 type ArbitraryWorkerInterface = WorkerFunction & WorkerModule<string> & { somekeythatisneverusedinproductioncode123: "magicmarker123" }
 type ArbitraryThreadType = FunctionThread<any, any> & ModuleThread<any>
@@ -31,6 +33,7 @@ export type ExposedToThreadType<Exposed extends WorkerFunction | WorkerModule<an
   ? ModuleThread<Exposed>
   : never
 
+console.log('hello from spawn')
 
 const debugMessages = DebugLogger("threads:master:messages")
 const debugSpawn = DebugLogger("threads:master:spawn")
@@ -106,7 +109,7 @@ function createEventObservable(worker: WorkerType, workerTermination: Promise<an
   })
 }
 
-function createTerminator(worker: WorkerType): { termination: Promise<void>, terminate: () => Promise<void> } {
+function createTerminator(worker: TWorker):  {termination: Promise<void>, terminate: () => Promise<void> } {
   const [termination, resolver] = createPromiseWithResolver<void>()
   const terminate = async () => {
     debugThreadUtils("Terminating worker")
@@ -117,12 +120,29 @@ function createTerminator(worker: WorkerType): { termination: Promise<void>, ter
   return { terminate, termination }
 }
 
-function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Observable<WorkerEvent>, terminate: () => Promise<void>): T & PrivateThreadProps {
+function createSharedWorkerTerminator(worker: SharedWorker): {
+  termination: Promise<void>
+  terminate: () => Promise<void>
+} {
+  const [termination, resolver] = createPromiseWithResolver<void>()
+  const terminate = async () => {
+    debugThreadUtils("Terminating shared worker")
+    await worker.port.close()
+    resolver()
+  }
+  return { terminate, termination }
+}
+
+function setPrivateThreadProps<T>(
+  raw: T,
+  worker: WorkerType,
+  workerEvents: Observable<WorkerEvent>,
+  terminate: () => Promise<void>
+): T & PrivateThreadProps {
   const workerErrors = workerEvents
     .filter(event => event.type === WorkerEventType.internalError)
     .map(errorEvent => (errorEvent as WorkerInternalErrorEvent).error)
 
-  // tslint:disable-next-line prefer-object-spread
   return Object.assign(raw, {
     [$errors]: workerErrors,
     [$events]: workerEvents,
@@ -136,7 +156,7 @@ function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Obse
  * abstraction layer to provide the transparent API and verifies that
  * the worker has initialized successfully.
  *
- * @param worker Instance of `Worker`. Either a web worker, `worker_threads` worker or `tiny-worker` worker.
+ * @param worker Instance of `Worker` or `SharedWorker`. Either a web worker, `worker_threads` worker or `tiny-worker` worker.
  * @param [options]
  * @param [options.timeout] Init message timeout. Default: 10000 or set by environment variable.
  */
@@ -146,11 +166,37 @@ export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> =
 ): Promise<ExposedToThreadType<Exposed>> {
   debugSpawn("Initializing new thread")
 
-  const timeout = options && options.timeout ? options.timeout : initMessageTimeout
-  const initMessage = await withTimeout(receiveInitMessage(worker), timeout, `Timeout: Did not receive an init message from worker after ${timeout}ms. Make sure the worker calls expose().`)
-  const exposed = initMessage.exposed
+console.log('0000');
 
-  const { termination, terminate } = createTerminator(worker)
+  const timeout = options && options.timeout ? options.timeout : initMessageTimeout
+
+  console.log('000')
+
+  const initMessage = await withTimeout(receiveInitMessage(worker), timeout, `Timeout: Did not receive an init message from worker after ${timeout}ms. Make sure the worker calls expose().`)
+
+  console.log('00')
+
+  const exposed = initMessage.exposed
+  let termination, terminate
+
+console.log('a')
+
+  if (worker instanceof SharedWorker) {
+    const o = createSharedWorkerTerminator(worker)
+
+console.log('b')
+
+    termination = o.termination
+    terminate = o.terminate
+  } else {
+    const o = createTerminator(worker)
+
+    termination = o.termination
+    terminate = o.terminate
+  }
+
+console.log('c', exposed.type)
+
   const events = createEventObservable(worker, termination)
 
   if (exposed.type === "function") {

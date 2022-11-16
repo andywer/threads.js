@@ -181,6 +181,40 @@ Use `expose()` to make a function or an object containing methods callable from 
 
 In case of exposing an object, `spawn()` will asynchronously return an object exposing all the object's functions. If you `expose()` a function, `spawn` will also return a callable function, not an object.
 
+## Shared Workers
+
+[Shared Workers](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker) can be accessed from multiple browsing contexts (windows, iframes, other workers) making them useful for sharing tasks such as synchronization and avoiding redundant work.
+
+In threads.js, the functionality is exposed as follows:
+
+```js
+// master.js
+import { spawn, SharedWorker, Thread } from "threads"
+
+const auth = await spawn(new SharedWorker("./workers/auth"))
+const hashed = await auth.hashPassword("Super secret password", "1234")
+
+console.log("Hashed password:", hashed)
+
+await Thread.terminate(auth)
+```
+
+```js
+// workers/auth.js
+import sha256 from "js-sha256"
+import { expose } from "threads/worker"
+
+expose({
+  hashPassword(password, salt) {
+    return sha256(password + salt)
+  },
+})
+```
+
+As you might notice, compared to the original example, only the imports (`Worker` -> `SharedWorker` and `expose` path) have changed.
+
+Note that as the functionality makes sense only in the browser, it's available only there. Based on [caniuse](https://caniuse.com/sharedworkers), the functionality is widely supported [Safari being a notable exception](https://bugs.webkit.org/show_bug.cgi?id=149850).
+
 ## Usage
 
 <p>
