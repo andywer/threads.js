@@ -15,27 +15,27 @@ A trivial worker example to demo the two most important functions provided by th
 
 ```js
 // master.js
-import { spawn, Thread, Worker } from "threads"
+import { spawn, Thread, Worker } from "threads";
 
 async function main() {
-  const add = await spawn(new Worker("./workers/add"))
-  const sum = await add(2, 3)
+  const add = await spawn(new Worker(new URL("./workers/add"), import.meta.url));
+  const sum = await add(2, 3);
 
-  console.log(`2 + 3 = ${sum}`)
+  console.log(`2 + 3 = ${sum}`);
 
-  await Thread.terminate(add)
+  await Thread.terminate(add);
 }
 
-main().catch(console.error)
+main().catch(console.error);
 ```
 
 ```js
 // workers/add.js
-import { expose } from "threads/worker"
+import { expose } from "threads/worker";
 
 expose(function add(a, b) {
-  return a + b
-})
+  return a + b;
+});
 ```
 
 ### spawn()
@@ -60,25 +60,27 @@ This is one of two kinds of workers. A function worker exposes a single function
 
 ```js
 // master.js
-import { spawn, Thread, Worker } from "threads"
+import { spawn, Thread, Worker } from "threads";
 
-const fetchGithubProfile = await spawn(new Worker("./workers/fetch-github-profile"))
-const andywer = await fetchGithubProfile("andywer")
+const fetchGithubProfile = await spawn(
+  new Worker(new URL("./workers/fetch-github-profile", import.meta.url))
+);
+const andywer = await fetchGithubProfile("andywer");
 
-console.log(`User "andywer" has signed up on ${new Date(andywer.created_at).toLocaleString()}`)
+console.log(`User "andywer" has signed up on ${new Date(andywer.created_at).toLocaleString()}`);
 
-await Thread.terminate(fetchGithubProfile)
+await Thread.terminate(fetchGithubProfile);
 ```
 
 ```js
 // workers/fetch-github-profile.js
-import fetch from "isomorphic-fetch"
-import { expose } from "threads/worker"
+import fetch from "isomorphic-fetch";
+import { expose } from "threads/worker";
 
 expose(async function fetchGithubProfile(username) {
-  const response = await fetch(`https://api.github.com/users/${username}`)
-  return response.json()
-})
+  const response = await fetch(`https://api.github.com/users/${username}`);
+  return response.json();
+});
 ```
 
 ### Module worker
@@ -87,37 +89,37 @@ This is the second kind of worker. A module worker exposes an object whose value
 
 ```js
 // master.js
-import { spawn, Thread, Worker } from "threads"
+import { spawn, Thread, Worker } from "threads";
 
-const counter = await spawn(new Worker("./workers/counter"))
-await counter.increment()
-await counter.increment()
-await counter.decrement()
+const counter = await spawn(new Worker(new URL("./workers/counter", import.meta.url)));
+await counter.increment();
+await counter.increment();
+await counter.decrement();
 
-console.log(`Counter is now at ${await counter.getCount()}`)
+console.log(`Counter is now at ${await counter.getCount()}`);
 
-await Thread.terminate(counter)
+await Thread.terminate(counter);
 ```
 
 ```js
 // workers/counter.js
-import { expose } from "threads/worker"
+import { expose } from "threads/worker";
 
-let currentCount = 0
+let currentCount = 0;
 
 const counter = {
   getCount() {
-    return currentCount
+    return currentCount;
   },
   increment() {
-    return ++currentCount
+    return ++currentCount;
   },
   decrement() {
-    return --currentCount
-  }
-}
+    return --currentCount;
+  },
+};
 
-expose(counter)
+expose(counter);
 ```
 
 ### Error handling
@@ -126,20 +128,20 @@ Works fully transparent - the promise in the master code's call will be rejected
 
 ```js
 // master.js
-import { spawn, Thread, Worker } from "threads"
+import { spawn, Thread, Worker } from "threads";
 
-const counter = await spawn(new Worker("./workers/counter"))
+const counter = await spawn(new Worker(new URL("./workers/counter", import.meta.url)));
 
 try {
-  await counter.increment()
-  await counter.increment()
-  await counter.decrement()
+  await counter.increment();
+  await counter.increment();
+  await counter.decrement();
 
-  console.log(`Counter is now at ${await counter.getCount()}`)
+  console.log(`Counter is now at ${await counter.getCount()}`);
 } catch (error) {
-  console.error("Counter thread errored:", error)
+  console.error("Counter thread errored:", error);
 } finally {
-  await Thread.terminate(counter)
+  await Thread.terminate(counter);
 }
 ```
 
@@ -154,13 +156,13 @@ There is also a convenience function `BlobWorker.fromText()` that creates a new 
 Here is a webpack-based example, leveraging the `raw-loader` to inline the worker code. The worker code that we load using the `raw-loader` is the content of bundles that have been created by two previous webpack runs: one worker build targetting node.js, one for web browsers.
 
 ```js
-import { spawn, BlobWorker } from "threads"
-import MyWorkerNode from "raw-loader!../dist/worker.node/worker.js"
-import MyWorkerWeb from "raw-loader!../dist/worker.web/worker.js"
+import { spawn, BlobWorker } from "threads";
+import MyWorkerNode from "raw-loader!../dist/worker.node/worker.js";
+import MyWorkerWeb from "raw-loader!../dist/worker.web/worker.js";
 
-const MyWorker = process.browser ? MyWorkerWeb : MyWorkerNode
+const MyWorker = process.browser ? MyWorkerWeb : MyWorkerNode;
 
-const worker = await spawn(BlobWorker.fromText(MyWorker))
+const worker = await spawn(BlobWorker.fromText(MyWorker));
 // Now use this worker as always
 ```
 
@@ -174,58 +176,58 @@ When using TypeScript you can declare the type of a `spawn()`-ed worker:
 
 ```ts
 // master.ts
-import { spawn, Thread, Worker } from "threads"
+import { spawn, Thread, Worker } from "threads";
 
-type HashFunction = (input: string) => Promise<string>
+type HashFunction = (input: string) => Promise<string>;
 
-const sha512 = await spawn<HashFunction>(new Worker("./workers/sha512"))
-const hashed = await sha512("abcdef")
+const sha512 = await spawn<HashFunction>(new Worker(new URL("./workers/sha512", import.meta.url)));
+const hashed = await sha512("abcdef");
 ```
 
 It's also easy to export the type from the worker module and use it when `spawn()`-ing:
 
 ```ts
 // master.ts
-import { spawn, Thread, Worker } from "threads"
-import { Counter } from "./workers/counter"
+import { spawn, Thread, Worker } from "threads";
+import { Counter } from "./workers/counter";
 
-const counter = await spawn<Counter>(new Worker("./workers/counter"))
-console.log(`Initial counter: ${await counter.getCount()}`)
+const counter = await spawn<Counter>(new Worker(new URL("./workers/counter", import.meta.url)));
+console.log(`Initial counter: ${await counter.getCount()}`);
 
-await counter.increment()
-console.log(`Updated counter: ${await counter.getCount()}`)
+await counter.increment();
+console.log(`Updated counter: ${await counter.getCount()}`);
 
-await Thread.terminate(counter)
+await Thread.terminate(counter);
 ```
 
 ```ts
 // counter.ts
-import { expose } from "threads/worker"
+import { expose } from "threads/worker";
 
-let currentCount = 0
+let currentCount = 0;
 
 const counter = {
   getCount() {
-    return currentCount
+    return currentCount;
   },
   increment() {
-    return ++currentCount
+    return ++currentCount;
   },
   decrement() {
-    return --currentCount
-  }
-}
+    return --currentCount;
+  },
+};
 
-export type Counter = typeof counter
+export type Counter = typeof counter;
 
-expose(counter)
+expose(counter);
 ```
 
 ### TypeScript workers in node.js
 
 You can spawn `*.ts` workers out-of-the-box without prior transpiling if <a href="https://github.com/TypeStrong/ts-node" rel="nofollow">ts-node</a> is installed.
 
-If the path passed to `new Worker()` resolves to a `*.ts` file, threads.js will check if `ts-node` is available. If so, it will create an in-memory module that wraps the actual worker module and initializes `ts-node` before running the worker code. *It is likely you will have to increase the THREADS_WORKER_INIT_TIMEOUT environment variable (milliseconds, default 10000) to account for the longer ts-node startup time if you see timeouts spawning threads.*
+If the path passed to `new Worker()` resolves to a `*.ts` file, threads.js will check if `ts-node` is available. If so, it will create an in-memory module that wraps the actual worker module and initializes `ts-node` before running the worker code. _It is likely you will have to increase the THREADS_WORKER_INIT_TIMEOUT environment variable (milliseconds, default 10000) to account for the longer ts-node startup time if you see timeouts spawning threads._
 
 In case `ts-node` is not available, `new Worker()` will attempt to load the same file, but with a `*.js` extension. It is then in your hands to transpile the worker module before running the code.
 

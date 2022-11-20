@@ -16,17 +16,20 @@ A `Pool` allows you to create a set of workers and queue worker calls. The queue
 Use it if you have a lot of work to offload to workers and don't want to drown them in a pile of work at once, but run those tasks in a controlled way with limited concurrency.
 
 ```js
-import { spawn, Pool, Worker } from "threads"
+import { spawn, Pool, Worker } from "threads";
 
-const pool = Pool(() => spawn(new Worker("./workers/multiplier")), 8 /* optional size */)
+const pool = Pool(
+  () => spawn(new Worker(new URL("./workers/multiplier", import.meta.url))),
+  8 /* optional size */
+);
 
-pool.queue(async multiplier => {
-  const multiplied = await multiplier(2, 3)
-  console.log(`2 * 3 = ${multiplied}`)
-})
+pool.queue(async (multiplier) => {
+  const multiplied = await multiplier(2, 3);
+  console.log(`2 * 3 = ${multiplied}`);
+});
 
-await pool.completed()
-await pool.terminate()
+await pool.completed();
+await pool.terminate();
 ```
 
 Note that `pool.queue()` will schedule a task to be run in a deferred way. It might execute straight away or it might take a while until a new worker thread becomes available.
@@ -35,14 +38,14 @@ Note that `pool.queue()` will schedule a task to be run in a deferred way. It mi
 
 ```ts
 interface PoolOptions {
-  concurrency?: number
-  maxQueuedJobs?: number
-  name?: string
-  size?: number
+  concurrency?: number;
+  maxQueuedJobs?: number;
+  name?: string;
+  size?: number;
 }
 
-function Pool(threadFactory: () => Thread, size?: number): Pool
-function Pool(threadFactory: () => Thread, options?: PoolOptions): Pool
+function Pool(threadFactory: () => Thread, size?: number): Pool;
+function Pool(threadFactory: () => Thread, options?: PoolOptions): Pool;
 ```
 
 The first argument passed to the `Pool()` factory must be a function that spawns a worker thread of your choice. The pool will use this function to create its workers.
@@ -63,7 +66,7 @@ type TaskFunction<ThreadType, T> = (thread: ThreadType) => Promise<T> | T
 pool.queue<T>(task: TaskFunction<ThreadType, T>): Promise<T>
 ```
 
-The promise returned by `pool.queue()` resolves or rejects when the queued task function has been run and resolved / rejected. That means *you should usually not `await` that promise straight away* when calling `pool.queue()`, since the code after this line will then not be run until the task has been run and completed.
+The promise returned by `pool.queue()` resolves or rejects when the queued task function has been run and resolved / rejected. That means _you should usually not `await` that promise straight away_ when calling `pool.queue()`, since the code after this line will then not be run until the task has been run and completed.
 
 Whenever a pool worker finishes a job, the next pool job is de-queued (that is the function you passed to `pool.queue()`). It is called with the worker as the first argument. The job function is supposed to return a promise - when this promise resolves, the job is considered done and the next job is de-queued and dispatched to the worker.
 
@@ -74,17 +77,17 @@ The promise returned by `pool.completed()` will resolve once the scheduled callb
 Track a pooled task via the object that the `pool.queue()` promise resolves to. You can `await pool.queue()` to obtain the job's result. Be aware, though, that if you `await` the result directly on queueing, you will only queue another job after this one has finished. You might rather want to `pool.queue().then()` to defer handling the outcome and keep queueing tasks uninterruptedly.
 
 ```js
-import { spawn, Pool, Worker } from "threads"
+import { spawn, Pool, Worker } from "threads";
 
-const pool = Pool(() => spawn(new Worker("./workers/crytpo")))
-const task = pool.queue(crypto => crypto.encrypt("some-password"))
+const pool = Pool(() => spawn(new Worker(new URL("./workers/crytpo", import.meta.url))));
+const task = pool.queue((crypto) => crypto.encrypt("some-password"));
 
-task.then(result => {
-  // do something with the result 
-})
+task.then((result) => {
+  // do something with the result
+});
 
-await pool.completed()
-await pool.terminate()
+await pool.completed();
+await pool.terminate();
 ```
 
 ## Cancelling a queued task
@@ -92,18 +95,18 @@ await pool.terminate()
 You can cancel queued tasks, too. If the pool has already started to execute the task, you cannot cancel it anymore, though.
 
 ```js
-const task = pool.queue(multiplierWorker => multiplierWorker(2, 3))
-task.cancel()
+const task = pool.queue((multiplierWorker) => multiplierWorker(2, 3));
+task.cancel();
 ```
 
 ## Pool termination
 
 ```js
 // Terminate gracefully
-pool.terminate()
+pool.terminate();
 
 // Force-terminate pool workers
-pool.terminate(true)
+pool.terminate(true);
 ```
 
 By default the pool will wait until all scheduled tasks have completed before terminating the workers. Pass `true` to force-terminate the pool immediately.
@@ -121,13 +124,13 @@ As outlined before, pool tasks provide a Promise-like `.then()` method. You can 
 ```ts
 // (Created a pool and queued other pool tasks before…)
 
-const myTasks: QueuedTask[] = []
+const myTasks: QueuedTask[] = [];
 
 for (let input = 0; input < 5; input++) {
-  const task = pool.queue(worker => worker.work(input))
-  myTasks.push(task)
+  const task = pool.queue((worker) => worker.work(input));
+  myTasks.push(task);
 }
 
-await Promise.all(myTasks)
-console.log("All worker.work() tasks have completed. Other pool tasks might still be running.")
+await Promise.all(myTasks);
+console.log("All worker.work() tasks have completed. Other pool tasks might still be running.");
 ```
