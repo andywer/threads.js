@@ -12,6 +12,7 @@
     ],
     "interface-over-type-literal": false,
     "member-ordering": false,
+    "no-empty": [true, "allow-empty-functions"],
     "no-implicit-dependencies": [
       true,
       ["tiny-worker", "worker_threads"]
