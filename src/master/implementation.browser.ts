@@ -1,6 +1,6 @@
 // tslint:disable max-classes-per-file
 
-import { ImplementationExport, ThreadsWorkerOptions } from "../types/master"
+import { ImplementationExport, ThreadsWorkerOptions, TransferList } from "../types/master"
 import { getBundleURL } from "./get-bundle-url.browser"
 
 export const defaultPoolSize = typeof navigator !== "undefined" && navigator.hardwareConcurrency
@@ -18,16 +18,6 @@ function createSourceBlobURL(code: string): string {
 }
 
 function selectWorkerImplementation(): ImplementationExport {
-  if (typeof Worker === "undefined") {
-    // Might happen on Safari, for instance
-    // The idea is to only fail if the constructor is actually used
-    return class NoWebWorker {
-      constructor() {
-        throw Error("No web worker implementation available. You might have tried to spawn a worker within a worker in a browser that doesn't support workers in workers.")
-      }
-    } as any
-  }
-
   class WebWorker extends Worker {
     constructor(url: string | URL, options?: ThreadsWorkerOptions) {
       if (typeof url === "string" && options && options._baseURL) {
@@ -49,6 +39,20 @@ function selectWorkerImplementation(): ImplementationExport {
     }
   }
 
+  function getWorkerImpl() {
+    if (typeof Worker === "undefined") {
+      // Might happen on Safari, for instance
+      // The idea is to only fail if the constructor is actually used
+      return class NoWebWorker {
+        constructor() {
+          throw Error("No web worker implementation available. You might have tried to spawn a worker within a worker in a browser that doesn't support workers in workers.")
+        }
+      } as any
+    }
+
+    return WebWorker
+  }
+
   class BlobWorker extends WebWorker {
     constructor(blob: Blob, options?: ThreadsWorkerOptions) {
       const url = window.URL.createObjectURL(blob)
@@ -61,9 +65,46 @@ function selectWorkerImplementation(): ImplementationExport {
     }
   }
 
+  class SharedWebWorker extends SharedWorker {
+    constructor(url: string | URL, options?: ThreadsWorkerOptions) {
+      if (typeof url === "string" && options && options._baseURL) {
+        url = new URL(url, options._baseURL)
+      } else if (typeof url === "string" && !isAbsoluteURL(url) && getBundleURL().match(/^file:\/\//i)) {
+        url = new URL(url, getBundleURL().replace(/\/[^\/]+$/, "/"))
+        if (options?.CORSWorkaround ?? true) {
+          url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        }
+      }
+      if (typeof url === "string" && isAbsoluteURL(url)) {
+        // Create source code blob loading JS file via `importScripts()`
+        // to circumvent worker CORS restrictions
+        if (options?.CORSWorkaround ?? true) {
+          url = createSourceBlobURL(`importScripts(${JSON.stringify(url)});`)
+        }
+      }
+      super(url.toString(), options)
+      this.port.start()
+    }
+  }
+
+  function getSharedWorkerImpl() {
+    if (typeof SharedWorker === "undefined") {
+      // Might happen on Safari, for instance
+      // The idea is to only fail if the constructor is actually used
+      return class NoSharedWebWorker {
+        constructor() {
+          throw Error("No shared web worker implementation available. Maybe your browser doesn't support shared web workers.")
+        }
+      } as any
+    }
+
+    return SharedWebWorker
+  }
+
   return {
     blob: BlobWorker,
-    default: WebWorker
+    default: getWorkerImpl(),
+    shared: getSharedWorkerImpl()
   }
 }
 
@@ -78,5 +119,5 @@ export function getWorkerImplementation(): ImplementationExport {
 
 export function isWorkerRuntime() {
   const isWindowContext = typeof self !== "undefined" && typeof Window !== "undefined" && self instanceof Window
-  return typeof self !== "undefined" && self.postMessage && !isWindowContext ? true : false
+  return typeof self !== "undefined" && typeof self.postMessage === "function" && !isWindowContext ? true : false
 }

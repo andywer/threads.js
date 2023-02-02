@@ -9,7 +9,7 @@
 import * as BrowserImplementation from "./implementation.browser"
 import * as NodeImplementation from "./implementation.node"
 
-const runningInNode = typeof process !== 'undefined' && process.arch !== 'browser' && 'pid' in process
+const runningInNode = typeof process !== 'undefined' && 'pid' in process
 const implementation = runningInNode ? NodeImplementation : BrowserImplementation
 
 /** Default size of pools. Depending on the platform the value might vary from device to device. */
