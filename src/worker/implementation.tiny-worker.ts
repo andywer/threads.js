@@ -16,7 +16,7 @@ if (typeof self === "undefined") {
 }
 
 const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorkerRuntime() {
-  return typeof self !== "undefined" && self.postMessage ? true : false
+  return typeof self !== "undefined" && typeof self.postMessage === "function" ? true : false
 }
 
 const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data) {

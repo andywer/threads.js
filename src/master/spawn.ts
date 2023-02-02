@@ -117,12 +117,12 @@ function createTerminator(worker: WorkerType): { termination: Promise<void>, ter
   return { terminate, termination }
 }
 
-function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Observable<WorkerEvent>, terminate: () => Promise<void>): T & PrivateThreadProps {
+function setPrivateThreadProps<T extends object>(raw: T, worker: WorkerType, workerEvents: Observable<WorkerEvent>, terminate: () => Promise<void>): T & PrivateThreadProps {
   const workerErrors = workerEvents
     .filter(event => event.type === WorkerEventType.internalError)
     .map(errorEvent => (errorEvent as WorkerInternalErrorEvent).error)
 
-  // tslint:disable-next-line prefer-object-spread
+  // tslint:disable-next-line:prefer-object-spread
   return Object.assign(raw, {
     [$errors]: workerErrors,
     [$events]: workerEvents,

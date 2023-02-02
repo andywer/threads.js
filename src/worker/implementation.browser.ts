@@ -13,7 +13,7 @@ declare const self: WorkerGlobalScope
 
 const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorkerRuntime() {
   const isWindowContext = typeof self !== "undefined" && typeof Window !== "undefined" && self instanceof Window
-  return typeof self !== "undefined" && self.postMessage && !isWindowContext ? true : false
+  return typeof self !== "undefined" && typeof self.postMessage === "function" && !isWindowContext ? true : false
 }
 
 const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList?) {
