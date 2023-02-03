@@ -19,20 +19,20 @@ const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorke
   return typeof self !== "undefined" && typeof self.postMessage === "function" ? true : false
 }
 
-const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data) {
+const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(context, data) {
   // TODO: Warn that Transferables are not supported on first attempt to use feature
-  self.postMessage(data)
+  context.postMessage(data)
 }
 
 let muxingHandlerSetUp = false
-const messageHandlers = new Set<(data: any) => void>()
+const messageHandlers = new Set<(context: any, data: any) => void>()
 
-const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {
+const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(context, onMessage) {
   if (!muxingHandlerSetUp) {
     // We have one multiplexing message handler as tiny-worker's
     // addEventListener() only allows you to set a single message handler
     self.addEventListener("message", ((event: MessageEvent) => {
-      messageHandlers.forEach(handler => handler(event.data))
+      messageHandlers.forEach(handler => handler(context, event.data))
     }) as EventListener)
     muxingHandlerSetUp = true
   }
