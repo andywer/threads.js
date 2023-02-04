@@ -14,18 +14,18 @@ const isWorkerRuntime: AbstractedWorkerAPI["isWorkerRuntime"] = function isWorke
   return !WorkerThreads().isMainThread
 }
 
-const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(data, transferList) {
+const postMessageToMaster: AbstractedWorkerAPI["postMessageToMaster"] = function postMessageToMaster(context, data, transferList) {
   assertMessagePort(WorkerThreads().parentPort).postMessage(data, transferList as any)
 }
 
-const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(onMessage) {
+const subscribeToMasterMessages: AbstractedWorkerAPI["subscribeToMasterMessages"] = function subscribeToMasterMessages(context, onMessage) {
   const parentPort = WorkerThreads().parentPort
 
   if (!parentPort) {
     throw Error("Invariant violation: MessagePort to parent is not available.")
   }
   const messageHandler = (message: any) => {
-    onMessage(message)
+    onMessage(context, message)
   }
   const unsubscribe = () => {
     assertMessagePort(parentPort).off("message", messageHandler)

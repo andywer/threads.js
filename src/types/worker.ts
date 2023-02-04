@@ -2,8 +2,8 @@ type UnsubscribeFn = () => void
 
 export interface AbstractedWorkerAPI {
   isWorkerRuntime(): boolean
-  postMessageToMaster(message: any, transferList?: Transferable[]): void
-  subscribeToMasterMessages(onMessage: (data: any) => void): UnsubscribeFn
+  postMessageToMaster(context: any, message: any, transferList?: Transferable[]): void
+  subscribeToMasterMessages(context: any, onMessage: (context: any, data: any) => void): UnsubscribeFn
 }
 
 export type WorkerFunction = ((...args: any[]) => any) | (() => any)

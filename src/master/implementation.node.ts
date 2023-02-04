@@ -79,6 +79,12 @@ function rebaseScriptPath(scriptPath: string, ignoreRegex: RegExp) {
   return rebasedScriptPath
 }
 
+class NoSharedWebWorker {
+  constructor() {
+    throw Error("Shared workers are not supported in node.")
+  }
+}
+
 function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
   const makeRelative = (filePath: string) => {
     // eval() hack is also webpack-related
@@ -164,7 +170,8 @@ function initWorkerThreadsWorker(): ImplementationExport {
 
   return {
     blob: BlobWorker as any,
-    default: Worker as any
+    default: Worker as any,
+    shared: NoSharedWebWorker as any
   }
 }
 
@@ -245,7 +252,8 @@ function initTinyWorker(): ImplementationExport {
 
   return {
     blob: BlobWorker as any,
-    default: Worker as any
+    default: Worker as any,
+    shared: NoSharedWebWorker as any
   }
 }
 
@@ -273,7 +281,7 @@ export function getWorkerImplementation(): ImplementationExport {
 
 export function isWorkerRuntime() {
   if (isTinyWorker) {
-    return typeof self !== "undefined" && self.postMessage ? true : false
+    return typeof self !== "undefined" && typeof self.postMessage === "function" ? true : false
   } else {
     // Webpack hack
     const isMainThread = typeof __non_webpack_require__ === "function"

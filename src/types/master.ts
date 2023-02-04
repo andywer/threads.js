@@ -51,7 +51,7 @@ export interface PrivateThreadProps {
   [$errors]: Observable<Error>
   [$events]: Observable<WorkerEvent>
   [$terminate]: () => Promise<void>
-  [$worker]: Worker
+  [$worker]: Worker | SharedWorker
 }
 
 export type FunctionThread<Args extends any[] = any[], ReturnType = any> = ProxyableFunction<Args, ReturnType> & PrivateThreadProps
@@ -79,6 +79,12 @@ export interface Worker extends EventTarget {
     /** In nodejs 10+ return type is Promise while with tiny-worker and in browser return type is void */
   terminate(callback?: (error?: Error, exitCode?: number) => void): void | Promise<number>
 }
+
+/** SharedWorker instance. Either a web worker or a node.js Worker provided by `worker_threads` or `tiny-worker`. */
+export interface SharedWorker extends EventTarget {
+  port: MessagePort
+}
+
 export interface ThreadsWorkerOptions extends WorkerOptions {
   /** Prefix for the path passed to the Worker constructor. Web worker only. */
   _baseURL?: string
@@ -111,9 +117,15 @@ export declare class BlobWorker extends WorkerImplementation {
   public static fromText(source: string, options?: ThreadsWorkerOptions): WorkerImplementation
 }
 
+export declare class SharedWorkerImplementation extends EventTarget implements SharedWorker {
+  constructor(path: string, options?: ThreadsWorkerOptions)
+  port: MessagePort
+}
+
 export interface ImplementationExport {
   blob: typeof BlobWorker
   default: typeof WorkerImplementation
+  shared: typeof SharedWorkerImplementation
 }
 
 /** Event as emitted by worker thread. Subscribe to using `Thread.events(thread)`. */

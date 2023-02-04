@@ -9,6 +9,7 @@ import {
   PrivateThreadProps,
   StripAsync,
   Worker as WorkerType,
+  SharedWorker as SharedWorkerType,
   WorkerEvent,
   WorkerEventType,
   WorkerInternalErrorEvent,
@@ -19,6 +20,7 @@ import { WorkerInitMessage, WorkerUncaughtErrorMessage } from "../types/messages
 import { WorkerFunction, WorkerModule } from "../types/worker"
 import { createProxyFunction, createProxyModule } from "./invocation-proxy"
 
+type TWorker = WorkerType | SharedWorkerType
 type ArbitraryWorkerInterface = WorkerFunction & WorkerModule<string> & { somekeythatisneverusedinproductioncode123: "magicmarker123" }
 type ArbitraryThreadType = FunctionThread<any, any> & ModuleThread<any>
 
@@ -58,7 +60,7 @@ async function withTimeout<T>(promise: Promise<T>, timeoutInMs: number, errorMes
   return result
 }
 
-function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
+function receiveInitMessage(worker: TWorker): Promise<WorkerInitMessage> {
   return new Promise((resolve, reject) => {
     const messageHandler = ((event: MessageEvent) => {
       debugMessages("Message from worker before finishing initialization:", event.data)
@@ -74,7 +76,7 @@ function receiveInitMessage(worker: WorkerType): Promise<WorkerInitMessage> {
   })
 }
 
-function createEventObservable(worker: WorkerType, workerTermination: Promise<any>): Observable<WorkerEvent> {
+function createEventObservable(worker: TWorker, workerTermination: Promise<any>): Observable<WorkerEvent> {
   return new Observable<WorkerEvent>(observer => {
     const messageHandler = ((messageEvent: MessageEvent) => {
       const workerEvent: WorkerMessageEvent<any> = {
@@ -106,23 +108,27 @@ function createEventObservable(worker: WorkerType, workerTermination: Promise<an
   })
 }
 
-function createTerminator(worker: WorkerType): { termination: Promise<void>, terminate: () => Promise<void> } {
+function createTerminator(worker: TWorker): { termination: Promise<void>, terminate: () => Promise<void> } {
   const [termination, resolver] = createPromiseWithResolver<void>()
   const terminate = async () => {
     debugThreadUtils("Terminating worker")
     // Newer versions of worker_threads workers return a promise
-    await worker.terminate()
+    if('port' in worker) {
+      // TODO: send termination message to shared worker.
+      worker.port.close()
+    }
+    else await worker.terminate()
     resolver()
   }
   return { terminate, termination }
 }
 
-function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Observable<WorkerEvent>, terminate: () => Promise<void>): T & PrivateThreadProps {
+function setPrivateThreadProps<T extends object>(raw: T, worker: TWorker, workerEvents: Observable<WorkerEvent>, terminate: () => Promise<void>): T & PrivateThreadProps {
   const workerErrors = workerEvents
     .filter(event => event.type === WorkerEventType.internalError)
     .map(errorEvent => (errorEvent as WorkerInternalErrorEvent).error)
 
-  // tslint:disable-next-line prefer-object-spread
+  // tslint:disable-next-line:prefer-object-spread
   return Object.assign(raw, {
     [$errors]: workerErrors,
     [$events]: workerEvents,
@@ -141,7 +147,7 @@ function setPrivateThreadProps<T>(raw: T, worker: WorkerType, workerEvents: Obse
  * @param [options.timeout] Init message timeout. Default: 10000 or set by environment variable.
  */
 export async function spawn<Exposed extends WorkerFunction | WorkerModule<any> = ArbitraryWorkerInterface>(
-  worker: WorkerType,
+  worker: TWorker,
   options?: { timeout?: number }
 ): Promise<ExposedToThreadType<Exposed>> {
   debugSpawn("Initializing new thread")

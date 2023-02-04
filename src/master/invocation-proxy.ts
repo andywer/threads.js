@@ -14,7 +14,8 @@ import {
   ModuleMethods,
   ModuleProxy,
   ProxyableFunction,
-  Worker as WorkerType
+  Worker as WorkerType,
+  SharedWorker as SharedWorkerType
 } from "../types/master"
 import {
   MasterJobCancelMessage,
@@ -26,6 +27,7 @@ import {
   WorkerMessageType
 } from "../types/messages"
 
+type TWorker = WorkerType | SharedWorkerType
 const debugMessages = DebugLogger("threads:master:messages")
 
 let nextJobUID = 1
@@ -36,7 +38,7 @@ const isJobErrorMessage = (data: any): data is WorkerJobErrorMessage => data && 
 const isJobResultMessage = (data: any): data is WorkerJobResultMessage => data && data.type === WorkerMessageType.result
 const isJobStartMessage = (data: any): data is WorkerJobStartMessage => data && data.type === WorkerMessageType.running
 
-function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number): Observable<ResultType> {
+function createObservableForJob<ResultType>(worker: WorkerType | SharedWorkerType, jobUID: number): Observable<ResultType> {
   return new Observable(observer => {
     let asyncType: "observable" | "promise" | undefined
 
@@ -81,7 +83,8 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
           type: MasterMessageType.cancel,
           uid: jobUID
         }
-        worker.postMessage(cancelMessage)
+        if('port' in worker) worker.port.postMessage(cancelMessage);
+        else worker.postMessage(cancelMessage)
       }
       worker.removeEventListener("message", messageHandler)
     }
@@ -115,7 +118,7 @@ function prepareArguments(rawArgs: any[]): { args: any[], transferables: Transfe
   }
 }
 
-export function createProxyFunction<Args extends any[], ReturnType>(worker: WorkerType, method?: string) {
+export function createProxyFunction<Args extends any[], ReturnType>(worker: TWorker, method?: string) {
   return ((...rawArgs: Args) => {
     const uid = nextJobUID++
     const { args, transferables } = prepareArguments(rawArgs)
@@ -129,7 +132,8 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
     debugMessages("Sending command to run function to worker:", runMessage)
 
     try {
-      worker.postMessage(runMessage, transferables)
+      if('port' in worker) worker.port.postMessage(runMessage, transferables)
+      else worker.postMessage(runMessage, transferables)
     } catch (error) {
       return ObservablePromise.from(Promise.reject(error))
     }
@@ -139,7 +143,7 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
 }
 
 export function createProxyModule<Methods extends ModuleMethods>(
-  worker: WorkerType,
+  worker: TWorker,
   methodNames: string[]
 ): ModuleProxy<Methods> {
   const proxy: any = {}
