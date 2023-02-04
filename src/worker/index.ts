@@ -210,6 +210,8 @@ export function expose(exposed: WorkerFunction | WorkerModule<any>) {
       innerExpose(port)
 
       // TODO: it somehow needs to handle the port closing, but apparently that isn't so simple...
+      // see spawn.ts:
+      // TODO: send termination message to shared worker.
     }
   }
   else innerExpose(self)

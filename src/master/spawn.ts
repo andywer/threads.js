@@ -113,7 +113,10 @@ function createTerminator(worker: TWorker): { termination: Promise<void>, termin
   const terminate = async () => {
     debugThreadUtils("Terminating worker")
     // Newer versions of worker_threads workers return a promise
-    if('port' in worker) worker.port.close()
+    if('port' in worker) {
+      // TODO: send termination message to shared worker.
+      worker.port.close()
+    }
     else await worker.terminate()
     resolver()
   }
