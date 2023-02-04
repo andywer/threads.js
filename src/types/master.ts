@@ -100,7 +100,7 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
 
 /** Worker implementation. Either web worker or a node.js Worker class. */
 export declare class WorkerImplementation extends EventTarget implements Worker {
-  constructor(path: string, options?: ThreadsWorkerOptions)
+  constructor(path: string | URL, options?: ThreadsWorkerOptions)
   public postMessage(value: any, transferList?: TransferList): void
   public terminate(): void | Promise<number>
 }
