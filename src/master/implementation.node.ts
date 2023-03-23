@@ -115,8 +115,13 @@ function initWorkerThreadsWorker(): ImplementationExport {
       } else if (resolvedScriptPath.match(/\.tsx?$/i) && detectTsNode()) {
         super(createTsNodeModule(resolvedScriptPath), { ...options, eval: true })
       } else if (resolvedScriptPath.match(/\.asar[\/\\]/)) {
-        // See <https://github.com/andywer/threads-plugin/issues/17>
-        super(resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1"), options)
+        const electronPath =
+          options?.electronAsarUnpacked === false
+            ? resolvedScriptPath
+            // See <https://github.com/andywer/threads-plugin/issues/17>
+            : resolvedScriptPath.replace(/\.asar([\/\\])/, ".asar.unpacked$1")
+
+        super(electronPath, options)
       } else {
         super(resolvedScriptPath, options)
       }
