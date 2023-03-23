@@ -94,6 +94,10 @@ export interface ThreadsWorkerOptions extends WorkerOptions {
   /** Data passed on to node.js worker_threads. */
   workerData?: any
 
+  /** If Electron workers should use the asar.unpacked path. Default to true.
+   *  See <https://github.com/andywer/threads-plugin/issues/17> */
+  electronAsarUnpacked?: boolean
+
   /** Whether to apply CORS protection workaround. Defaults to true. */
   CORSWorkaround?: boolean
 }
