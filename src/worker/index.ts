@@ -124,10 +124,10 @@ async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
     return postJobErrorMessage(jobUID, error)
   }
 
-  const resultType = isObservable(syncResult) ? "observable" : "promise"
-  postJobStartMessage(jobUID, resultType)
 
   if (isObservable(syncResult)) {
+    postJobStartMessage(jobUID, "observable")
+    
     const subscription = syncResult.subscribe(
       value => postJobResultMessage(jobUID, false, serialize(value)),
       error => {
@@ -143,7 +143,27 @@ async function runFunction(jobUID: number, fn: WorkerFunction, args: any[]) {
   } else {
     try {
       const result = await syncResult
-      postJobResultMessage(jobUID, true, serialize(result))
+
+      const resultType = isObservable(result) ? "observable" : "promise"
+      postJobStartMessage(jobUID, resultType)
+    
+      if(isObservable(result)){
+        const subscription = result.subscribe(
+          value => postJobResultMessage(jobUID, false, serialize(value)),
+          error => {
+            postJobErrorMessage(jobUID, serialize(error) as any)
+            activeSubscriptions.delete(jobUID)
+          },
+          () => {
+            postJobResultMessage(jobUID, true)
+            activeSubscriptions.delete(jobUID)
+          }
+        )
+        activeSubscriptions.set(jobUID, subscription)
+      }else{
+        postJobResultMessage(jobUID, true, serialize(result))
+      }
+
     } catch (error) {
       postJobErrorMessage(jobUID, serialize(error) as any)
     }
