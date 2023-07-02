@@ -24,6 +24,7 @@
   "exports": {
     ".": {
       "require": "./dist/index.js",
+      "types": "./dist/index.d.ts",
       "default": "./index.mjs"
     },
     "./observable": {
