@@ -23,20 +23,24 @@
   },
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "default": "./index.mjs"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./observable": {
-      "require": "./observable.js",
-      "default": "./observable.mjs"
+      "types": "./dist/observable.d.ts",
+      "default": "./dist/observable.js"
     },
     "./register": {
-      "require": "./register.js",
-      "default": "./register.mjs"
+      "types": "./dist/master/register.d.ts",
+      "default": "./dist/master/register.js"
+    },
+    "./master": {
+      "types": "./dist/master/index.d.ts",
+      "default": "./dist/master/index.js"
     },
     "./worker": {
-      "require": "./worker.js",
-      "default": "./worker.mjs"
+      "types": "./dist/worker/index.d.ts",
+      "default": "./dist/worker/index.js"
     }
   },
   "sideEffects": [
@@ -142,3 +146,4 @@
     "*.ts"
   ]
 }
+
