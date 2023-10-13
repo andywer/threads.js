@@ -4,7 +4,6 @@ on:
 
 env:
   THREADS_WORKER_INIT_TIMEOUT: 15000
-  NODE_OPTIONS: --openssl-legacy-provider
 
 jobs:
   # Building threads library from source
@@ -26,6 +25,8 @@ jobs:
         run: npm install
 
       - name: Dev test
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
         run: npm run test:tooling
 
       - name: Upload artifacts

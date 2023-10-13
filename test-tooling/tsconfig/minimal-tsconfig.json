@@ -2,7 +2,8 @@
   "compilerOptions": {
     "lib": ["es2017"],
     "noEmit": true,
-    "strict": true
+    "strict": true,
+    "skipLibCheck": true
   },
   "include": [
     "./minimal.ts"
