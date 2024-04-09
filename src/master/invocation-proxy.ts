@@ -41,8 +41,8 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
     let asyncType: "observable" | "promise" | undefined
 
     const messageHandler = ((event: MessageEvent) => {
-      debugMessages("Message from worker:", event.data)
       if (!event.data || event.data.uid !== jobUID) return
+      debugMessages("Message from worker:", event.data)
 
       if (isJobStartMessage(event.data)) {
         asyncType = event.data.resultType
