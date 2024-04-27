@@ -51,8 +51,7 @@ Also note that we imported `Worker` from threads.js. This is an important detail
 
 Importing the `Worker` from threads.js allows us not only to run the same code in browsers and node, but the threads.js `Worker` transparently provides additional functionality, too, to make using it as easy as possible.
 
-Learn more about it on the [Basic usage](/usage) page.
-
+Learn more about it on the [Basic usage](/docs/usage) page.
 
 ## Installation
 
@@ -198,7 +197,7 @@ Learn about the details and all the other features of the threads.js API, like
 
 <div class="mt-5">
   <p class="text-center">
-    <a class="button button--rounded button--secondary button--lg" href="/usage">
+    <a class="button button--rounded button--secondary button--lg" href="/docs/usage">
       <i class="fas fa-arrow-right mr-2" style="font-size: 90%"></i>
       API & Usage
     </a>
