@@ -5,6 +5,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist-esm/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rimraf dist/ dist-esm/",
     "dev": "npm run clean && tsc -p tsconfig.json --watch",
@@ -24,19 +25,23 @@
   "exports": {
     ".": {
       "require": "./dist/index.js",
-      "default": "./index.mjs"
+      "default": "./index.mjs",
+      "types": "./dist/index.d.ts"
     },
     "./observable": {
       "require": "./observable.js",
-      "default": "./observable.mjs"
+      "default": "./observable.mjs",
+      "types": "./observable.d.ts"
     },
     "./register": {
       "require": "./register.js",
-      "default": "./register.mjs"
+      "default": "./register.mjs",
+      "types": "./register.d.ts"
     },
     "./worker": {
       "require": "./worker.js",
-      "default": "./worker.mjs"
+      "default": "./worker.mjs",
+      "types": "./worker.d.ts"
     }
   },
   "sideEffects": [
