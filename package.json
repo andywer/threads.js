@@ -24,18 +24,22 @@
   "exports": {
     ".": {
       "require": "./dist/index.js",
+      "types": "./dist/index.d.ts",
       "default": "./index.mjs"
     },
     "./observable": {
       "require": "./observable.js",
+      "types": "./observable.d.ts",
       "default": "./observable.mjs"
     },
     "./register": {
       "require": "./register.js",
+      "types": "./register.d.ts",
       "default": "./register.mjs"
     },
     "./worker": {
       "require": "./worker.js",
+      "types": "./worker.d.ts",
       "default": "./worker.mjs"
     }
   },
