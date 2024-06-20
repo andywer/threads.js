@@ -15,11 +15,11 @@ Uses web workers in the browser, `worker_threads` in node 12+ and [`tiny-worker`
 
 ### Features
 
-* First-class support for **async functions** & **observables**
-* Write code once, run it **on all platforms**
-* Manage bulk task executions with **thread pools**
-* Use **require()** and **import**/**export** in workers
-* Works great with **webpack**
+- First-class support for **async functions** & **observables**
+- Write code once, run it **on all platforms**
+- Manage bulk task executions with **thread pools**
+- Use **require()** and **import**/**export** in workers
+- Works great with **webpack**
 
 ### Version 0.x
 
@@ -31,7 +31,7 @@ You can find the old version 0.12 of threads.js on the [`v0` branch](https://git
 npm install threads tiny-worker
 ```
 
-*You only need to install the `tiny-worker` package to support node.js < 12. It's an optional dependency and used as a fallback if `worker_threads` are not available.*
+_You only need to install the `tiny-worker` package to support node.js < 12. It's an optional dependency and used as a fallback if `worker_threads` are not available._
 
 ## Platform support
 
@@ -42,7 +42,7 @@ npm install threads tiny-worker
 
 Running code using threads.js in node works out of the box.
 
-Note that we wrap the native `Worker`, so `new Worker("./foo/bar")` will resolve the path relative to the module that calls it, not relative to the current working directory.
+Note that we wrap the native `Worker`, so `new Worker(new URL("./foo/bar", import.meta.url))` will resolve the path relative to the module that calls it, not relative to the current working directory.
 
 That aligns it with the behavior when bundling the code with webpack or parcel.
 
@@ -147,26 +147,26 @@ Everything else should work out of the box.
 
 ```js
 // master.js
-import { spawn, Thread, Worker } from "threads"
+import { spawn, Thread, Worker } from "threads";
 
-const auth = await spawn(new Worker("./workers/auth"))
-const hashed = await auth.hashPassword("Super secret password", "1234")
+const auth = await spawn(new Worker(new URL("./workers/auth", import.meta.url)));
+const hashed = await auth.hashPassword("Super secret password", "1234");
 
-console.log("Hashed password:", hashed)
+console.log("Hashed password:", hashed);
 
-await Thread.terminate(auth)
+await Thread.terminate(auth);
 ```
 
 ```js
 // workers/auth.js
-import sha256 from "js-sha256"
-import { expose } from "threads/worker"
+import sha256 from "js-sha256";
+import { expose } from "threads/worker";
 
 expose({
   hashPassword(password, salt) {
-    return sha256(password + salt)
-  }
-})
+    return sha256(password + salt);
+  },
+});
 ```
 
 ### spawn()

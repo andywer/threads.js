@@ -11,31 +11,32 @@ aside:
 
 ## Transferable objects
 
-Use `Transfer()` to mark [transferable objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers#Passing_data_by_transferring_ownership_(transferable_objects)) like ArrayBuffers to be transferred to the receiving thread. It can speed up your code a lot if you are working with big pieces of binary data.
+Use `Transfer()` to mark [transferable objects](<https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers#Passing_data_by_transferring_ownership_(transferable_objects)>) like ArrayBuffers to be transferred to the receiving thread. It can speed up your code a lot if you are working with big pieces of binary data.
 
 `Transfer()` comes in two flavors:
-* `Transfer(myBuffer: Transferable)`
-* `Transfer(arrayOrObjectContainingBuffers: any, [myBuffer]: Transferable[])`
+
+- `Transfer(myBuffer: Transferable)`
+- `Transfer(arrayOrObjectContainingBuffers: any, [myBuffer]: Transferable[])`
 
 Use it when calling a thread function or returning from a thread function:
 
 ```js
 // master.js
-import { spawn, Transfer, Worker } from "threads"
+import { spawn, Transfer, Worker } from "threads";
 
-const xorBuffer = await spawn(new Worker("./workers/arraybuffer-xor"))
-const resultBuffer = await xorBuffer(Transfer(testData), 127)
+const xorBuffer = await spawn(new Worker(new URL("./workers/arraybuffer-xor", import.meta.url)));
+const resultBuffer = await xorBuffer(Transfer(testData), 127);
 ```
 
 ```js
 // workers/arraybuffer-xor.js
-import { expose, Transfer } from "threads/worker"
+import { expose, Transfer } from "threads/worker";
 
 expose(function xorBuffer(buffer, value) {
-  const view = new Uint8Array(buffer)
-  view.forEach((byte, offset) => view.set([byte ^ value], offset))
-  return Transfer(buffer)
-})
+  const view = new Uint8Array(buffer);
+  view.forEach((byte, offset) => view.set([byte ^ value], offset));
+  return Transfer(buffer);
+});
 ```
 
 Without `Transfer()` the buffers would be copied on every call and every return. Using `Transfer()` their ownership is transferred to the other thread instead only, to make sure it is accessible in a thread-safe way. This is a much faster operation.
@@ -43,16 +44,16 @@ Without `Transfer()` the buffers would be copied on every call and every return.
 You can use transferable objects with observables, too.
 
 ```js
-import { expose, Observable, Transfer } from "threads/worker"
-import { DataSource } from "./my-data-source"
+import { expose, Observable, Transfer } from "threads/worker";
+import { DataSource } from "./my-data-source";
 
 expose(function streamBuffers() {
-  return new Observable(observer => {
-    const datasource = new DataSource()
-    datasource.on("data", arrayBuffer => observer.next(Transfer(arrayBuffer)))
-    return () => datasource.close()
-  })
-})
+  return new Observable((observer) => {
+    const datasource = new DataSource();
+    datasource.on("data", (arrayBuffer) => observer.next(Transfer(arrayBuffer)));
+    return () => datasource.close();
+  });
+});
 ```
 
 ## Task queue
@@ -66,17 +67,17 @@ Threads.js does not provide a distinct task queue implementation, but it comes w
 Every spawned thread emits events during its lifetime that you can subscribe to. This can be useful for debugging.
 
 ```js
-import { spawn, Thread, Worker } from "threads"
+import { spawn, Thread, Worker } from "threads";
 
-const myThread = await spawn(new Worker("./mythread"))
+const myThread = await spawn(new Worker(new URL("./mythread", import.meta.url)));
 
-Thread.events(myThread).subscribe(event => console.log("Thread event:", event))
+Thread.events(myThread).subscribe((event) => console.log("Thread event:", event));
 ```
 
 There is a specialized function to subscribe only to thread error events:
 
 ```js
-Thread.errors(myThread).subscribe(error => console.log("Thread error:", error))
+Thread.errors(myThread).subscribe((error) => console.log("Thread error:", error));
 ```
 
 ## Custom message serializers
@@ -88,18 +89,18 @@ You can however define and register custom serializers to provide support for pa
 First you need to implement your serializer. Fortunately, this is pretty straight-forward.
 
 ```typescript
-import { SerializerImplementation } from "threads"
+import { SerializerImplementation } from "threads";
 
 interface SerializedMyClass {
-  __type: "$$MyClass"
-  state: string
+  __type: "$$MyClass";
+  state: string;
 }
 
 class MyClass {
-  state: string
+  state: string;
 
   constructor(initialState: string) {
-    this.state = initialState
+    this.state = initialState;
   }
 
   doStuff() {
@@ -109,41 +110,41 @@ class MyClass {
   serialize(): SerializedMyClass {
     return {
       __type: "$$MyClass",
-      state: this.state
-    }
+      state: this.state,
+    };
   }
 
   static deserialize(message: SerializedMyClass) {
-    return new MyClass(message.state)
+    return new MyClass(message.state);
   }
 }
 
 const MySerializer: SerializerImplementation = {
   deserialize(message, defaultHandler) {
     if (message && message.__type === "$$MyClass") {
-      return MyClass.deserialize(message as any)
+      return MyClass.deserialize(message as any);
     } else {
-      return defaultHandler(message)
+      return defaultHandler(message);
     }
   },
   serialize(thing, defaultHandler) {
     if (thing instanceof MyClass) {
-      return thing.serialize()
+      return thing.serialize();
     } else {
-      return defaultHandler(thing)
+      return defaultHandler(thing);
     }
-  }
-}
+  },
+};
 ```
 
 Finally, register your serializer in both the main thread and the worker. Register it early, before you `spawn()` or `expose()` anything.
 
 ```typescript
-import { registerSerializer } from "threads"
+import { registerSerializer } from "threads";
 // also exported from the worker sub-module:
 // import { registerSerializer } from "threads/worker"
 
-registerSerializer(MySerializer)
+registerSerializer(MySerializer);
 ```
 
 You can also register multiple serializers. Just call `registerSerializer()` multiple times – make sure to register the same serializers in the worker and main thread.
@@ -151,15 +152,14 @@ You can also register multiple serializers. Just call `registerSerializer()` mul
 The registered serializers will then be chained. The serializer that was registered at last is invoked first. If it does not know how to serialize the data, it will call its fallback handler which is the second-to-last serializer and so forth.
 
 ```typescript
-import { registerSerializer } from "threads"
+import { registerSerializer } from "threads";
 
-registerSerializer(SomeSerializer)
-registerSerializer(AnotherSerializer)
+registerSerializer(SomeSerializer);
+registerSerializer(AnotherSerializer);
 
 // threads.js will first try to use AnotherSerializer, will fall back to SomeSerializer,
 // eventually falls back to passing the data as is if no serializer can handle it
 ```
-
 
 ## Debug logging
 
