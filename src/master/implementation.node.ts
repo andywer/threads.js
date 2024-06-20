@@ -27,6 +27,36 @@ let tsNodeAvailable: boolean | undefined
 
 export const defaultPoolSize = cpus().length
 
+interface Terminable {
+  terminate(this: Terminable): any
+}
+
+// Terminates the workers, empties the workers array, and possibly exits.
+const onSignal = (workers: Terminable[], signal: string) => {
+  // worker.terminate() might return a Promise or might be synchronous. This async helper function
+  // creates a consistent interface.
+  const terminate = async (worker: Terminable) => worker.terminate()
+  Promise.all(workers.map(worker => terminate(worker).catch(() => {}))).then(() => {
+    // Adding a signal listener suppresses the default signal handling behavior. That default
+    // behavior must be replicated here, but only if the default behavior isn't intentionally
+    // suppressed by another signal listener. Unfortunately there is no robust way to determine
+    // whether the default behavior was intentionally suppressed, so a heuristic is used. (Note: The
+    // 'exit' event is not suitable for terminating workers because it is not emitted when the
+    // default signal handler terminates the process.)
+    if (process.listenerCount(signal) > 1) {
+      // Assume that one of the other signal listeners will take care of calling process.exit().
+      // This assumption breaks down if all of the other listeners are making the same assumption.
+      return
+    }
+    // Right now this is the only signal listener, so assume that this listener is to blame for
+    // inhibiting the default signal handler. (This assumption fails if the number of listeners
+    // changes during signal handling. This can happen if a listener was added by process.once().)
+    // Mimic the default behavior, which is to exit with a non-0 code.
+    process.exit(1)
+  })
+  workers.length = 0
+}
+
 function detectTsNode() {
   if (typeof __non_webpack_require__ === "function") {
     // Webpack build: => No ts-node required or possible
@@ -98,7 +128,7 @@ function initWorkerThreadsWorker(): ImplementationExport {
     ? __non_webpack_require__("worker_threads").Worker
     : eval("require")("worker_threads").Worker
 
-  let allWorkers: Array<typeof NativeWorker> = []
+  const allWorkers: Array<typeof NativeWorker> = []
 
   class Worker extends NativeWorker {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
@@ -139,18 +169,9 @@ function initWorkerThreadsWorker(): ImplementationExport {
     }
   }
 
-  const terminateWorkersAndMaster = () => {
-    // we should terminate all workers and then gracefully shutdown self process
-    Promise.all(allWorkers.map(worker => worker.terminate())).then(
-      () => process.exit(0),
-      () => process.exit(1),
-    )
-    allWorkers = []
-  }
-
   // Take care to not leave orphaned processes behind. See #147.
-  process.on("SIGINT", () => terminateWorkersAndMaster())
-  process.on("SIGTERM", () => terminateWorkersAndMaster())
+  process.on("SIGINT", (signal) => onSignal(allWorkers, signal))
+  process.on("SIGTERM", (signal) => onSignal(allWorkers, signal))
 
   class BlobWorker extends Worker {
     constructor(blob: Uint8Array, options?: ThreadsWorkerOptions) {
@@ -219,19 +240,10 @@ function initTinyWorker(): ImplementationExport {
     }
   }
 
-  const terminateWorkersAndMaster = () => {
-    // we should terminate all workers and then gracefully shutdown self process
-    Promise.all(allWorkers.map(worker => worker.terminate())).then(
-      () => process.exit(0),
-      () => process.exit(1),
-    )
-    allWorkers = []
-  }
-
   // Take care to not leave orphaned processes behind
   // See <https://github.com/avoidwork/tiny-worker#faq>
-  process.on("SIGINT", () => terminateWorkersAndMaster())
-  process.on("SIGTERM", () => terminateWorkersAndMaster())
+  process.on("SIGINT", (signal) => onSignal(allWorkers, signal))
+  process.on("SIGTERM", (signal) => onSignal(allWorkers, signal))
 
   class BlobWorker extends Worker {
     constructor(blob: Uint8Array, options?: ThreadsWorkerOptions) {
