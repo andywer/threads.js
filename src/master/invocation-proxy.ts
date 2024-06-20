@@ -14,7 +14,7 @@ import {
   ModuleMethods,
   ModuleProxy,
   ProxyableFunction,
-  Worker as WorkerType
+  Worker as TWorker,
 } from "../types/master"
 import {
   MasterJobCancelMessage,
@@ -25,6 +25,8 @@ import {
   WorkerJobStartMessage,
   WorkerMessageType
 } from "../types/messages"
+
+type WorkerType = SharedWorker | TWorker
 
 const debugMessages = DebugLogger("threads:master:messages")
 
@@ -75,13 +77,19 @@ function createObservableForJob<ResultType>(worker: WorkerType, jobUID: number):
 
     worker.addEventListener("message", messageHandler)
 
+    if (worker instanceof SharedWorker) {
+      worker.port.start()
+    }
+
     return () => {
       if (asyncType === "observable" || !asyncType) {
         const cancelMessage: MasterJobCancelMessage = {
           type: MasterMessageType.cancel,
           uid: jobUID
         }
-        worker.postMessage(cancelMessage)
+        const port = worker instanceof SharedWorker ? worker.port : worker;
+
+        port.postMessage(cancelMessage, []);
       }
       worker.removeEventListener("message", messageHandler)
     }
@@ -125,11 +133,12 @@ export function createProxyFunction<Args extends any[], ReturnType>(worker: Work
       method,
       args
     }
+    const port = worker instanceof SharedWorker ? worker.port : worker;
 
     debugMessages("Sending command to run function to worker:", runMessage)
 
     try {
-      worker.postMessage(runMessage, transferables)
+      port.postMessage(runMessage, transferables)
     } catch (error) {
       return ObservablePromise.from(Promise.reject(error))
     }
