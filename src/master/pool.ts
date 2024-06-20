@@ -48,10 +48,13 @@ function spawnWorkers<ThreadType extends Thread>(
   spawnWorker: () => Promise<ThreadType>,
   count: number
 ): Array<WorkerDescriptor<ThreadType>> {
-  return createArray(count).map((): WorkerDescriptor<ThreadType> => ({
-    init: spawnWorker(),
-    runningTasks: []
-  }))
+  return createArray(count).map(
+    (): WorkerDescriptor<ThreadType> => ({
+      init: spawnWorker(),
+      runningTasks: [],
+      lastActivity: Date.now()
+    })
+  )
 }
 
 /**
@@ -109,6 +112,15 @@ export interface PoolOptions {
 
   /** No. of worker threads to spawn and to be managed by the pool. */
   size?: number
+
+  /** For dynamically sized pool, the minimum number of active workers. */
+  minSize?: number
+
+  /** For dynamically sized pool, maximum idle lifetime of worker threads. */
+  idleTimeoutMillis?: number
+
+  /** For dynamically sized pool, frequency of cleaning up idle threads. */
+  idleCleanupIntervalMillis?: number
 }
 
 class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
@@ -124,6 +136,11 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
   private isClosing = false
   private nextTaskID = 1
   private taskQueue: Array<QueuedTask<ThreadType, any>> = []
+  private maxSize: number
+  private minSize: number
+  private idleTimeoutMillis?: number
+  private spawnWorker: () => Promise<ThreadType>
+  private idleCleanupHandle: NodeJS.Timeout | undefined
 
   constructor(
     spawnWorker: () => Promise<ThreadType>,
@@ -134,12 +151,25 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
       : optionsOrSize || {}
 
     const { size = defaultPoolSize } = options
+    this.maxSize = size
+    this.minSize = options.minSize ?? 0
+    this.idleTimeoutMillis = options.idleTimeoutMillis
+    this.spawnWorker = spawnWorker
 
     this.debug = DebugLogger(`threads:pool:${slugify(options.name || String(nextPoolID++))}`)
     this.options = options
-    this.workers = spawnWorkers(spawnWorker, size)
+
+    const initialWorkers = this.idleTimeoutMillis ? this.minSize : size
+    this.workers = spawnWorkers(spawnWorker, initialWorkers)
 
     this.eventObservable = multicast(Observable.from(this.eventSubject))
+
+    if (this.idleTimeoutMillis) {
+      this.idleCleanupHandle = setInterval(
+        () => this.purgeExpiredWorkers(),
+        options.idleCleanupIntervalMillis ?? 30 * 1000
+      )
+    }
 
     Promise.all(this.workers.map(worker => worker.init)).then(
       () => this.eventSubject.next({
@@ -191,6 +221,8 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
   }
 
   private async run(worker: WorkerDescriptor<ThreadType>, task: QueuedTask<ThreadType, any>) {
+    worker.lastActivity = Date.now()
+
     const runPromise = (async () => {
       const removeTaskFromWorkersRunningTasks = () => {
         worker.runningTasks = worker.runningTasks.filter(someRunPromise => someRunPromise !== runPromise)
@@ -202,6 +234,7 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
       try {
         await this.runPoolTask(worker, task)
       } finally {
+        worker.lastActivity = Date.now()
         removeTaskFromWorkersRunningTasks()
 
         if (!this.isClosing) {
@@ -213,12 +246,35 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
     worker.runningTasks.push(runPromise)
   }
 
+  private async purgeExpiredWorkers() {
+    const idleWorkers: WorkerDescriptor<ThreadType>[] = this.workers.filter(
+      w => w.lastActivity < Date.now() - this.idleTimeoutMillis!
+    )
+    const rmWorkers: WorkerDescriptor<ThreadType>[] = []
+    while (idleWorkers.length && this.workers.length > this.minSize) {
+      const rmWorker = idleWorkers.shift()!
+      rmWorkers.push(rmWorker)
+      const idx = this.workers.findIndex(w => w === rmWorker)
+      this.workers.splice(idx, 1)
+    }
+
+    Promise.all(rmWorkers.map(
+      async (w) => Thread.terminate(await w.init)
+    ))
+  }
 
   private scheduleWork() {
     this.debug(`Attempt de-queueing a task in order to run it...`)
 
-    const availableWorker = this.findIdlingWorker()
-    if (!availableWorker) return
+    let availableWorker = this.findIdlingWorker()
+    if (!availableWorker) {
+      if (this.workers.length < this.maxSize) {
+        [availableWorker] = spawnWorkers(this.spawnWorker, 1)
+        this.workers.push(availableWorker)
+      } else {
+        return
+      }
+    }
 
     const nextTask = this.taskQueue.shift()
     if (!nextTask) {
@@ -371,6 +427,10 @@ class WorkerPool<ThreadType extends Thread> implements Pool<ThreadType> {
 
   public async terminate(force?: boolean) {
     this.isClosing = true
+    if (this.idleCleanupHandle) {
+      clearInterval(this.idleCleanupHandle!)
+    }
+
     if (!force) {
       await this.completed(true)
     }
