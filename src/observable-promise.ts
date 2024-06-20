@@ -44,7 +44,9 @@ export class ObservablePromise<T> extends Observable<T> implements Promise<T> {
   private rejection: Error | undefined
   private state: "fulfilled" | "pending" | "rejected" = "pending"
 
-  public readonly [Symbol.toStringTag]: "[object ObservablePromise]"
+  get [Symbol.toStringTag]() {
+    return "[object ObservablePromise]";
+  }
 
   constructor(init: Initializer<T>) {
     super((originalObserver: SubscriptionObserver<T>) => {

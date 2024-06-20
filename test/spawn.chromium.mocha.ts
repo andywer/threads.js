@@ -43,4 +43,10 @@ describe("threads in browser", function() {
     expect(await increment()).to.equal(3)
     await Thread.terminate(increment)
   })
+
+  it("can spawn and terminate a shared webworker", async function() {
+    const helloWorld = await spawn<() => string>(new SharedWorker("./workers/hello-world.js"))
+    expect(await helloWorld()).to.equal("Hello World")
+    await Thread.terminate(helloWorld)
+  })
 })
