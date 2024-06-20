@@ -11,6 +11,8 @@ import {
   ThreadsWorkerOptions,
   WorkerImplementation
 } from "../types/master"
+import { isWebpack, requireFunction } from "../webpack-hack"
+export declare const __non_webpack_require__: typeof require
 
 interface WorkerGlobalScope {
   addEventListener(eventName: string, listener: (event: Event) => void): void
@@ -18,7 +20,7 @@ interface WorkerGlobalScope {
   removeEventListener(eventName: string, listener: (event: Event) => void): void
 }
 
-declare const __non_webpack_require__: typeof require
+
 declare const self: WorkerGlobalScope
 
 type WorkerEventName = "error" | "message"
@@ -28,7 +30,7 @@ let tsNodeAvailable: boolean | undefined
 export const defaultPoolSize = cpus().length
 
 function detectTsNode() {
-  if (typeof __non_webpack_require__ === "function") {
+  if (isWebpack) {
     // Webpack build: => No ts-node required or possible
     return false
   }
@@ -85,7 +87,8 @@ function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
     return path.isAbsolute(filePath) ? filePath : path.join(baseURL || eval("__dirname"), filePath)
   }
 
-  const workerFilePath = typeof __non_webpack_require__ === "function"
+  // Webpack hack
+  const workerFilePath = isWebpack
     ? __non_webpack_require__.resolve(makeRelative(scriptPath))
     : eval("require").resolve(makeRelative(rebaseScriptPath(scriptPath, /[\/\\]worker_threads[\/\\]/)))
 
@@ -94,11 +97,9 @@ function resolveScriptPath(scriptPath: string, baseURL?: string | undefined) {
 
 function initWorkerThreadsWorker(): ImplementationExport {
   // Webpack hack
-  const NativeWorker = typeof __non_webpack_require__ === "function"
-    ? __non_webpack_require__("worker_threads").Worker
-    : eval("require")("worker_threads").Worker
+  const NativeWorker = (requireFunction("worker_threads") as typeof import("worker_threads")).Worker
 
-  let allWorkers: Array<typeof NativeWorker> = []
+  let allWorkers: Array<Worker> = []
 
   class Worker extends NativeWorker {
     private mappedEventListeners: WeakMap<EventListener, EventListener>
@@ -276,9 +277,7 @@ export function isWorkerRuntime() {
     return typeof self !== "undefined" && self.postMessage ? true : false
   } else {
     // Webpack hack
-    const isMainThread = typeof __non_webpack_require__ === "function"
-      ? __non_webpack_require__("worker_threads").isMainThread
-      : eval("require")("worker_threads").isMainThread
+    const isMainThread = (requireFunction("worker_threads") as typeof import("worker_threads")).isMainThread
     return !isMainThread
   }
 }
